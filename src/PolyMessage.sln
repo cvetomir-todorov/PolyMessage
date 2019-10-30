@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29418.71
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyMessage", "PolyMessage\PolyMessage.csproj", "{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_MSBuild", "_MSBuild", "{C8026493-6344-44F5-A4DB-A513ABE9DA86}"
+	ProjectSection(SolutionItems) = preProject
+		MSBuild\Product.props = MSBuild\Product.props
+		MSBuild\Version.props = MSBuild\Version.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyMessage.IntegrationTests", "PolyMessage.IntegrationTests\PolyMessage.IntegrationTests.csproj", "{BA7D8234-1025-4B36-A2D4-696CD4D07769}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA7D8234-1025-4B36-A2D4-696CD4D07769}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA7D8234-1025-4B36-A2D4-696CD4D07769}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA7D8234-1025-4B36-A2D4-696CD4D07769}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA7D8234-1025-4B36-A2D4-696CD4D07769}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B437B44B-083E-49F2-AD64-408F4DE47028}
+	EndGlobalSection
+EndGlobal

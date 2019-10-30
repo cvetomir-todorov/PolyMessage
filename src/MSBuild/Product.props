@@ -1,0 +1,7 @@
+﻿<Project>
+  <PropertyGroup>
+    <Company>Cvetomir Todorov</Company>
+    <Authors>Cvetomir Todorov</Authors>
+    <PackageId>PolyMessage</PackageId>
+  </PropertyGroup>
+</Project>
