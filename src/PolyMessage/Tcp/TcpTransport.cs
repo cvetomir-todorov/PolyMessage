@@ -56,8 +56,6 @@ namespace PolyMessage.Tcp
         {
             EnsureNotDisposed();
 
-            //TcpClient tcpClient = _tcpListener.AcceptTcpClient();
-            //return Task.FromResult((IChannel) new TcpChannel(tcpClient, format));
             TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
             return new TcpChannel(tcpClient, format);
         }

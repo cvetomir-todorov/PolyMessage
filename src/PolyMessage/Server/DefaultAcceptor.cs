@@ -85,11 +85,13 @@ namespace PolyMessage.Server
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 IChannel channel = await _transport.AcceptClient(format).ConfigureAwait(false);
+                _logger.LogTrace("Accepted client.");
+
                 IProcessor processor = new DefaultProcessor(_loggerFactory);
                 // TODO: add stopped event so that we remove the processor when it has finished
                 _processors.Add(processor);
 
-                Task _ = processor.Start(channel, router, dispatcher, cancelToken);
+                Task _ = Task.Run(async () => await processor.Start(channel, router, dispatcher, cancelToken), cancelToken);
             }
         }
 

@@ -93,7 +93,7 @@ namespace PolyMessage
             _acceptor = new DefaultAcceptor(_loggerFactory);
             IRouter router = new DefaultRouter(_endpoints);
 
-            Task acceptClientsTask = _acceptor.Start(_transport, _format, router, _cancelTokenSource.Token);
+            Task acceptClientsTask = Task.Run(async () => await _acceptor.Start(_transport, _format, router, _cancelTokenSource.Token));
             _logger.LogInformation("Started host with {0} endpoint(s) using {1} transport and {2} format.", _endpoints.Count, _transport.DisplayName, _format.DisplayName);
             return acceptClientsTask;
         }
