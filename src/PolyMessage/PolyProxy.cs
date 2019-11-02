@@ -122,20 +122,18 @@ namespace PolyMessage
             public void Intercept(IInvocation invocation)
             {
                 string requestMessage = (string) invocation.Arguments[0];
+                invocation.ReturnValue = CallEndpoint(requestMessage);
+            }
 
-                // TODO: do we need to call Task.Run or can we combine the tasks somehow?
-                Task<string> sendReceiveTask = Task.Run(async () =>
-                {
-                    _logger.LogTrace("[{0}] Sending request [{1}]...", _proxyID, requestMessage);
-                    await _channel.Send(requestMessage, _cancelToken).ConfigureAwait(false);
-                    _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _proxyID, requestMessage);
-                    string responseMessage = await _channel.Receive(_cancelToken).ConfigureAwait(false);
-                    _logger.LogTrace("[{0}] Received response [{1}].", _proxyID, responseMessage);
+            private async Task<string> CallEndpoint(string requestMessage)
+            {
+                _logger.LogTrace("[{0}] Sending request [{1}]...", _proxyID, requestMessage);
+                await _channel.Send(requestMessage, _cancelToken).ConfigureAwait(false);
+                _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _proxyID, requestMessage);
+                string responseMessage = await _channel.Receive(_cancelToken).ConfigureAwait(false);
+                _logger.LogTrace("[{0}] Received response [{1}].", _proxyID, responseMessage);
 
-                    return responseMessage;
-                }, _cancelToken);
-
-                invocation.ReturnValue = sendReceiveTask;
+                return responseMessage;
             }
         }
     }
