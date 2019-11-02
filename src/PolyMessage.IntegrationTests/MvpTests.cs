@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Binary;
-using PolyMessage.Formats;
 using PolyMessage.Tcp;
-using PolyMessage.Transports;
 using Xunit;
 using Xunit.Abstractions;
 

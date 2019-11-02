@@ -3,8 +3,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using PolyMessage.Formats;
-using PolyMessage.Transports;
 
 namespace PolyMessage.Tcp
 {

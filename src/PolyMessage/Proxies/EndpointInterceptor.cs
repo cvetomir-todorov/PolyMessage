@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Transports;
 
 namespace PolyMessage.Proxies
 {

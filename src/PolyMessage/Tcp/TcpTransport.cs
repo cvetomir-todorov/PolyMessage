@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Net.Sockets;
-using PolyMessage.Formats;
-using PolyMessage.Transports;
 
 namespace PolyMessage.Tcp
 {

@@ -4,9 +4,7 @@ using System.Threading;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using PolyMessage.Formats;
 using PolyMessage.Proxies;
-using PolyMessage.Transports;
 
 namespace PolyMessage
 {

@@ -2,8 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using PolyMessage.Formats;
-using PolyMessage.Transports;
 using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
 namespace PolyMessage.Tcp

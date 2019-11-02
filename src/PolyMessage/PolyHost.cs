@@ -6,9 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Contracts;
 using PolyMessage.Endpoints;
-using PolyMessage.Formats;
 using PolyMessage.Server;
-using PolyMessage.Transports;
 
 namespace PolyMessage
 {
