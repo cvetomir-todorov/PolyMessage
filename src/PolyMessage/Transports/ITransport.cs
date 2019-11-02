@@ -1,18 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using PolyMessage.Formats;
+﻿using PolyMessage.Formats;
 
 namespace PolyMessage.Transports
 {
-    public interface ITransport : IDisposable
+    public interface ITransport
     {
         string DisplayName { get; }
 
-        Task PrepareAccepting();
-
-        Task<IChannel> AcceptClient(IFormat format);
-
-        void StopAccepting();
+        IListener CreateListener();
 
         IChannel CreateClient(IFormat format);
     }

@@ -18,7 +18,7 @@ namespace PolyMessage.Server
 
     internal sealed class DefaultAcceptor : IAcceptor
     {
-        private ITransport _transport;
+        private IListener _listener;
         private readonly HashSet<IProcessor> _processors;
         // logging
         private readonly ILoggerFactory _loggerFactory;
@@ -45,10 +45,12 @@ namespace PolyMessage.Server
             {
                 processor.Stop();
             }
-            _transport.StopAccepting();
+            _listener?.StopAccepting();
             _isStopRequested = true;
             _logger.LogTrace("Waiting worker thread...");
             _stoppedEvent.Wait();
+
+            _listener?.Dispose();
             _stoppedEvent.Dispose();
 
             _isDisposed = true;
@@ -77,12 +79,12 @@ namespace PolyMessage.Server
 
         private async Task DoStart(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken)
         {
-            _transport = transport;
-            await _transport.PrepareAccepting().ConfigureAwait(false);
+            _listener = transport.CreateListener();
+            await _listener.PrepareAccepting().ConfigureAwait(false);
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
-                IChannel channel = await _transport.AcceptClient(format).ConfigureAwait(false);
+                IChannel channel = await _listener.AcceptClient(format).ConfigureAwait(false);
                 _logger.LogTrace("Accepted client.");
 
                 IProcessor processor = new DefaultProcessor(_loggerFactory);

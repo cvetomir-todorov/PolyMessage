@@ -67,8 +67,8 @@ namespace PolyMessage
             _cancelTokenSource.Cancel();
             _acceptor?.Stop();
 
+            _cancelTokenSource.Dispose();
             _acceptor?.Dispose();
-            _transport.Dispose();
 
             _isDisposed = true;
             _logger.LogInformation("Stopped.");

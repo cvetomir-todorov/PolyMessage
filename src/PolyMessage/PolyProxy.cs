@@ -62,7 +62,6 @@ namespace PolyMessage
 
             _cancelTokenSource.Cancel();
             _cancelTokenSource.Dispose();
-            _transport.Dispose();
 
             _isDisposed = true;
         }
