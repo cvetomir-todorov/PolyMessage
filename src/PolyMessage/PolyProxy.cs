@@ -35,7 +35,12 @@ namespace PolyMessage
 
         public PolyProxy(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
         {
-            // TODO: validate input
+            if (transport == null)
+                throw new ArgumentNullException(nameof(transport));
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+            if (loggerFactory == null)
+                throw new ArgumentNullException(nameof(loggerFactory));
 
             // transport/format
             _transport = transport;

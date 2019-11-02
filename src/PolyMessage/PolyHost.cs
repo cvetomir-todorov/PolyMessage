@@ -37,7 +37,12 @@ namespace PolyMessage
 
         public PolyHost(ITransport transport, IFormat format, IServiceProvider serviceProvider)
         {
-            // TODO: validate input
+            if (transport == null)
+                throw new ArgumentNullException(nameof(transport));
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+            if (serviceProvider == null)
+                throw new ArgumentNullException(nameof(serviceProvider));
 
             // transport/format
             _transport = transport;
