@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 namespace PolyMessage.Transports
 {
-    // TODO: apply interface segregation for server/client
     public interface IChannel : IDisposable
     {
         Task Send(string message, CancellationToken cancelToken);

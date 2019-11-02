@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using PolyMessage.Formats;
+using PolyMessage.Proxies;
 using PolyMessage.Transports;
 
 namespace PolyMessage
@@ -18,6 +18,8 @@ namespace PolyMessage
         // proxies
         private readonly Dictionary<Type, object> _proxies;
         private readonly IProxyGenerator _proxyGenerator;
+        private IChannel _channel;
+        private static readonly object _createChannelLock = new object();
         // logging
         private readonly ILogger _logger;
         // identity
@@ -94,46 +96,25 @@ namespace PolyMessage
 
         private object CreateProxy(Type contractType)
         {
-            // TODO: figure out how to create the channel w/o connecting to the server
-            // TODO: reuse the channel for all different dynamic proxy instances
-            IChannel channel = _transport.CreateClient(_format);
-            IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, channel, _cancelTokenSource.Token);
+            EnsureChannelCreated();
+            IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, _channel, _cancelTokenSource.Token);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(
                 contractType, new Type[0], endpointInterceptor);
             return proxy;
         }
 
-        private class EndpointInterceptor : IInterceptor
+        private void EnsureChannelCreated()
         {
-            private readonly ILogger _logger;
-            private readonly IChannel _channel;
-            private readonly string _proxyID;
-            private readonly CancellationToken _cancelToken;
-
-            public EndpointInterceptor(ILogger logger, string proxyID, IChannel channel, CancellationToken cancelToken)
+            if (_channel == null)
             {
-                _logger = logger;
-                _proxyID = proxyID;
-                _channel = channel;
-                _cancelToken = cancelToken;
-            }
-
-            public void Intercept(IInvocation invocation)
-            {
-                string requestMessage = (string) invocation.Arguments[0];
-                invocation.ReturnValue = CallEndpoint(requestMessage);
-            }
-
-            private async Task<string> CallEndpoint(string requestMessage)
-            {
-                _logger.LogTrace("[{0}] Sending request [{1}]...", _proxyID, requestMessage);
-                await _channel.Send(requestMessage, _cancelToken).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _proxyID, requestMessage);
-                string responseMessage = await _channel.Receive(_cancelToken).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Received response [{1}].", _proxyID, responseMessage);
-
-                return responseMessage;
+                lock (_createChannelLock)
+                {
+                    if (_channel == null)
+                    {
+                        _channel = _transport.CreateClient(_format);
+                    }
+                }
             }
         }
     }

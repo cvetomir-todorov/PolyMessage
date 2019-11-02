@@ -4,7 +4,6 @@ using PolyMessage.Formats;
 
 namespace PolyMessage.Transports
 {
-    // TODO: apply interface segregation for server/client
     public interface ITransport : IDisposable
     {
         string DisplayName { get; }
