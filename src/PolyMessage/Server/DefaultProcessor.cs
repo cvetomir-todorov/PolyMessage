@@ -18,6 +18,9 @@ namespace PolyMessage.Server
     {
         private readonly ILogger _logger;
         private IChannel _channel;
+        // identity
+        private static int _generation;
+        private readonly string _id;
         // stop/dispose
         private readonly ManualResetEventSlim _stoppedEvent;
         private bool _isDisposed;
@@ -26,6 +29,9 @@ namespace PolyMessage.Server
         public DefaultProcessor(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger(GetType());
+            // identity
+            _id = "Processor" + Interlocked.Increment(ref _generation);
+            // stop/dispose
             _stoppedEvent = new ManualResetEventSlim(initialState: false);
         }
 
@@ -36,12 +42,12 @@ namespace PolyMessage.Server
 
             _isStopRequested = true;
             _channel.Dispose();
-            _logger.LogTrace("Waiting worker thread...");
+            _logger.LogTrace("[{0}] Waiting worker thread...", _id);
             _stoppedEvent.Wait();
             _stoppedEvent.Dispose();
 
             _isDisposed = true;
-            _logger.LogTrace("Stopped.");
+            _logger.LogTrace("[{0}] Stopped.", _id);
         }
 
         private void EnsureNotDisposed()
@@ -61,12 +67,12 @@ namespace PolyMessage.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError("Unexpected: {0}", exception);
+                _logger.LogError("[{0}] Unexpected: {1}", _id, exception);
             }
             finally
             {
                 _stoppedEvent.Set();
-                _logger.LogTrace("Stopped worker thread.");
+                _logger.LogTrace("[{0}] Stopped worker thread.", _id);
             }
         }
 
@@ -74,10 +80,16 @@ namespace PolyMessage.Server
         {
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
+                _logger.LogTrace("[{0}] Receiving request...", _id);
                 string requestMessage = await _channel.Receive(cancelToken).ConfigureAwait(false);
+                _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
+
                 Endpoint endpoint = router.ChooseEndpoint(requestMessage);
                 string responseMessage = await dispatcher.Dispatch(requestMessage, endpoint).ConfigureAwait(false);
+
+                _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
                 await _channel.Send(responseMessage, cancelToken).ConfigureAwait(false);
+                _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
             }
         }
 

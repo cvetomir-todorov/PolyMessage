@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Binary;
 using PolyMessage.Formats;
@@ -13,32 +15,49 @@ namespace PolyMessage.IntegrationTests
 {
     public sealed class MvpTests
     {
-        private readonly ITestOutputHelper _output;
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
         public MvpTests(ITestOutputHelper output)
         {
-            _output = output;
+            IServiceCollection services = new ServiceCollection()
+                .AddLogging(builder =>
+                {
+                    builder.SetMinimumLevel(LogLevel.Information);
+                    builder.AddDebug();
+                    builder.AddProvider(new XunitLoggingProvider(output));
+                });
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            _logger = _loggerFactory.CreateLogger(GetType());
         }
 
         [Fact]
         public async Task ShouldSendAndReceiveMessage()
         {
             Uri serverAddress = new Uri("tcp://127.0.0.1:10678");
+            const int clientsCount = 5;
+            const int requestsCount = 1000;
             PolyHost host = null;
 
             try
             {
                 host = StartHost(serverAddress);
-                //ParallelLoopResult result = Parallel.ForEach(requests, async request =>
-                //{
-                //    await SendRequest(serverAddress, request, 100, random);
-                //});
+                await Task.Delay(1000);
 
-                const int clientsCount = 1;
+                List<Task> clientTasks = new List<Task>();
                 for (int i = 0; i < clientsCount; ++i)
                 {
-                    await MakeSingleClientRequests(serverAddress, requestsCount: 10000);
+                    Task clientTask = Task.Run(async () =>
+                    {
+                        PolyProxy client = CreateClient(serverAddress);
+                        TimeSpan duration = await ConnectMakeRequestsDisconnect(client, requestsCount);
+                        _logger.LogInformation("Making {0} requests from a proxy took: {1:0} ms.", requestsCount, duration.TotalMilliseconds);
+                    });
+                    clientTasks.Add(clientTask);
                 }
+
+                Task.WaitAll(clientTasks.ToArray());
             }
             finally
             {
@@ -48,60 +67,56 @@ namespace PolyMessage.IntegrationTests
 
         private PolyHost StartHost(Uri serverAddress)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory();
-            loggerFactory.AddProvider(new XunitLoggingProvider(_output));
-
             ITransport hostTransport = new TcpTransport(serverAddress);
             IFormat hostFormat = new BinaryFormat();
-            PolyHost host = new PolyHost(loggerFactory, hostTransport, hostFormat);
+            PolyHost host = new PolyHost(hostTransport, hostFormat, _loggerFactory);
             host.AddContract<IStringContract, StringImplementor>();
 
-            Task _ = Task.Run(async () =>
+            host.Start().ContinueWith(task =>
             {
-                try
-                {
-                    await host.Start();
-                }
-                catch (Exception exception)
-                {
-                    _output.WriteLine("Starting host threw: {0}", exception);
-                }
-            });
+                _logger.LogError("Starting host threw: {0}", task.Exception);
+            },
+                TaskContinuationOptions.OnlyOnFaulted);
             return host;
         }
 
-        private async Task MakeSingleClientRequests(Uri serverAddress, int requestsCount)
+        private PolyProxy CreateClient(Uri serverAddress)
         {
             ITransport clientTransport = new TcpTransport(serverAddress);
             IFormat clientFormat = new BinaryFormat();
-            PolyProxy proxy = new PolyProxy(clientTransport, clientFormat);
+            PolyProxy proxy = new PolyProxy(clientTransport, clientFormat, _loggerFactory);
 
+            return proxy;
+        }
+
+        private async Task<TimeSpan> ConnectMakeRequestsDisconnect(PolyProxy proxy, int requestsCount)
+        {
             try
             {
                 // currently this creates the proxy and connects to the server
                 proxy.AddContract<IStringContract>();
-                await MakeRequests(proxy, requestsCount);
+
+                // warmup
+                await proxy.Get<IStringContract>().Call("request");
+
+                Stopwatch requestsWatch = Stopwatch.StartNew();
+                for (int i = 0; i < requestsCount; ++i)
+                {
+                    await proxy.Get<IStringContract>().Call("request");
+                }
+
+                requestsWatch.Stop();
+                return requestsWatch.Elapsed;
             }
             catch (Exception exception)
             {
-                _output.WriteLine("Proxy threw: {0}", exception);
+                _logger.LogError("Proxy threw: {0}", exception);
+                throw;
             }
             finally
             {
                 proxy.Dispose();
             }
-        }
-
-        private async Task MakeRequests(PolyProxy proxy, int requestsCount)
-        {
-            Stopwatch requestsWatch = Stopwatch.StartNew();
-            for (int i = 0; i < requestsCount; ++i)
-            {
-                string _ = await proxy.Get<IStringContract>().Call("request");
-            }
-
-            requestsWatch.Stop();
-            _output.WriteLine("Making {0} requests from a proxy took: {1:000000} ms.", requestsCount, requestsWatch.Elapsed.TotalMilliseconds);
         }
     }
 

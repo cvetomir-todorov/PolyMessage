@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
@@ -39,8 +38,6 @@ namespace PolyMessage.IntegrationTests
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            // TODO: use a debugging logging provider
-            Debug.WriteLine("{0} | {1} | {2}", logLevel, _category, formatter(state, exception));
             _output.WriteLine("{0} | {1} | {2}", logLevel, _category, formatter(state, exception));
         }
 

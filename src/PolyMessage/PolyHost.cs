@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using PolyMessage.Contracts;
 using PolyMessage.Endpoints;
 using PolyMessage.Formats;
@@ -32,7 +33,11 @@ namespace PolyMessage
         private readonly CancellationTokenSource _cancelTokenSource;
         private bool _isDisposed;
 
-        public PolyHost(ILoggerFactory loggerFactory, ITransport transport, IFormat format)
+        public PolyHost(ITransport transport, IFormat format)
+            : this(transport, format, new NullLoggerFactory())
+        {}
+
+        public PolyHost(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
         {
             // TODO: validate input
 
