@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyMessage", "PolyMessage\PolyMessage.csproj", "{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage", "PolyMessage\PolyMessage.csproj", "{2D73E7C5-8629-477C-BFEE-A0A1E9F3E634}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_MSBuild", "_MSBuild", "{C8026493-6344-44F5-A4DB-A513ABE9DA86}"
 	ProjectSection(SolutionItems) = preProject
@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_MSBuild", "_MSBuild", "{C8
 		MSBuild\Version.props = MSBuild\Version.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyMessage.IntegrationTests", "PolyMessage.IntegrationTests\PolyMessage.IntegrationTests.csproj", "{BA7D8234-1025-4B36-A2D4-696CD4D07769}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.IntegrationTests", "PolyMessage.IntegrationTests\PolyMessage.IntegrationTests.csproj", "{BA7D8234-1025-4B36-A2D4-696CD4D07769}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

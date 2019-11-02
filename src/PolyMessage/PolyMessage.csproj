@@ -1,7 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Condition="Exists('../MSBuild/Version.props')" Project="../MSBuild/Version.props"/>
-  <Import Condition="Exists('../MSBuild/Product.props')" Project="../MSBuild/Product.props"/>
+  <Import Condition="Exists('../MSBuild/Version.props')" Project="../MSBuild/Version.props" />
+  <Import Condition="Exists('../MSBuild/Product.props')" Project="../MSBuild/Product.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Castle.Core" Version="4.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
+  </ItemGroup>
 </Project>
