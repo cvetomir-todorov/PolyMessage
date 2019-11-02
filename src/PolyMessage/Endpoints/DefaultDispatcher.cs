@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PolyMessage.Endpoints
 {
@@ -10,12 +11,21 @@ namespace PolyMessage.Endpoints
 
     internal sealed class DefaultDispatcher : IDispatcher
     {
+        private readonly IServiceProvider _serviceProvider;
+
+        public DefaultDispatcher(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
         public Task<string> Dispatch(string message, Endpoint endpoint)
         {
-            // TODO: get this from a DI or check constructors
-            object implementor = Activator.CreateInstance(endpoint.ImplementationType);
-            Task<string> resultTask = (Task<string>) endpoint.Method.Invoke(implementor, new object[] {message});
-            return resultTask;
+            using (IServiceScope scope = _serviceProvider.CreateScope())
+            {
+                object implementor = scope.ServiceProvider.GetRequiredService(endpoint.ImplementationType);
+                Task<string> resultTask = (Task<string>) endpoint.Method.Invoke(implementor, new object[] {message});
+                return resultTask;
+            }
         }
     }
 }

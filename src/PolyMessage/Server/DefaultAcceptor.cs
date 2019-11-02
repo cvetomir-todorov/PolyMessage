@@ -11,7 +11,7 @@ namespace PolyMessage.Server
 {
     internal interface IAcceptor : IDisposable
     {
-        Task Start(ITransport transport, IFormat format, IRouter router, CancellationToken cancelToken);
+        Task Start(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken);
 
         void Stop();
     }
@@ -55,14 +55,14 @@ namespace PolyMessage.Server
             _logger.LogTrace("Stopped.");
         }
 
-        public async Task Start(ITransport transport, IFormat format, IRouter router, CancellationToken cancelToken)
+        public async Task Start(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken)
         {
             if (_isDisposed)
                 throw new InvalidOperationException("Acceptor is already stopped.");
 
             try
             {
-                await DoStart(transport, format, router, cancelToken).ConfigureAwait(false);
+                await DoStart(transport, format, router, dispatcher, cancelToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -75,12 +75,10 @@ namespace PolyMessage.Server
             }
         }
 
-        private async Task DoStart(ITransport transport, IFormat format, IRouter router, CancellationToken cancelToken)
+        private async Task DoStart(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken)
         {
             _transport = transport;
             await _transport.PrepareAccepting().ConfigureAwait(false);
-
-            IDispatcher dispatcher = new DefaultDispatcher();
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {

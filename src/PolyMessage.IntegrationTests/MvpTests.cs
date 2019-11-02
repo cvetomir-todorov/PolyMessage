@@ -15,8 +15,9 @@ namespace PolyMessage.IntegrationTests
 {
     public sealed class MvpTests
     {
-        private readonly ILogger _logger;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
         public MvpTests(ITestOutputHelper output)
         {
@@ -27,8 +28,10 @@ namespace PolyMessage.IntegrationTests
                     builder.AddDebug();
                     builder.AddProvider(new XunitLoggingProvider(output));
                 });
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            services.AddScoped<StringImplementor>();
+
+            _serviceProvider = services.BuildServiceProvider();
+            _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             _logger = _loggerFactory.CreateLogger(GetType());
         }
 
@@ -69,7 +72,7 @@ namespace PolyMessage.IntegrationTests
         {
             ITransport hostTransport = new TcpTransport(serverAddress);
             IFormat hostFormat = new BinaryFormat();
-            PolyHost host = new PolyHost(hostTransport, hostFormat, _loggerFactory);
+            PolyHost host = new PolyHost(hostTransport, hostFormat, _serviceProvider);
             host.AddContract<IStringContract, StringImplementor>();
 
             host.Start().ContinueWith(task =>

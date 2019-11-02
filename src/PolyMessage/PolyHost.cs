@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using PolyMessage.Contracts;
 using PolyMessage.Endpoints;
 using PolyMessage.Formats;
@@ -26,6 +26,8 @@ namespace PolyMessage
         private readonly List<Endpoint> _endpoints;
         private readonly IContractInspector _contractInspector;
         private IAcceptor _acceptor;
+        // messaging
+        private readonly IServiceProvider _serviceProvider;
         // logging
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
@@ -33,11 +35,7 @@ namespace PolyMessage
         private readonly CancellationTokenSource _cancelTokenSource;
         private bool _isDisposed;
 
-        public PolyHost(ITransport transport, IFormat format)
-            : this(transport, format, new NullLoggerFactory())
-        {}
-
-        public PolyHost(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
+        public PolyHost(ITransport transport, IFormat format, IServiceProvider serviceProvider)
         {
             // TODO: validate input
 
@@ -47,9 +45,11 @@ namespace PolyMessage
             // endpoints/contracts
             _endpoints = new List<Endpoint>();
             _contractInspector = new DefaultContractInspector();
+            // messaging
+            _serviceProvider = serviceProvider;
             // logging
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger(GetType());
+            _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+            _logger = _loggerFactory.CreateLogger(GetType());
             // stop/dispose
             _cancelTokenSource = new CancellationTokenSource();
         }
@@ -92,8 +92,9 @@ namespace PolyMessage
 
             _acceptor = new DefaultAcceptor(_loggerFactory);
             IRouter router = new DefaultRouter(_endpoints);
+            IDispatcher dispatcher = new DefaultDispatcher(_serviceProvider);
 
-            Task acceptClientsTask = Task.Run(async () => await _acceptor.Start(_transport, _format, router, _cancelTokenSource.Token));
+            Task acceptClientsTask = Task.Run(async () => await _acceptor.Start(_transport, _format, router, dispatcher, _cancelTokenSource.Token));
             _logger.LogInformation("Started host with {0} endpoint(s) using {1} transport and {2} format.", _endpoints.Count, _transport.DisplayName, _format.DisplayName);
             return acceptClientsTask;
         }
