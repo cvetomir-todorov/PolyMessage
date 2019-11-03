@@ -22,7 +22,7 @@ namespace PolyMessage.IntegrationTests.RequestResponse
         private readonly ILogger _logger;
         private readonly Uri _serverAddress;
         private readonly PolyHost _host;
-        private readonly List<PolyProxy> _clients;
+        private readonly List<PolyClient> _clients;
 
         public Tests(ITestOutputHelper output)
         {
@@ -31,12 +31,12 @@ namespace PolyMessage.IntegrationTests.RequestResponse
 
             _serverAddress = GetServerAddress();
             _host = CreateHost(_serverAddress, _serviceProvider);
-            _clients = new List<PolyProxy>();
+            _clients = new List<PolyClient>();
         }
 
         public void Dispose()
         {
-            foreach (PolyProxy client in _clients)
+            foreach (PolyClient client in _clients)
             {
                 client.Dispose();
             }
@@ -76,11 +76,11 @@ namespace PolyMessage.IntegrationTests.RequestResponse
             return host;
         }
 
-        private static PolyProxy CreateClient(Uri serverAddress, ILoggerFactory loggerFactory)
+        private static PolyClient CreateClient(Uri serverAddress, ILoggerFactory loggerFactory)
         {
             ITransport clientTransport = new TcpTransport(serverAddress);
             IFormat clientFormat = new BinaryFormat();
-            PolyProxy client = new PolyProxy(clientTransport, clientFormat, loggerFactory);
+            PolyClient client = new PolyClient(clientTransport, clientFormat, loggerFactory);
             return client;
         }
 
@@ -101,7 +101,7 @@ namespace PolyMessage.IntegrationTests.RequestResponse
             // arrange
             for (int i = 0; i < clientsCount; ++i)
             {
-                PolyProxy client = CreateClient(_serverAddress, _serviceProvider.GetRequiredService<ILoggerFactory>());
+                PolyClient client = CreateClient(_serverAddress, _serviceProvider.GetRequiredService<ILoggerFactory>());
                 _clients.Add(client);
             }
 
@@ -110,12 +110,12 @@ namespace PolyMessage.IntegrationTests.RequestResponse
             await StartHost();
 
             List<Task<double>> clientTasks = new List<Task<double>>();
-            foreach (PolyProxy client in _clients)
+            foreach (PolyClient client in _clients)
             {
                 Task<double> clientTask = Task.Run(async () =>
                 {
                     TimeSpan duration = await MakeRequests(client, messagesCount);
-                    _logger.LogInformation("Making {0} requests from a proxy took: {1:0} ms.", messagesCount, duration.TotalMilliseconds);
+                    _logger.LogInformation("Making {0} requests from a client took: {1:0} ms.", messagesCount, duration.TotalMilliseconds);
                     return duration.TotalMilliseconds;
                 });
                 clientTasks.Add(clientTask);
@@ -139,9 +139,9 @@ namespace PolyMessage.IntegrationTests.RequestResponse
             }
         }
 
-        private async Task<TimeSpan> MakeRequests(PolyProxy client, int messagesCount)
+        private async Task<TimeSpan> MakeRequests(PolyClient client, int messagesCount)
         {
-            // currently this creates the proxy and connects to the server
+            // currently this connects to the server
             client.AddContract<IStringContract>();
             IStringContract proxy = client.Get<IStringContract>();
 

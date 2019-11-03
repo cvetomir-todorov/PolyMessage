@@ -9,13 +9,13 @@ namespace PolyMessage.Proxies
     {
         private readonly ILogger _logger;
         private readonly IChannel _channel;
-        private readonly string _proxyID;
+        private readonly string _clientID;
         private readonly CancellationToken _cancelToken;
 
-        public EndpointInterceptor(ILogger logger, string proxyID, IChannel channel, CancellationToken cancelToken)
+        public EndpointInterceptor(ILogger logger, string clientID, IChannel channel, CancellationToken cancelToken)
         {
             _logger = logger;
-            _proxyID = proxyID;
+            _clientID = clientID;
             _channel = channel;
             _cancelToken = cancelToken;
         }
@@ -28,11 +28,11 @@ namespace PolyMessage.Proxies
 
         private async Task<string> CallEndpoint(string requestMessage)
         {
-            _logger.LogTrace("[{0}] Sending request [{1}]...", _proxyID, requestMessage);
+            _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
             await _channel.Send(requestMessage, _cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _proxyID, requestMessage);
+            _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage);
             string responseMessage = await _channel.Receive(_cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Received response [{1}].", _proxyID, responseMessage);
+            _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
 
             return responseMessage;
         }

@@ -8,7 +8,7 @@ using PolyMessage.Proxies;
 
 namespace PolyMessage
 {
-    public class PolyProxy : IDisposable
+    public class PolyClient : IDisposable
     {
         // transport/format
         private readonly ITransport _transport;
@@ -27,11 +27,11 @@ namespace PolyMessage
         private readonly CancellationTokenSource _cancelTokenSource;
         private bool _isDisposed;
 
-        public PolyProxy(ITransport transport, IFormat format)
+        public PolyClient(ITransport transport, IFormat format)
             : this(transport, format, new NullLoggerFactory())
         {}
 
-        public PolyProxy(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
+        public PolyClient(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
         {
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
@@ -48,7 +48,7 @@ namespace PolyMessage
             _proxyGenerator = new ProxyGenerator();
             // logging
             _logger = loggerFactory.CreateLogger(GetType());
-            _id = "Proxy" + Interlocked.Increment(ref _generation);
+            _id = "Client" + Interlocked.Increment(ref _generation);
             // stop/dispose
             _cancelTokenSource = new CancellationTokenSource();
         }
@@ -67,7 +67,7 @@ namespace PolyMessage
         private void EnsureNotDisposed()
         {
             if (_isDisposed)
-                throw new InvalidOperationException("Proxy is already disposed.");
+                throw new InvalidOperationException("Client is already disposed.");
         }
 
         public void AddContract<TContract>()
@@ -100,9 +100,7 @@ namespace PolyMessage
         {
             EnsureChannelCreated();
             IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, _channel, _cancelTokenSource.Token);
-
-            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(
-                contractType, new Type[0], endpointInterceptor);
+            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], endpointInterceptor);
             return proxy;
         }
 
