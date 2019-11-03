@@ -18,6 +18,10 @@ namespace PolyMessage
     {
         string DisplayName { get; }
 
+        TimeSpan ReceiveTimeout { get; set; }
+
+        TimeSpan SendTimeout { get; set; }
+
         IListener CreateListener();
 
         IChannel CreateClient(IFormat format);

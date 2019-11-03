@@ -42,7 +42,6 @@ namespace PolyMessage.Tcp
         {
             EnsureNotDisposed();
 
-            // TODO: use timeout to avoid hanging when server crashes
             _format.WriteToStream(message, _tcpStream, cancelToken);
             return Task.CompletedTask;
         }
@@ -51,7 +50,6 @@ namespace PolyMessage.Tcp
         {
             EnsureNotDisposed();
 
-            // TODO: use timeout to avoid hanging when server crashes
             string message = await _format.ReadFromStream(_tcpStream, cancelToken).ConfigureAwait(false);
             return message;
         }
