@@ -26,7 +26,7 @@ namespace PolyMessage.IntegrationTests
                     builder.AddDebug();
                     builder.AddProvider(new XunitLoggingProvider(output));
                 });
-            services.AddScoped<StringImplementor>();
+            services.AddScoped<IStringContract, StringImplementor>();
 
             _serviceProvider = services.BuildServiceProvider();
             _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();

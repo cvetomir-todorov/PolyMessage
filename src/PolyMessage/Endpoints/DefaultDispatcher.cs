@@ -22,7 +22,7 @@ namespace PolyMessage.Endpoints
         {
             using (IServiceScope scope = _serviceProvider.CreateScope())
             {
-                object implementor = scope.ServiceProvider.GetRequiredService(endpoint.ImplementationType);
+                object implementor = scope.ServiceProvider.GetRequiredService(endpoint.ContractType);
                 Task<string> resultTask = (Task<string>) endpoint.Method.Invoke(implementor, new object[] {message});
                 return resultTask;
             }

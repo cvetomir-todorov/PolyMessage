@@ -23,6 +23,7 @@ namespace PolyMessage.Contracts
                 Endpoint endpoint = new Endpoint();
 
                 endpoint.Path = $"{contractType.FullName}.{method.Name}";
+                endpoint.ContractType = contractType;
                 endpoint.ImplementationType = implementationType;
                 endpoint.Method = method;
 
