@@ -87,7 +87,7 @@ namespace PolyMessage
             _endpoints.AddRange(endpoints);
         }
 
-        public Task Start()
+        public void Start()
         {
             EnsureNotDisposed();
             if (_endpoints.Count <= 0)
@@ -97,9 +97,8 @@ namespace PolyMessage
             IRouter router = new DefaultRouter(_endpoints);
             IDispatcher dispatcher = new DefaultDispatcher(_serviceProvider);
 
-            Task acceptClientsTask = Task.Run(async () => await _acceptor.Start(_transport, _format, router, dispatcher, _cancelTokenSource.Token));
+            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, router, dispatcher, _cancelTokenSource.Token));
             _logger.LogInformation("Started host with {0} endpoint(s) using {1} transport and {2} format.", _endpoints.Count, _transport.DisplayName, _format.DisplayName);
-            return acceptClientsTask;
         }
 
         public void Stop()

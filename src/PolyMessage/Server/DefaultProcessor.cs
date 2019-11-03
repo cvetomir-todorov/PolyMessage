@@ -83,6 +83,7 @@ namespace PolyMessage.Server
                 string requestMessage = await _channel.Receive(cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
+                // TODO: try/catch here to avoid client hanging when infinite timeout is set
                 Endpoint endpoint = router.ChooseEndpoint(requestMessage);
                 string responseMessage = await dispatcher.Dispatch(requestMessage, endpoint).ConfigureAwait(false);
 
