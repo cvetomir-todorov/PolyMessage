@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,16 +16,16 @@ namespace PolyMessage.Binary
 
         public string DisplayName => "Binary";
 
-        public Task WriteToStream(string message, Stream stream, CancellationToken cancelToken)
+        public Task Write(object obj, IChannel channel, CancellationToken cancelToken)
         {
-            _formatter.Serialize(stream, message);
+            _formatter.Serialize(channel.Stream, obj);
             return Task.CompletedTask;
         }
 
-        public Task<string> ReadFromStream(Stream stream, CancellationToken cancelToken)
+        public Task<object> Read(Type objType, IChannel channel, CancellationToken cancelToken)
         {
-            string message = (string) _formatter.Deserialize(stream);
-            return Task.FromResult(message);
+            object obj = _formatter.Deserialize(channel.Stream);
+            return Task.FromResult(obj);
         }
     }
 }

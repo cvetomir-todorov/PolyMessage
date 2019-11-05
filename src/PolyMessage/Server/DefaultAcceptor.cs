@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Endpoints;
 
 namespace PolyMessage.Server
 {
     internal interface IAcceptor : IDisposable
     {
-        Task Start(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken);
+        Task Start(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken);
 
         void Stop();
     }
@@ -55,14 +55,19 @@ namespace PolyMessage.Server
             _logger.LogTrace("Stopped.");
         }
 
-        public async Task Start(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken)
+        public async Task Start(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             if (_isDisposed)
                 throw new InvalidOperationException("Acceptor is already stopped.");
 
             try
             {
-                await DoStart(transport, format, router, dispatcher, cancelToken).ConfigureAwait(false);
+                await DoStart(transport, format, serverComponents, cancelToken).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException objectDisposedException) when (objectDisposedException.ObjectName == typeof(Socket).FullName)
+            {
+                // TODO: catch this exception in the transport logic and throw a recognizable one
+                _logger.LogTrace("Disposed the listener for {0} transport.", transport.DisplayName);
             }
             catch (Exception exception)
             {
@@ -75,21 +80,21 @@ namespace PolyMessage.Server
             }
         }
 
-        private async Task DoStart(ITransport transport, IFormat format, IRouter router, IDispatcher dispatcher, CancellationToken cancelToken)
+        private async Task DoStart(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             _listener = transport.CreateListener();
             await _listener.PrepareAccepting().ConfigureAwait(false);
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
-                IChannel channel = await _listener.AcceptClient(format).ConfigureAwait(false);
+                IChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
                 _logger.LogTrace("Accepted client.");
 
-                IProcessor processor = new DefaultProcessor(_loggerFactory);
+                IProcessor processor = new DefaultProcessor(_loggerFactory, format, channel);
                 // TODO: add stopped event so that we remove the processor when it has finished
                 _processors.Add(processor);
 
-                Task _ = Task.Run(async () => await processor.Start(channel, router, dispatcher, cancelToken), cancelToken);
+                Task _ = Task.Run(async () => await processor.Start(serverComponents, cancelToken), cancelToken);
             }
         }
 

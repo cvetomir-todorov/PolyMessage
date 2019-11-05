@@ -4,6 +4,8 @@ using System.Threading;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using PolyMessage.Endpoints;
+using PolyMessage.Messaging;
 using PolyMessage.Proxies;
 
 namespace PolyMessage
@@ -13,19 +15,26 @@ namespace PolyMessage
         // transport/format
         private readonly ITransport _transport;
         private readonly IFormat _format;
-        // proxies
-        private readonly Dictionary<Type, object> _proxies;
-        private readonly IProxyGenerator _proxyGenerator;
+        // contracts/operations
+        private readonly List<Type> _contracts;
+        private readonly List<Endpoint> _endpoints;
+        private readonly IEndpointBuilder _endpointBuilder;
+        // messaging
+        private readonly object _setupMessagingLock;
+        private IMessenger _messenger;
         private IChannel _channel;
-        private static readonly object _createChannelLock = new object();
+        // proxies
+        private readonly IProxyGenerator _proxyGenerator;
+        private readonly object _createProxyLock;
+        private readonly Dictionary<Type, object> _proxies;
         // logging
         private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
         // identity
         private static int _generation;
         private readonly string _id;
         // stop/dispose
         private readonly CancellationTokenSource _cancelTokenSource;
-        private bool _isDisposed;
 
         public PolyClient(ITransport transport, IFormat format)
             : this(transport, format, new NullLoggerFactory())
@@ -43,11 +52,20 @@ namespace PolyMessage
             // transport/format
             _transport = transport;
             _format = format;
+            // contracts/operations
+            _contracts = new List<Type>();
+            _endpoints = new List<Endpoint>();
+            _endpointBuilder = new DefaultEndpointBuilder();
+            // messaging
+            _setupMessagingLock = new object();
             // proxies
-            _proxies = new Dictionary<Type, object>();
             _proxyGenerator = new ProxyGenerator();
+            _createProxyLock = new object();
+            _proxies = new Dictionary<Type, object>();
             // logging
             _logger = loggerFactory.CreateLogger(GetType());
+            _loggerFactory = loggerFactory;
+            // identity
             _id = "Client" + Interlocked.Increment(ref _generation);
             // stop/dispose
             _cancelTokenSource = new CancellationTokenSource();
@@ -55,67 +73,82 @@ namespace PolyMessage
 
         public void Dispose()
         {
-            if (_isDisposed)
+            if (State == CommunicationState.Closed)
                 return;
 
             _cancelTokenSource.Cancel();
             _cancelTokenSource.Dispose();
+            _channel?.Dispose();
+            _logger.LogInformation("[{0}] Stopped", _id);
 
-            _isDisposed = true;
+            State = CommunicationState.Closed;
         }
 
-        private void EnsureNotDisposed()
+        public CommunicationState State { get; private set; }
+
+        private void EnsureState(CommunicationState expectedState, string action)
         {
-            if (_isDisposed)
-                throw new InvalidOperationException("Client is already disposed.");
+            if (State != expectedState)
+                throw new InvalidOperationException($"[{_id}] should be in {expectedState} state in order to {action}.");
         }
 
-        public void AddContract<TContract>()
-            where TContract : class
+        public void AddContract<TContract>() where TContract : class
         {
-            EnsureNotDisposed();
+            EnsureState(CommunicationState.Created, "add contract");
 
             Type contractType = typeof(TContract);
-            object proxy = CreateProxy(contractType);
-            _proxies.Add(contractType, proxy);
+            IEnumerable<Endpoint> endpoints = _endpointBuilder.InspectContract(contractType);
+            _endpoints.AddRange(endpoints);
+            _contracts.Add(contractType);
         }
 
-        public TContract Get<TContract>()
-            where TContract : class
+        public void Connect()
         {
-            EnsureNotDisposed();
+            EnsureState(CommunicationState.Created, "connect to the server");
 
-            if (_proxies.TryGetValue(typeof(TContract), out object proxy))
+            if (_messenger == null)
+            lock (_setupMessagingLock)
+            if (_messenger == null)
             {
-                TContract contract = (TContract) proxy;
-                return contract;
+                _channel = _transport.CreateClient();
+                _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
+                IMessageMetadata messageMetadata = new DefaultMessageMetadata();
+                messageMetadata.Build(_endpoints);
+                _messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
+                State = CommunicationState.Opened;
             }
-            else
+        }
+
+        public TContract Get<TContract>() where TContract : class
+        {
+            EnsureState(CommunicationState.Opened, "get a proxy for sending messages");
+
+            Type contractType = typeof(TContract);
+            if (!_contracts.Contains(contractType))
+                throw new InvalidOperationException($"{contractType.Name} should be added before connecting.");
+
+            object proxy;
+            if (!_proxies.TryGetValue(contractType, out proxy))
             {
-                throw new InvalidOperationException($"Contract {typeof(TContract).FullName} needs to be added first.");
+                lock (_createProxyLock)
+                {
+                    if (!_proxies.TryGetValue(contractType, out proxy))
+                    {
+                        proxy = CreateProxy(contractType);
+                        _proxies.Add(contractType, proxy);
+                    }
+                }
             }
+
+            TContract contract = (TContract) proxy;
+            return contract;
         }
 
         private object CreateProxy(Type contractType)
         {
-            EnsureChannelCreated();
-            IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, _channel, _cancelTokenSource.Token);
+            IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token);
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], endpointInterceptor);
             return proxy;
-        }
-
-        private void EnsureChannelCreated()
-        {
-            if (_channel == null)
-            {
-                lock (_createChannelLock)
-                {
-                    if (_channel == null)
-                    {
-                        _channel = _transport.CreateClient(_format);
-                    }
-                }
-            }
         }
     }
 }

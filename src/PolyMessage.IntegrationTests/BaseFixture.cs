@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Binary;
-using PolyMessage.IntegrationTests.RequestResponse;
 using PolyMessage.Tcp;
 using Xunit.Abstractions;
 
@@ -21,9 +20,9 @@ namespace PolyMessage.IntegrationTests
         protected PolyHost Host { get; }
         protected List<PolyClient> Clients { get; }
 
-        protected BaseFixture(ITestOutputHelper output)
+        protected BaseFixture(ITestOutputHelper output, Action<IServiceCollection> addServices)
         {
-            ServiceProvider = CreateServiceProvider(output);
+            ServiceProvider = CreateServiceProvider(output, addServices);
             Logger = ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(GetType());
 
             ServerAddress = GetServerAddress();
@@ -44,11 +43,11 @@ namespace PolyMessage.IntegrationTests
                 {
                     client.Dispose();
                 }
-                Host.Dispose();
+                Host.Stop();
             }
         }
 
-        private static IServiceProvider CreateServiceProvider(ITestOutputHelper output)
+        private static IServiceProvider CreateServiceProvider(ITestOutputHelper output, Action<IServiceCollection> addServices)
         {
             IServiceCollection services = new ServiceCollection()
                 .AddLogging(loggingBuilder =>
@@ -57,10 +56,8 @@ namespace PolyMessage.IntegrationTests
                     loggingBuilder.AddDebug();
                     loggingBuilder.AddProvider(new XunitLoggingProvider(output));
                 });
-            services.AddScoped<IStringContract, StringImplementor>();
-
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            return serviceProvider;
+            addServices(services);
+            return services.BuildServiceProvider();
         }
 
         private static Uri GetServerAddress()

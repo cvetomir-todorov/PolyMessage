@@ -9,14 +9,16 @@ namespace PolyMessage
     {
         string DisplayName { get; }
 
-        Task WriteToStream(string message, Stream stream, CancellationToken cancelToken);
+        Task Write(object obj, IChannel channel, CancellationToken cancelToken);
 
-        Task<string> ReadFromStream(Stream stream, CancellationToken cancelToken);
+        Task<object> Read(Type objType, IChannel channel, CancellationToken cancelToken);
     }
 
     public interface ITransport
     {
         string DisplayName { get; }
+
+        Uri Address { get; }
 
         TimeSpan ReceiveTimeout { get; set; }
 
@@ -24,22 +26,30 @@ namespace PolyMessage
 
         IListener CreateListener();
 
-        IChannel CreateClient(IFormat format);
+        IChannel CreateClient();
     }
 
     public interface IListener : IDisposable
     {
+        string DisplayName { get; }
+
         Task PrepareAccepting();
 
-        Task<IChannel> AcceptClient(IFormat format);
+        Task<IChannel> AcceptClient();
 
         void StopAccepting();
     }
 
     public interface IChannel : IDisposable
     {
-        Task Send(string message, CancellationToken cancelToken);
+        string DisplayName { get; }
 
-        Task<string> Receive(CancellationToken cancelToken);
+        // FEAT: hide this and expose just send/receive byte[]
+        Stream Stream { get; }
+    }
+
+    public enum CommunicationState
+    {
+        Created, Opened, Closed
     }
 }

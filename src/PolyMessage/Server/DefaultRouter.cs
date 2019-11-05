@@ -6,24 +6,40 @@ namespace PolyMessage.Server
 {
     internal interface IRouter
     {
-        Endpoint ChooseEndpoint(string message);
+        void BuildRoutingTable(IEnumerable<Endpoint> endpoints);
+
+        Endpoint ChooseEndpoint(object message, IMessageMetadata messageMetadata);
     }
 
     internal sealed class DefaultRouter : IRouter
     {
-        private readonly List<Endpoint> _endpoints;
+        private readonly Dictionary<int, Endpoint> _routingTable;
 
-        public DefaultRouter(IReadOnlyCollection<Endpoint> endpoints)
+        public DefaultRouter()
         {
-            if (endpoints.Count <= 0)
-                throw new ArgumentException("There should be at least one endpoint.", nameof(endpoints));
-
-            _endpoints = new List<Endpoint>(endpoints);
+            _routingTable = new Dictionary<int, Endpoint>();
         }
 
-        public Endpoint ChooseEndpoint(string message)
+        public void BuildRoutingTable(IEnumerable<Endpoint> endpoints)
         {
-            return _endpoints[0];
+            if (endpoints == null)
+                throw new ArgumentNullException(nameof(endpoints));
+            if (_routingTable.Count > 0)
+                throw new InvalidOperationException("Routing table is already built.");
+
+            foreach (Endpoint endpoint in endpoints)
+            {
+                _routingTable.Add(endpoint.RequestID, endpoint);
+            }
+
+            if (_routingTable.Count <= 0)
+                throw new ArgumentException("No endpoints were provided.", nameof(endpoints));
+        }
+
+        public Endpoint ChooseEndpoint(object message, IMessageMetadata messageMetadata)
+        {
+            int messageID = messageMetadata.GetMessageID(message.GetType());
+            return _routingTable[messageID];
         }
     }
 }

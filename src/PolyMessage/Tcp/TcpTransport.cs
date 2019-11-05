@@ -31,6 +31,8 @@ namespace PolyMessage.Tcp
 
         public string DisplayName => "TCP";
 
+        public Uri Address => _address;
+
         public TimeSpan ReceiveTimeout
         {
             get { return _receiveTimeout;}
@@ -55,14 +57,14 @@ namespace PolyMessage.Tcp
 
         public IListener CreateListener()
         {
-            return new TcpListener(_address);
+            return new TcpListener(DisplayName, _address);
         }
 
-        public IChannel CreateClient(IFormat format)
+        public IChannel CreateClient()
         {
             // TODO: initialize TCP client without connecting
             TcpClient tcpClient = new TcpClient(_address.Host, _address.Port);
-            return new TcpChannel(tcpClient, format);
+            return new TcpChannel(DisplayName, tcpClient);
         }
     }
 }

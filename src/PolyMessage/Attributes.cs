@@ -3,10 +3,16 @@
 namespace PolyMessage
 {
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
-    public class PolyContract : Attribute
+    public class PolyContractAttribute : Attribute
     {}
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class PolyRequestResponseEndpoint : Attribute
+    public class PolyRequestResponseAttribute : Attribute
     {}
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class PolyMessageAttribute : Attribute
+    {
+        public int ID { get; set; }
+    }
 }

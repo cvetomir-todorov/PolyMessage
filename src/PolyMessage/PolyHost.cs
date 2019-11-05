@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Contracts;
 using PolyMessage.Endpoints;
+using PolyMessage.Messaging;
 using PolyMessage.Server;
 
 namespace PolyMessage
@@ -22,7 +22,7 @@ namespace PolyMessage
         private readonly IFormat _format;
         // endpoints/contracts
         private readonly List<Endpoint> _endpoints;
-        private readonly IContractInspector _contractInspector;
+        private readonly IEndpointBuilder _endpointBuilder;
         private IAcceptor _acceptor;
         // messaging
         private readonly IServiceProvider _serviceProvider;
@@ -47,7 +47,7 @@ namespace PolyMessage
             _format = format;
             // endpoints/contracts
             _endpoints = new List<Endpoint>();
-            _contractInspector = new DefaultContractInspector();
+            _endpointBuilder = new DefaultEndpointBuilder();
             // messaging
             _serviceProvider = serviceProvider;
             // logging
@@ -78,12 +78,11 @@ namespace PolyMessage
                 throw new InvalidOperationException("Host is already stopped.");
         }
 
-        public void AddContract<TContract, TImplementation>()
-            where TImplementation : class, TContract
+        public void AddContract<TContract>() where TContract : class
         {
             EnsureNotDisposed();
 
-            IEnumerable<Endpoint> endpoints = _contractInspector.InspectContract(typeof(TContract), typeof(TImplementation));
+            IEnumerable<Endpoint> endpoints = _endpointBuilder.InspectContract(typeof(TContract));
             _endpoints.AddRange(endpoints);
         }
 
@@ -94,11 +93,20 @@ namespace PolyMessage
                 throw new InvalidOperationException("No contracts added or none of them have endpoints.");
 
             _acceptor = new DefaultAcceptor(_loggerFactory);
-            IRouter router = new DefaultRouter(_endpoints);
+            IMessageMetadata messageMetadata = new DefaultMessageMetadata();
+            IRouter router = new DefaultRouter();
+            IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new DefaultDispatcher(_serviceProvider);
 
-            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, router, dispatcher, _cancelTokenSource.Token));
-            _logger.LogInformation("Started host with {0} endpoint(s) using {1} transport and {2} format.", _endpoints.Count, _transport.DisplayName, _format.DisplayName);
+            messageMetadata.Build(_endpoints);
+            router.BuildRoutingTable(_endpoints);
+
+            ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
+
+            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _cancelTokenSource.Token));
+            _logger.LogInformation(
+                "Started host using {0} transport listening at {1} and {2} format with {3} endpoint(s).",
+                _transport.DisplayName, _transport.Address, _format.DisplayName, _endpoints.Count);
         }
 
         public void Stop()
