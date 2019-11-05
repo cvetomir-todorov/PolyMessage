@@ -8,7 +8,7 @@ using PolyMessage.Messaging;
 
 namespace PolyMessage.Proxies
 {
-    internal sealed class EndpointInterceptor : IInterceptor
+    internal sealed class OperationInterceptor : IInterceptor
     {
         private readonly ILogger _logger;
         private readonly string _clientID;
@@ -18,7 +18,7 @@ namespace PolyMessage.Proxies
         private readonly CancellationToken _cancelToken;
         private readonly MethodInfo _castMethod;
 
-        public EndpointInterceptor(
+        public OperationInterceptor(
             ILogger logger,
             string clientID,
             IMessenger messenger,
@@ -38,7 +38,7 @@ namespace PolyMessage.Proxies
         public void Intercept(IInvocation invocation)
         {
             object requestMessage = invocation.Arguments[0];
-            Task<object> responseMessage = CallEndpoint(requestMessage);
+            Task<object> responseMessage = CallOperation(requestMessage);
 
             // TODO: reuse this casting (and the same in the dispatcher) and make it faster
             // get the response type inside of the task: when returning Task<T> we want to get T
@@ -50,7 +50,7 @@ namespace PolyMessage.Proxies
             invocation.ReturnValue = taskOfResponseType;
         }
 
-        private async Task<object> CallEndpoint(object requestMessage)
+        private async Task<object> CallOperation(object requestMessage)
         {
             _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
             await _messenger.Send(requestMessage, _format, _channel, _cancelToken).ConfigureAwait(false);

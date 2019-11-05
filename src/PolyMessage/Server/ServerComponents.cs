@@ -1,5 +1,5 @@
-﻿using PolyMessage.Endpoints;
-using PolyMessage.Messaging;
+﻿using PolyMessage.Messaging;
+using PolyMessage.Metadata;
 
 namespace PolyMessage.Server
 {

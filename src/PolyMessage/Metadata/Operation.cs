@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Reflection;
 
-namespace PolyMessage.Endpoints
+namespace PolyMessage.Metadata
 {
-    internal sealed class Endpoint
+    internal sealed class Operation
     {
         public int RequestID { get; set; }
 

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Endpoints;
+using PolyMessage.Metadata;
 
 namespace PolyMessage.Server
 {
@@ -13,7 +13,7 @@ namespace PolyMessage.Server
         void Stop();
     }
 
-    internal sealed class DefaultProcessor : IProcessor
+    internal sealed class Processor : IProcessor
     {
         private readonly ILogger _logger;
         private readonly IFormat _format;
@@ -26,7 +26,7 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public DefaultProcessor(ILoggerFactory loggerFactory, IFormat format, IChannel channel)
+        public Processor(ILoggerFactory loggerFactory, IFormat format, IChannel channel)
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _format = format;
@@ -86,8 +86,8 @@ namespace PolyMessage.Server
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
                 // TODO: try/catch here to avoid client hanging when infinite timeout is set
-                Endpoint endpoint = serverComponents.Router.ChooseEndpoint(requestMessage, serverComponents.MessageMetadata);
-                object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, endpoint).ConfigureAwait(false);
+                Operation operation = serverComponents.Router.ChooseOperation(requestMessage, serverComponents.MessageMetadata);
+                object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, operation).ConfigureAwait(false);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
                 await serverComponents.Messenger.Send(responseMessage, _format, _channel, cancelToken).ConfigureAwait(false);

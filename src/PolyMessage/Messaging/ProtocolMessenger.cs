@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Endpoints;
+using PolyMessage.Metadata;
 
 namespace PolyMessage.Messaging
 {
@@ -51,6 +51,12 @@ namespace PolyMessage.Messaging
             // FEAT: validate actual type etc.
 
             return message;
+        }
+
+        [Serializable]
+        private sealed class PolyHeader
+        {
+            public int MessageID { get; set; }
         }
     }
 }

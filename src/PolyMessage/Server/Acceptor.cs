@@ -14,7 +14,7 @@ namespace PolyMessage.Server
         void Stop();
     }
 
-    internal sealed class DefaultAcceptor : IAcceptor
+    internal sealed class Acceptor : IAcceptor
     {
         private IListener _listener;
         private readonly HashSet<IProcessor> _processors;
@@ -26,7 +26,7 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public DefaultAcceptor(ILoggerFactory loggerFactory)
+        public Acceptor(ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
@@ -90,7 +90,7 @@ namespace PolyMessage.Server
                 IChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
                 _logger.LogTrace("Accepted client.");
 
-                IProcessor processor = new DefaultProcessor(_loggerFactory, format, channel);
+                IProcessor processor = new Processor(_loggerFactory, format, channel);
                 // TODO: add stopped event so that we remove the processor when it has finished
                 _processors.Add(processor);
 

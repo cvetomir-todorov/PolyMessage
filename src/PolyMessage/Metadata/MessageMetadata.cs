@@ -1,43 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PolyMessage.Endpoints
+namespace PolyMessage.Metadata
 {
     internal interface IMessageMetadata
     {
-        void Build(IEnumerable<Endpoint> endpoints);
+        void Build(IEnumerable<Operation> operations);
 
         Type GetMessageType(int messageID);
 
         int GetMessageID(Type messageType);
     }
 
-    internal class DefaultMessageMetadata : IMessageMetadata
+    internal class MessageMetadata : IMessageMetadata
     {
         private readonly Dictionary<int, Type> _idTypeMap;
         private readonly Dictionary<Type, int> _typeIDMap;
 
-        public DefaultMessageMetadata()
+        public MessageMetadata()
         {
             _idTypeMap = new Dictionary<int, Type>();
             _typeIDMap = new Dictionary<Type, int>();
         }
 
-        public void Build(IEnumerable<Endpoint> endpoints)
+        public void Build(IEnumerable<Operation> operations)
         {
-            if (endpoints == null)
-                throw new ArgumentNullException(nameof(endpoints));
+            if (operations == null)
+                throw new ArgumentNullException(nameof(operations));
             if (_idTypeMap.Count > 0 || _typeIDMap.Count > 0)
                 throw new InvalidOperationException("Metadata is already built.");
 
-            foreach (Endpoint endpoint in endpoints)
+            foreach (Operation operation in operations)
             {
-                AddMetadata(endpoint.RequestID, endpoint.RequestType);
-                AddMetadata(endpoint.ResponseID, endpoint.ResponseType);
+                AddMetadata(operation.RequestID, operation.RequestType);
+                AddMetadata(operation.ResponseID, operation.ResponseType);
             }
 
             if (_idTypeMap.Count <= 0 || _typeIDMap.Count <= 0)
-                throw new ArgumentException("No endpoints were provided.", nameof(endpoints));
+                throw new ArgumentException("No operations were provided.", nameof(operations));
         }
 
         private void AddMetadata(int messageID, Type messageType)
@@ -49,7 +49,7 @@ namespace PolyMessage.Endpoints
         private void EnsureBuilt()
         {
             if (_idTypeMap.Count <= 0 || _typeIDMap.Count <= 0)
-                throw new InvalidOperationException("");
+                throw new InvalidOperationException("Metadata has not been built.");
         }
 
         public Type GetMessageType(int messageID)

@@ -4,8 +4,8 @@ using System.Threading;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using PolyMessage.Endpoints;
 using PolyMessage.Messaging;
+using PolyMessage.Metadata;
 using PolyMessage.Proxies;
 
 namespace PolyMessage
@@ -17,11 +17,11 @@ namespace PolyMessage
         private readonly IFormat _format;
         // contracts/operations
         private readonly List<Type> _contracts;
-        private readonly List<Endpoint> _endpoints;
-        private readonly IEndpointBuilder _endpointBuilder;
+        private readonly List<Operation> _operations;
+        private readonly IContractInspector _contractInspector;
         // messaging
         private readonly object _setupMessagingLock;
-        private IMessenger _messenger;
+        private volatile IMessenger _messenger;
         private IChannel _channel;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
@@ -54,8 +54,8 @@ namespace PolyMessage
             _format = format;
             // contracts/operations
             _contracts = new List<Type>();
-            _endpoints = new List<Endpoint>();
-            _endpointBuilder = new DefaultEndpointBuilder();
+            _operations = new List<Operation>();
+            _contractInspector = new ContractInspector();
             // messaging
             _setupMessagingLock = new object();
             // proxies
@@ -97,8 +97,8 @@ namespace PolyMessage
             EnsureState(CommunicationState.Created, "add contract");
 
             Type contractType = typeof(TContract);
-            IEnumerable<Endpoint> endpoints = _endpointBuilder.InspectContract(contractType);
-            _endpoints.AddRange(endpoints);
+            IEnumerable<Operation> operations = _contractInspector.InspectContract(contractType);
+            _operations.AddRange(operations);
             _contracts.Add(contractType);
         }
 
@@ -107,16 +107,16 @@ namespace PolyMessage
             EnsureState(CommunicationState.Created, "connect to the server");
 
             if (_messenger == null)
-            lock (_setupMessagingLock)
-            if (_messenger == null)
-            {
-                _channel = _transport.CreateClient();
-                _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
-                IMessageMetadata messageMetadata = new DefaultMessageMetadata();
-                messageMetadata.Build(_endpoints);
-                _messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
-                State = CommunicationState.Opened;
-            }
+                lock (_setupMessagingLock)
+                    if (_messenger == null)
+                    {
+                        _channel = _transport.CreateClient();
+                        _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
+                        IMessageMetadata messageMetadata = new MessageMetadata();
+                        messageMetadata.Build(_operations);
+                        _messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
+                        State = CommunicationState.Opened;
+                    }
         }
 
         public TContract Get<TContract>() where TContract : class
@@ -146,8 +146,8 @@ namespace PolyMessage
 
         private object CreateProxy(Type contractType)
         {
-            IInterceptor endpointInterceptor = new EndpointInterceptor(_logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token);
-            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], endpointInterceptor);
+            IInterceptor operationInterceptor = new OperationInterceptor(_logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token);
+            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }
     }

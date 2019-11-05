@@ -25,7 +25,7 @@ namespace PolyMessage.IntegrationTests.RequestResponse
         [InlineData(1)]
         [InlineData(100)]
         [InlineData(1000)]
-        public async Task SendMessagesUsingSingleEndpointContract(int messagesCount)
+        public async Task SendMessagesUsingSingleOperationContract(int messagesCount)
         {
             // arrange
             Clients.Add(CreateClient(ServerAddress, ServiceProvider));
@@ -53,7 +53,7 @@ namespace PolyMessage.IntegrationTests.RequestResponse
         [Theory]
         [InlineData(1)]
         [InlineData(100)]
-        public async Task SendMessagesUsingMultipleEndpointContract(int messagesCount)
+        public async Task SendMessagesUsingMultipleOperationsContract(int messagesCount)
         {
             // arrange
             Clients.Add(CreateClient(ServerAddress, ServiceProvider));

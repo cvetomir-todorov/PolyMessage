@@ -2,34 +2,35 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using PolyMessage.Metadata;
 
-namespace PolyMessage.Endpoints
+namespace PolyMessage.Server
 {
     internal interface IDispatcher
     {
-        Task<object> Dispatch(object message, Endpoint endpoint);
+        Task<object> Dispatch(object message, Operation operation);
     }
 
-    internal sealed class DefaultDispatcher : IDispatcher
+    internal sealed class Dispatcher : IDispatcher
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly MethodInfo _castMethod;
 
-        public DefaultDispatcher(IServiceProvider serviceProvider)
+        public Dispatcher(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _castMethod = GetType().GetMethod(nameof(Cast), BindingFlags.Static | BindingFlags.NonPublic);
         }
 
-        public Task<object> Dispatch(object message, Endpoint endpoint)
+        public Task<object> Dispatch(object message, Operation operation)
         {
             using (IServiceScope scope = _serviceProvider.CreateScope())
             {
-                object implementor = scope.ServiceProvider.GetRequiredService(endpoint.ContractType);
-                object operationTask = endpoint.Method.Invoke(implementor, new object[] {message});
+                object implementor = scope.ServiceProvider.GetRequiredService(operation.ContractType);
+                object operationTask = operation.Method.Invoke(implementor, new object[] {message});
 
                 // get the response type inside of the task: when returning Task<T> we want to get T
-                Type responseType = endpoint.Method.ReturnType.GenericTypeArguments[0];
+                Type responseType = operation.Method.ReturnType.GenericTypeArguments[0];
                 // we will cast Task<T> to Task<object> where T is the response type
                 MethodInfo specificMethod = _castMethod.MakeGenericMethod(responseType);
                 Task<object> resultTask = (Task<object>) specificMethod.Invoke(null, new object[] {operationTask});

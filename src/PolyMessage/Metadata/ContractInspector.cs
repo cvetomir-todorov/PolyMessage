@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace PolyMessage.Endpoints
+namespace PolyMessage.Metadata
 {
-    internal interface IEndpointBuilder
+    internal interface IContractInspector
     {
-        IEnumerable<Endpoint> InspectContract(Type contractType);
+        IEnumerable<Operation> InspectContract(Type contractType);
     }
 
     // FEAT: validate contracts, operations, attributes and their values
-    internal sealed class DefaultEndpointBuilder : IEndpointBuilder
+    internal sealed class ContractInspector : IContractInspector
     {
-        public IEnumerable<Endpoint> InspectContract(Type contractType)
+        public IEnumerable<Operation> InspectContract(Type contractType)
         {
             MethodInfo[] methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
@@ -24,16 +24,16 @@ namespace PolyMessage.Endpoints
                 // methods return Task<T> where T is the response message type
                 Type responseType = method.ReturnType.GenericTypeArguments[0];
 
-                Endpoint endpoint = new Endpoint();
+                Operation operation = new Operation();
 
-                endpoint.RequestID = GetMessageID(requestType);
-                endpoint.RequestType = requestType;
-                endpoint.ResponseID = GetMessageID(responseType);
-                endpoint.ResponseType = responseType;
-                endpoint.Method = method;
-                endpoint.ContractType = contractType;
+                operation.RequestID = GetMessageID(requestType);
+                operation.RequestType = requestType;
+                operation.ResponseID = GetMessageID(responseType);
+                operation.ResponseType = responseType;
+                operation.Method = method;
+                operation.ContractType = contractType;
 
-                yield return endpoint;
+                yield return operation;
             }
         }
 

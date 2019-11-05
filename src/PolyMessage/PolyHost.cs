@@ -4,25 +4,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Endpoints;
 using PolyMessage.Messaging;
+using PolyMessage.Metadata;
 using PolyMessage.Server;
 
 namespace PolyMessage
 {
     /// <summary>
-    /// Creates a host for communicating via a certain <see cref="ITransport"/>
-    /// with messages in a certain <see cref="IFormat"/>
-    /// using a number of endpoint contracts.
+    /// Creates a host for communicating via a certain <see cref="ITransport"/>  with messages in a certain <see cref="IFormat"/>.
     /// </summary>
     public sealed class PolyHost : IDisposable
     {
         // transport/format
         private readonly ITransport _transport;
         private readonly IFormat _format;
-        // endpoints/contracts
-        private readonly List<Endpoint> _endpoints;
-        private readonly IEndpointBuilder _endpointBuilder;
+        // contracts
+        private readonly List<Operation> _operations;
+        private readonly IContractInspector _contractInspector;
         private IAcceptor _acceptor;
         // messaging
         private readonly IServiceProvider _serviceProvider;
@@ -45,9 +43,9 @@ namespace PolyMessage
             // transport/format
             _transport = transport;
             _format = format;
-            // endpoints/contracts
-            _endpoints = new List<Endpoint>();
-            _endpointBuilder = new DefaultEndpointBuilder();
+            // contracts
+            _operations = new List<Operation>();
+            _contractInspector = new ContractInspector();
             // messaging
             _serviceProvider = serviceProvider;
             // logging
@@ -82,31 +80,31 @@ namespace PolyMessage
         {
             EnsureNotDisposed();
 
-            IEnumerable<Endpoint> endpoints = _endpointBuilder.InspectContract(typeof(TContract));
-            _endpoints.AddRange(endpoints);
+            IEnumerable<Operation> operations = _contractInspector.InspectContract(typeof(TContract));
+            _operations.AddRange(operations);
         }
 
         public void Start()
         {
             EnsureNotDisposed();
-            if (_endpoints.Count <= 0)
-                throw new InvalidOperationException("No contracts added or none of them have endpoints.");
+            if (_operations.Count <= 0)
+                throw new InvalidOperationException("No contracts added or none of them have operations.");
 
-            _acceptor = new DefaultAcceptor(_loggerFactory);
-            IMessageMetadata messageMetadata = new DefaultMessageMetadata();
-            IRouter router = new DefaultRouter();
+            _acceptor = new Acceptor(_loggerFactory);
+            IMessageMetadata messageMetadata = new MessageMetadata();
+            IRouter router = new Router();
             IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
-            IDispatcher dispatcher = new DefaultDispatcher(_serviceProvider);
+            IDispatcher dispatcher = new Dispatcher(_serviceProvider);
 
-            messageMetadata.Build(_endpoints);
-            router.BuildRoutingTable(_endpoints);
+            messageMetadata.Build(_operations);
+            router.BuildRoutingTable(_operations);
 
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 
             Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _cancelTokenSource.Token));
             _logger.LogInformation(
-                "Started host using {0} transport listening at {1} and {2} format with {3} endpoint(s).",
-                _transport.DisplayName, _transport.Address, _format.DisplayName, _endpoints.Count);
+                "Started host using {0} transport listening at {1} and {2} format with {3} operation(s).",
+                _transport.DisplayName, _transport.Address, _format.DisplayName, _operations.Count);
         }
 
         public void Stop()
