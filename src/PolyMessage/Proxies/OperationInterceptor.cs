@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
@@ -16,7 +15,7 @@ namespace PolyMessage.Proxies
         private readonly IFormat _format;
         private readonly IChannel _channel;
         private readonly CancellationToken _cancelToken;
-        private readonly MethodInfo _castMethod;
+        private readonly ITaskCaster _taskCaster;
 
         public OperationInterceptor(
             ILogger logger,
@@ -24,7 +23,8 @@ namespace PolyMessage.Proxies
             IMessenger messenger,
             IFormat format,
             IChannel channel,
-            CancellationToken cancelToken)
+            CancellationToken cancelToken,
+            ITaskCaster taskCaster)
         {
             _logger = logger;
             _clientID = clientID;
@@ -32,7 +32,7 @@ namespace PolyMessage.Proxies
             _format = format;
             _channel = channel;
             _cancelToken = cancelToken;
-            _castMethod = GetType().GetMethod(nameof(Cast), BindingFlags.Static | BindingFlags.NonPublic);
+            _taskCaster = taskCaster;
         }
 
         public void Intercept(IInvocation invocation)
@@ -40,14 +40,10 @@ namespace PolyMessage.Proxies
             object requestMessage = invocation.Arguments[0];
             Task<object> responseMessage = CallOperation(requestMessage);
 
-            // TODO: reuse this casting (and the same in the dispatcher) and make it faster
             // get the response type inside of the task: when returning Task<T> we want to get T
             Type responseType = invocation.Method.ReturnType.GenericTypeArguments[0];
-            // we will cast the Task<object> to Task<T> where T is the response type
-            MethodInfo specificMethod = _castMethod.MakeGenericMethod(responseType);
-            object taskOfResponseType = specificMethod.Invoke(null, new object[] {responseMessage});
-
-            invocation.ReturnValue = taskOfResponseType;
+            object responseTask = _taskCaster.CastTaskObjectToTaskResult(responseMessage, responseType);
+            invocation.ReturnValue = responseTask;
         }
 
         private async Task<object> CallOperation(object requestMessage)
@@ -59,12 +55,6 @@ namespace PolyMessage.Proxies
             _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
 
             return responseMessage;
-        }
-
-        private static async Task<TDestination> Cast<TDestination>(Task<object> sourceTask)
-        {
-            TDestination destination = (TDestination)await sourceTask.ConfigureAwait(false);
-            return destination;
         }
     }
 }

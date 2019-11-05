@@ -94,7 +94,8 @@ namespace PolyMessage
             IMessageMetadata messageMetadata = new MessageMetadata();
             IRouter router = new Router();
             IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
-            IDispatcher dispatcher = new Dispatcher(_serviceProvider);
+            ITaskCaster taskCaster = new TaskCaster();
+            IDispatcher dispatcher = new Dispatcher(_serviceProvider, taskCaster);
 
             messageMetadata.Build(_operations);
             router.BuildRoutingTable(_operations);

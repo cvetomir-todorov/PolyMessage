@@ -27,6 +27,7 @@ namespace PolyMessage
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
         private readonly Dictionary<Type, object> _proxies;
+        private readonly ITaskCaster _taskCaster;
         // logging
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
@@ -62,6 +63,7 @@ namespace PolyMessage
             _proxyGenerator = new ProxyGenerator();
             _createProxyLock = new object();
             _proxies = new Dictionary<Type, object>();
+            _taskCaster = new TaskCaster();
             // logging
             _logger = loggerFactory.CreateLogger(GetType());
             _loggerFactory = loggerFactory;
@@ -146,7 +148,8 @@ namespace PolyMessage
 
         private object CreateProxy(Type contractType)
         {
-            IInterceptor operationInterceptor = new OperationInterceptor(_logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token);
+            IInterceptor operationInterceptor = new OperationInterceptor(
+                _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _taskCaster);
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }

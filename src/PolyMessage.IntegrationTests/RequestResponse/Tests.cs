@@ -53,6 +53,7 @@ namespace PolyMessage.IntegrationTests.RequestResponse
         [Theory]
         [InlineData(1)]
         [InlineData(100)]
+        [InlineData(1000)]
         public async Task SendMessagesUsingMultipleOperationsContract(int messagesCount)
         {
             // arrange
