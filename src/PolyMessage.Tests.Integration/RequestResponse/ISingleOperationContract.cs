@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace PolyMessage.IntegrationTests.RequestResponse
+namespace PolyMessage.Tests.Integration.RequestResponse
 {
     [PolyContract]
     public interface ISingleOperationContract

@@ -8,10 +8,8 @@ using PolyMessage.Metadata;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PolyMessage.IntegrationTests
+namespace PolyMessage.Tests.Micro
 {
-    // TODO: move to a new PM.Tests.Unit assembly
-    // TODO: rename this assembly to PM.Tests.Integration
     public class ILEmitterTests : BaseFixture
     {
         private readonly CastTaskOfObjectToTaskOfResponse _targetMethod;

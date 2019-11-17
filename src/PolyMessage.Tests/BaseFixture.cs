@@ -10,7 +10,7 @@ using PolyMessage.Binary;
 using PolyMessage.Tcp;
 using Xunit.Abstractions;
 
-namespace PolyMessage.IntegrationTests
+namespace PolyMessage.Tests
 {
     public abstract class BaseFixture : IDisposable
     {

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PolyMessage.IntegrationTests.RequestResponse
+namespace PolyMessage.Tests.Integration.RequestResponse
 {
     public class Tests : BaseFixture
     {
