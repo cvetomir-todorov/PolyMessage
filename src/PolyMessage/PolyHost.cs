@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 using PolyMessage.Server;
@@ -93,12 +94,14 @@ namespace PolyMessage
             _acceptor = new Acceptor(_loggerFactory);
             IMessageMetadata messageMetadata = new MessageMetadata();
             IRouter router = new Router();
-            IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
-            ITaskCaster taskCaster = new TaskCaster();
-            IDispatcher dispatcher = new Dispatcher(_serviceProvider, taskCaster);
+            ICodeGenerator codeGenerator = new ILEmitter();
 
             messageMetadata.Build(_operations);
             router.BuildRoutingTable(_operations);
+            codeGenerator.GenerateCode(_operations);
+
+            IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
+            IDispatcher dispatcher = new Dispatcher(_serviceProvider, messageMetadata, codeGenerator);
 
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 

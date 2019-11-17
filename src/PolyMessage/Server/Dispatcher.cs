@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using PolyMessage.CodeGeneration;
 using PolyMessage.Metadata;
 
 namespace PolyMessage.Server
@@ -13,12 +14,17 @@ namespace PolyMessage.Server
     internal sealed class Dispatcher : IDispatcher
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ITaskCaster _taskCaster;
+        private readonly IMessageMetadata _messageMetadata;
+        private readonly CastTaskOfResponseToTaskOfObject _castDelegate;
 
-        public Dispatcher(IServiceProvider serviceProvider, ITaskCaster taskCaster)
+        public Dispatcher(
+            IServiceProvider serviceProvider,
+            IMessageMetadata messageMetadata,
+            ICodeGenerator codeGenerator)
         {
             _serviceProvider = serviceProvider;
-            _taskCaster = taskCaster;
+            _messageMetadata = messageMetadata;
+            _castDelegate = codeGenerator.GetCastTaskOfResponseToTaskOfObjectDelegate();
         }
 
         public Task<object> Dispatch(object message, Operation operation)
@@ -28,9 +34,9 @@ namespace PolyMessage.Server
                 object implementor = scope.ServiceProvider.GetRequiredService(operation.ContractType);
                 object operationTask = operation.Method.Invoke(implementor, new object[] {message});
 
-                // get the response type inside of the task: when returning Task<T> we want to get T
                 Type responseType = operation.Method.ReturnType.GenericTypeArguments[0];
-                Task<object> objectTask = _taskCaster.CastTaskResultToTaskObject(operationTask, responseType);
+                int responseID = _messageMetadata.GetMessageID(responseType);
+                Task<object> objectTask = _castDelegate(responseID, (Task) operationTask);
                 return objectTask;
             }
         }
