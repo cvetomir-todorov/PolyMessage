@@ -3,7 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
+using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
+using PolyMessage.Metadata;
 
 namespace PolyMessage.Proxies
 {
@@ -15,7 +17,8 @@ namespace PolyMessage.Proxies
         private readonly IFormat _format;
         private readonly IChannel _channel;
         private readonly CancellationToken _cancelToken;
-        private readonly ITaskCaster _taskCaster;
+        private readonly IMessageMetadata _messageMetadata;
+        private readonly CastTaskOfObjectToTaskOfResponse _castDelegate;
 
         public OperationInterceptor(
             ILogger logger,
@@ -24,7 +27,8 @@ namespace PolyMessage.Proxies
             IFormat format,
             IChannel channel,
             CancellationToken cancelToken,
-            ITaskCaster taskCaster)
+            IMessageMetadata messageMetadata,
+            CastTaskOfObjectToTaskOfResponse castDelegate)
         {
             _logger = logger;
             _clientID = clientID;
@@ -32,7 +36,8 @@ namespace PolyMessage.Proxies
             _format = format;
             _channel = channel;
             _cancelToken = cancelToken;
-            _taskCaster = taskCaster;
+            _messageMetadata = messageMetadata;
+            _castDelegate = castDelegate;
         }
 
         public void Intercept(IInvocation invocation)
@@ -40,9 +45,9 @@ namespace PolyMessage.Proxies
             object requestMessage = invocation.Arguments[0];
             Task<object> responseMessage = CallOperation(requestMessage);
 
-            // get the response type inside of the task: when returning Task<T> we want to get T
             Type responseType = invocation.Method.ReturnType.GenericTypeArguments[0];
-            object responseTask = _taskCaster.CastTaskObjectToTaskResult(responseMessage, responseType);
+            int responseID = _messageMetadata.GetMessageID(responseType);
+            Task responseTask = _castDelegate(responseID, responseMessage);
             invocation.ReturnValue = responseTask;
         }
 

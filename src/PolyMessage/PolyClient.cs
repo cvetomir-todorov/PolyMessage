@@ -4,6 +4,7 @@ using System.Threading;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 using PolyMessage.Proxies;
@@ -19,6 +20,7 @@ namespace PolyMessage
         private readonly List<Type> _contracts;
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
+        private IMessageMetadata _messageMetadata;
         // messaging
         private readonly object _setupMessagingLock;
         private volatile IMessenger _messenger;
@@ -27,7 +29,6 @@ namespace PolyMessage
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
         private readonly Dictionary<Type, object> _proxies;
-        private readonly ITaskCaster _taskCaster;
         // logging
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
@@ -63,7 +64,6 @@ namespace PolyMessage
             _proxyGenerator = new ProxyGenerator();
             _createProxyLock = new object();
             _proxies = new Dictionary<Type, object>();
-            _taskCaster = new TaskCaster();
             // logging
             _logger = loggerFactory.CreateLogger(GetType());
             _loggerFactory = loggerFactory;
@@ -114,9 +114,9 @@ namespace PolyMessage
                     {
                         _channel = _transport.CreateClient();
                         _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
-                        IMessageMetadata messageMetadata = new MessageMetadata();
-                        messageMetadata.Build(_operations);
-                        _messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
+                        _messageMetadata = new MessageMetadata();
+                        _messageMetadata.Build(_operations);
+                        _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
                         State = CommunicationState.Opened;
                     }
         }
@@ -129,8 +129,7 @@ namespace PolyMessage
             if (!_contracts.Contains(contractType))
                 throw new InvalidOperationException($"{contractType.Name} should be added before connecting.");
 
-            object proxy;
-            if (!_proxies.TryGetValue(contractType, out proxy))
+            if (!_proxies.TryGetValue(contractType, out object proxy))
             {
                 lock (_createProxyLock)
                 {
@@ -148,8 +147,12 @@ namespace PolyMessage
 
         private object CreateProxy(Type contractType)
         {
+            ICodeGenerator codeGenerator = new ILEmitter();
+            codeGenerator.GenerateCode(_operations);
+            CastTaskOfObjectToTaskOfResponse castDelegate = codeGenerator.GetCastTaskOfObjectToTaskOfResponseDelegate();
+
             IInterceptor operationInterceptor = new OperationInterceptor(
-                _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _taskCaster);
+                _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }

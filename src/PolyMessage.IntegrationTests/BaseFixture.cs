@@ -20,6 +20,9 @@ namespace PolyMessage.IntegrationTests
         protected PolyHost Host { get; }
         protected List<PolyClient> Clients { get; }
 
+        protected BaseFixture(ITestOutputHelper output) : this(output, collection => {})
+        {}
+
         protected BaseFixture(ITestOutputHelper output, Action<IServiceCollection> addServices)
         {
             ServiceProvider = CreateServiceProvider(output, addServices);
