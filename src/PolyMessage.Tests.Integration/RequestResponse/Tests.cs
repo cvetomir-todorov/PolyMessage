@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.RequestResponse
 {
-    public class Tests : BaseFixture
+    public class Tests : BaseIntegrationFixture
     {
         public Tests(ITestOutputHelper output) : base(output, services =>
         {
@@ -103,14 +103,14 @@ namespace PolyMessage.Tests.Integration.RequestResponse
             Host.AddContract<IMultipleOperationsContract>();
             await StartHost();
 
-            List<Task<double>> clientTasks = new List<Task<double>>();
+            List<Task<TimeSpan>> clientTasks = new List<Task<TimeSpan>>();
             foreach (PolyClient client in Clients)
             {
-                Task<double> clientTask = Task.Run(async () =>
+                Task<TimeSpan> clientTask = Task.Run(async () =>
                 {
                     TimeSpan duration = await MakeRequests(client, messagesCount);
                     Logger.LogInformation("Making {0} requests from a client took: {1:0} ms.", messagesCount, duration.TotalMilliseconds);
-                    return duration.TotalMilliseconds;
+                    return duration;
                 });
                 clientTasks.Add(clientTask);
             }
@@ -123,12 +123,13 @@ namespace PolyMessage.Tests.Integration.RequestResponse
                 int succeededTasks = clientTasks.Count(ct => ct.IsCompletedSuccessfully);
                 succeededTasks.Should().Be(clientTasks.Count);
 
-                foreach (Task<double> clientTask in clientTasks)
+                foreach (Task<TimeSpan> clientTask in clientTasks)
                 {
                     clientTask.Exception.Should().BeNull();
-                    double totalDuration = clientTask.Result;
-                    double durationPerRequest = totalDuration / messagesCount;
-                    durationPerRequest.Should().BeLessOrEqualTo(1.0);
+                    TimeSpan totalDuration = clientTask.Result;
+                    TimeSpan durationPerRequest = totalDuration / messagesCount;
+                    Logger.LogInformation("Duration per request: {0}", durationPerRequest);
+                    durationPerRequest.Should().BeLessOrEqualTo(TimeSpan.FromMilliseconds(5.0));
                 }
             }
         }
