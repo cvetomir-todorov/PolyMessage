@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace PolyMessage.Metadata
 {
@@ -12,9 +13,17 @@ namespace PolyMessage.Metadata
     // FEAT: validate contracts, operations, attributes and their values
     internal sealed class ContractInspector : IContractInspector
     {
+        private readonly ILogger _logger;
+
+        public ContractInspector(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger(GetType());
+        }
+
         public IEnumerable<Operation> InspectContract(Type contractType)
         {
             MethodInfo[] methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            _logger.LogDebug("Contract {0} has {1} operations.", contractType.Name, methods.Length);
 
             foreach (MethodInfo method in methods)
             {
@@ -33,6 +42,7 @@ namespace PolyMessage.Metadata
                 operation.Method = method;
                 operation.ContractType = contractType;
 
+                _logger.LogDebug("{0}", operation);
                 yield return operation;
             }
         }

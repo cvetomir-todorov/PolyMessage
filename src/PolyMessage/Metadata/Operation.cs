@@ -16,5 +16,10 @@ namespace PolyMessage.Metadata
         public MethodInfo Method { get; set; }
 
         public Type ContractType { get; set; }
+
+        public override string ToString()
+        {
+            return $"Operation={Method.Name} Request={RequestType.Name}(ID={RequestID}) Response={ResponseType.Name}(ID={ResponseID})";
+        }
     }
 }

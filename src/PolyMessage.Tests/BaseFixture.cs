@@ -55,7 +55,7 @@ namespace PolyMessage.Tests
             IServiceCollection services = new ServiceCollection()
                 .AddLogging(loggingBuilder =>
                 {
-                    loggingBuilder.SetMinimumLevel(LogLevel.Information);
+                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                     loggingBuilder.AddDebug();
                     loggingBuilder.AddProvider(new XunitLoggingProvider(output));
                 });

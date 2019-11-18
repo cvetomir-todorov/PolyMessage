@@ -16,18 +16,18 @@ namespace PolyMessage
     /// </summary>
     public sealed class PolyHost : IDisposable
     {
+        // .net core integration
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
         // transport/format
         private readonly ITransport _transport;
         private readonly IFormat _format;
-        // contracts
+        // metadata
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
+        // server
         private IAcceptor _acceptor;
-        // messaging
-        private readonly IServiceProvider _serviceProvider;
-        // logging
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
         // stop/dispose
         private readonly CancellationTokenSource _cancelTokenSource;
         private bool _isDisposed;
@@ -41,17 +41,16 @@ namespace PolyMessage
             if (serviceProvider == null)
                 throw new ArgumentNullException(nameof(serviceProvider));
 
+            // .net core integration
+            _serviceProvider = serviceProvider;
+            _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            _logger = _loggerFactory.CreateLogger(GetType());
             // transport/format
             _transport = transport;
             _format = format;
-            // contracts
+            // metadata
             _operations = new List<Operation>();
-            _contractInspector = new ContractInspector();
-            // messaging
-            _serviceProvider = serviceProvider;
-            // logging
-            _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
-            _logger = _loggerFactory.CreateLogger(GetType());
+            _contractInspector = new ContractInspector(_loggerFactory);
             // stop/dispose
             _cancelTokenSource = new CancellationTokenSource();
         }

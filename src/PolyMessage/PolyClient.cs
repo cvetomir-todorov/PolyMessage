@@ -13,10 +13,13 @@ namespace PolyMessage
 {
     public class PolyClient : IDisposable
     {
+        // .net core integration
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
         // transport/format
         private readonly ITransport _transport;
         private readonly IFormat _format;
-        // contracts/operations
+        // metadata
         private readonly List<Type> _contracts;
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
@@ -29,9 +32,6 @@ namespace PolyMessage
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
         private readonly Dictionary<Type, object> _proxies;
-        // logging
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -51,22 +51,22 @@ namespace PolyMessage
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
 
+            // .net core integration
+            _logger = loggerFactory.CreateLogger(GetType());
+            _loggerFactory = loggerFactory;
             // transport/format
             _transport = transport;
             _format = format;
-            // contracts/operations
+            // metadata
             _contracts = new List<Type>();
             _operations = new List<Operation>();
-            _contractInspector = new ContractInspector();
+            _contractInspector = new ContractInspector(loggerFactory);
             // messaging
             _setupMessagingLock = new object();
             // proxies
             _proxyGenerator = new ProxyGenerator();
             _createProxyLock = new object();
             _proxies = new Dictionary<Type, object>();
-            // logging
-            _logger = loggerFactory.CreateLogger(GetType());
-            _loggerFactory = loggerFactory;
             // identity
             _id = "Client" + Interlocked.Increment(ref _generation);
             // stop/dispose
