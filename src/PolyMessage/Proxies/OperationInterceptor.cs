@@ -18,7 +18,7 @@ namespace PolyMessage.Proxies
         private readonly IChannel _channel;
         private readonly CancellationToken _cancelToken;
         private readonly IMessageMetadata _messageMetadata;
-        private readonly CastTaskOfObjectToTaskOfResponse _castDelegate;
+        private readonly CastToTaskOfResponse _castDelegate;
 
         public OperationInterceptor(
             ILogger logger,
@@ -28,7 +28,7 @@ namespace PolyMessage.Proxies
             IChannel channel,
             CancellationToken cancelToken,
             IMessageMetadata messageMetadata,
-            CastTaskOfObjectToTaskOfResponse castDelegate)
+            CastToTaskOfResponse castDelegate)
         {
             _logger = logger;
             _clientID = clientID;
@@ -45,6 +45,8 @@ namespace PolyMessage.Proxies
             object requestMessage = invocation.Arguments[0];
             Task<object> responseMessage = CallOperation(requestMessage);
 
+            // the Task<> is not covariant so we cannot cast Task<object> reference to Task<Response>
+            // so we do it manually but with generated code in order to avoid reflection at runtime
             Type responseType = invocation.Method.ReturnType.GenericTypeArguments[0];
             int responseID = _messageMetadata.GetMessageID(responseType);
             Task responseTask = _castDelegate(responseID, responseMessage);

@@ -149,7 +149,7 @@ namespace PolyMessage
         {
             ICodeGenerator codeGenerator = new ILEmitter();
             codeGenerator.GenerateCode(_operations);
-            CastTaskOfObjectToTaskOfResponse castDelegate = codeGenerator.GetCastTaskOfObjectToTaskOfResponseDelegate();
+            CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             IInterceptor operationInterceptor = new OperationInterceptor(
                 _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);

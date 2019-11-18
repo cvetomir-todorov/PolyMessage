@@ -11,8 +11,9 @@ namespace PolyMessage.CodeGeneration
     internal sealed class ILEmitter : ICodeGenerator
     {
         public const string AssemblyName = "PolyMessage.Emitted";
-        private CastTaskOfObjectToTaskOfResponse _toResponseTaskDelegate;
-        private CastTaskOfResponseToTaskOfObject _toObjectTaskDelegate;
+        private bool _isCodeGenerated;
+        private CastToTaskOfResponse _castToTaskOfResponse;
+        private DispatchRequest _dispatchRequest;
 
         public void GenerateCode(List<Operation> operations)
         {
@@ -23,50 +24,54 @@ namespace PolyMessage.CodeGeneration
             AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule($"{AssemblyName}.Module");
 
-            TypeBuilder taskCasterBuilder = moduleBuilder.DefineType($"{AssemblyName}.TaskCaster", TypeAttributes.Public);
-            MethodBuilder toResponseTaskBuilder = EmitToResponseTaskCast(taskCasterBuilder, operations);
-            MethodBuilder toObjectTaskBuilder = EmitToObjectTaskCast(taskCasterBuilder, operations);
+            TypeBuilder staticTypeBuilder = moduleBuilder.DefineType($"{AssemblyName}.StaticType", TypeAttributes.Public);
+            MethodBuilder castToTaskOfResponseBuilder = EmitCastToTaskOfResponse(staticTypeBuilder, operations);
+            MethodBuilder dispatchRequestBuilder = EmitDispatchRequest(staticTypeBuilder, operations);
 
-            TypeInfo taskCasterType = taskCasterBuilder.CreateTypeInfo();
-            MethodInfo toResponseTaskMethod = taskCasterType.GetDeclaredMethod(toResponseTaskBuilder.Name);
-            _toResponseTaskDelegate = (CastTaskOfObjectToTaskOfResponse) toResponseTaskMethod.CreateDelegate(typeof(CastTaskOfObjectToTaskOfResponse));
-            MethodInfo toObjectTaskMethod = taskCasterType.GetDeclaredMethod(toObjectTaskBuilder.Name);
-            _toObjectTaskDelegate = (CastTaskOfResponseToTaskOfObject) toObjectTaskMethod.CreateDelegate(typeof(CastTaskOfResponseToTaskOfObject));
+            TypeInfo staticType = staticTypeBuilder.CreateTypeInfo();
+            MethodInfo castToTaskOfResponseMethod = staticType.GetDeclaredMethod(castToTaskOfResponseBuilder.Name);
+            _castToTaskOfResponse = (CastToTaskOfResponse) castToTaskOfResponseMethod.CreateDelegate(typeof(CastToTaskOfResponse));
+            MethodInfo dispatchRequestMethod = staticType.GetDeclaredMethod(dispatchRequestBuilder.Name);
+            _dispatchRequest = (DispatchRequest) dispatchRequestMethod.CreateDelegate(typeof(DispatchRequest));
+
+            _isCodeGenerated = true;
         }
 
-        public CastTaskOfObjectToTaskOfResponse GetCastTaskOfObjectToTaskOfResponseDelegate()
+        public CastToTaskOfResponse GetCastToTaskOfResponse()
         {
-            if (_toResponseTaskDelegate == null)
-                throw new InvalidOperationException($"The method {nameof(GenerateCode)} should be called first.");
-
-            return _toResponseTaskDelegate;
+            EnsureCodeGenerated();
+            return _castToTaskOfResponse;
         }
 
-        public CastTaskOfResponseToTaskOfObject GetCastTaskOfResponseToTaskOfObjectDelegate()
+        public DispatchRequest GetDispatchRequest()
         {
-            if (_toObjectTaskDelegate == null)
-                throw new InvalidOperationException($"The method {nameof(GenerateCode)} should be called first.");
+            EnsureCodeGenerated();
+            return _dispatchRequest;
+        }
 
-            return _toObjectTaskDelegate;
+        private void EnsureCodeGenerated()
+        {
+            if (!_isCodeGenerated)
+                throw new InvalidOperationException($"The method {nameof(GenerateCode)} should be called first.");
         }
 
         /// <summary>
         /// The emitted method should look just like the one below.
-        /// It should switch the messageID and choose a specific cast.
+        /// It should switch the responseID and choose a specific cast.
         /// </summary>
-        // public static Task CastTaskOfObjectToTaskOfResponse(int messageID, Task<object> taskOfObject)
+        // public static Task CastToTaskOfResponse(int responseID, Task<object> taskOfObject)
         // {
-        //     switch (messageID)
+        //     switch (responseID)
         //     {
-        //         case 123: return ILEmitter.GenericToResponseTaskCast<ResponseAlpha>(taskOfObject);
-        //         case 456: return ILEmitter.GenericToResponseTaskCast<ResponseBeta>(taskOfObject);
-        //         default:  throw new InvalidOperationException($"Unknown message ID {messageID}.");
+        //         case 123: return ILEmitter.GenericCastToTaskOfResponse<Response1>(taskOfObject);
+        //         case 456: return ILEmitter.GenericCastToTaskOfResponse<Response2>(taskOfObject);
+        //         default:  throw new InvalidOperationException($"Unknown message ID {responseID}.");
         //     }
         // }
-        private MethodBuilder EmitToResponseTaskCast(TypeBuilder typeBuilder, List<Operation> operations)
+        private MethodBuilder EmitCastToTaskOfResponse(TypeBuilder typeBuilder, List<Operation> operations)
         {
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
-                "CastTaskOfObjectToTaskOfResponse", MethodAttributes.Public | MethodAttributes.Static,
+                "CastToTaskOfResponse", MethodAttributes.Public | MethodAttributes.Static,
                 // the method returns Task (which is actually Task<Response>) and accepts a message ID and the Task<object> to be cast
                 typeof(Task), new Type[] {typeof(int), typeof(Task<object>)});
             ILGenerator il = methodBuilder.GetILGenerator();
@@ -90,9 +95,9 @@ namespace PolyMessage.CodeGeneration
             // branch to default case
             il.Emit(OpCodes.Br_S, defaultCase);
 
-            MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericToResponseTaskCast));
+            MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericCastToTaskOfResponse));
             if (genericCastMethod == null)
-                throw new InvalidOperationException($"Could not find generic cast method {nameof(GenericToResponseTaskCast)}.");
+                throw new InvalidOperationException($"Could not find generic cast method {nameof(GenericCastToTaskOfResponse)}.");
 
             for (int i = 0; i < operations.Count; ++i)
             {
@@ -111,7 +116,7 @@ namespace PolyMessage.CodeGeneration
 
             il.MarkLabel(defaultCase);
             // format the exception message
-            il.Emit(OpCodes.Ldstr, "Unknown message ID {0}.");
+            il.Emit(OpCodes.Ldstr, "Unknown response ID {0}.");
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Box, typeof(int));
             il.EmitCall(OpCodes.Call, stringFormat, null);
@@ -125,30 +130,34 @@ namespace PolyMessage.CodeGeneration
         /// <summary>
         /// We declare the cast method here because we have to await and it's hard to emit all that code.
         /// </summary>
-        public static async Task<TResponse> GenericToResponseTaskCast<TResponse>(Task<object> taskOfObject)
+        public static async Task<TResponse> GenericCastToTaskOfResponse<TResponse>(Task<object> taskOfObject)
         {
             return (TResponse) await taskOfObject.ConfigureAwait(false);
         }
 
         /// <summary>
         /// The emitted method should look just like the one below.
-        /// It should switch the messageID and choose a specific cast.
+        /// It should switch the responseID and choose a specific cast.
         /// </summary>
-        // public static Task<object> CastTaskOfObjectToTaskOfResponse(int messageID, Task taskOfResponse)
+        // public static Task<object> DispatchRequest(int responseID, object request, object implementor)
         // {
-        //     switch (messageID)
+        //     switch (responseID)
         //     {
-        //         case 123: return ILEmitter.GenericToObjectTaskCast<ResponseAlpha>((Task<ResponseAlpha>) taskOfResponse);
-        //         case 456: return ILEmitter.GenericToObjectTaskCast<ResponseBeta>(Task<ResponseBeta> taskOfResponse);
-        //         default:  throw new InvalidOperationException($"Unknown message ID {messageID}.");
+        //         case 123:
+        //             Task<Response1> responseTask1 = ((IContract1)implementor).Operation1((Request1)request);
+        //             return CastPlaceHolder.GenericCast(responseTask1);
+        //         case 456:
+        //             Task<Response5> responseTask5 = ((IContract2)implementor).Operation5((Request5)request);
+        //             return CastPlaceHolder.GenericCast(responseTask5);
+        //         default: throw new InvalidOperationException($"Unknown request ID {requestID}.");
         //     }
         // }
-        private MethodBuilder EmitToObjectTaskCast(TypeBuilder typeBuilder, List<Operation> operations)
+        private MethodBuilder EmitDispatchRequest(TypeBuilder typeBuilder, List<Operation> operations)
         {
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
-                "CastTaskOfResponseToTaskOfObject", MethodAttributes.Public | MethodAttributes.Static,
-                // the method returns Task (which is actually Task<Response>) and accepts a message ID and the Task<object> to be cast
-                typeof(Task<object>), new Type[] {typeof(int), typeof(Task)});
+                "DispatchRequest", MethodAttributes.Public | MethodAttributes.Static,
+                // the method returns Task<object> and accepts requestID, request and contract implementor
+                typeof(Task<object>), new Type[] {typeof(int), typeof(object), typeof(object)});
             ILGenerator il = methodBuilder.GetILGenerator();
 
             Label defaultCase = il.DefineLabel();
@@ -170,21 +179,24 @@ namespace PolyMessage.CodeGeneration
             // branch to default case
             il.Emit(OpCodes.Br_S, defaultCase);
 
-            MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericToResponseTaskCast));
+            MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericCastToTaskOfObject));
             if (genericCastMethod == null)
-                throw new InvalidOperationException($"Could not find generic cast method {nameof(GenericToResponseTaskCast)}.");
+                throw new InvalidOperationException($"Could not find generic cast method {nameof(GenericCastToTaskOfObject)}.");
 
             for (int i = 0; i < operations.Count; ++i)
             {
-                //Type specificTaskType = typeof(Task<>).MakeGenericType(operations[i].ResponseType);
-                //MethodInfo specificCast = genericCastMethod.MakeGenericMethod(operations[i].ResponseType);
+                Operation operation = operations[i];
+                MethodInfo specificCast = genericCastMethod.MakeGenericMethod(operation.ResponseType);
 
                 il.MarkLabel(labels[i]);
-                // call the specific cast with the Task cast to Task<ResponseX> and return the resulting Task<object>
+                // cast the implementor and the request to the operation's contract and request types
+                il.Emit(OpCodes.Ldarg_2);
+                il.Emit(OpCodes.Castclass, operation.ContractType);
                 il.Emit(OpCodes.Ldarg_1);
-                // Looks like the actual casting is not needed to make things work which is very strange
-                //il.Emit(OpCodes.Castclass, specificTaskType);
-                //il.EmitCall(OpCodes.Call, specificCast, null);
+                il.Emit(OpCodes.Castclass, operation.RequestType);
+                // call the operation method, cast the resulting Task<Response> to Task<object> and return it
+                il.EmitCall(OpCodes.Callvirt, operation.Method, null);
+                il.EmitCall(OpCodes.Call, specificCast, null);
                 il.Emit(OpCodes.Ret);
             }
 
@@ -194,7 +206,7 @@ namespace PolyMessage.CodeGeneration
 
             il.MarkLabel(defaultCase);
             // format the exception message
-            il.Emit(OpCodes.Ldstr, "Unknown message ID {0}.");
+            il.Emit(OpCodes.Ldstr, "Unknown responseID ID {0}.");
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Box, typeof(int));
             il.EmitCall(OpCodes.Call, stringFormat, null);
@@ -208,7 +220,7 @@ namespace PolyMessage.CodeGeneration
         /// <summary>
         /// We declare the cast method here because we have to await and it's hard to emit all that code.
         /// </summary>
-        public static async Task<object> GenericToObjectTaskCast<TResponse>(Task<TResponse> taskOfResponse)
+        public static async Task<object> GenericCastToTaskOfObject<TResponse>(Task<TResponse> taskOfResponse)
         {
             return await taskOfResponse.ConfigureAwait(false);
         }

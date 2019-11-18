@@ -15,16 +15,16 @@ namespace PolyMessage.Server
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IMessageMetadata _messageMetadata;
-        private readonly CastTaskOfResponseToTaskOfObject _castDelegate;
+        private readonly DispatchRequest _dispatchRequest;
 
         public Dispatcher(
             IServiceProvider serviceProvider,
             IMessageMetadata messageMetadata,
-            ICodeGenerator codeGenerator)
+            DispatchRequest dispatchRequest)
         {
             _serviceProvider = serviceProvider;
             _messageMetadata = messageMetadata;
-            _castDelegate = codeGenerator.GetCastTaskOfResponseToTaskOfObjectDelegate();
+            _dispatchRequest = dispatchRequest;
         }
 
         public Task<object> Dispatch(object message, Operation operation)
@@ -32,12 +32,12 @@ namespace PolyMessage.Server
             using (IServiceScope scope = _serviceProvider.CreateScope())
             {
                 object implementor = scope.ServiceProvider.GetRequiredService(operation.ContractType);
-                object operationTask = operation.Method.Invoke(implementor, new object[] {message});
-
                 Type responseType = operation.Method.ReturnType.GenericTypeArguments[0];
                 int responseID = _messageMetadata.GetMessageID(responseType);
-                Task<object> objectTask = _castDelegate(responseID, (Task) operationTask);
-                return objectTask;
+
+                // code generation is used to avoid using reflection at runtime
+                Task<object> operationTask = _dispatchRequest(responseID, message, implementor);
+                return operationTask;
             }
         }
     }

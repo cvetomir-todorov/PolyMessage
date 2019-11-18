@@ -4,16 +4,16 @@ using PolyMessage.Metadata;
 
 namespace PolyMessage.CodeGeneration
 {
-    internal delegate Task CastTaskOfObjectToTaskOfResponse(int messageID, Task<object> taskOfObject);
+    internal delegate Task CastToTaskOfResponse(int responseID, Task<object> taskOfObject);
 
-    internal delegate Task<object> CastTaskOfResponseToTaskOfObject(int messageID, Task taskOfResponse);
+    internal delegate Task<object> DispatchRequest(int responseID, object request, object implementor);
 
     internal interface ICodeGenerator
     {
         void GenerateCode(List<Operation> operations);
 
-        CastTaskOfObjectToTaskOfResponse GetCastTaskOfObjectToTaskOfResponseDelegate();
+        CastToTaskOfResponse GetCastToTaskOfResponse();
 
-        CastTaskOfResponseToTaskOfObject GetCastTaskOfResponseToTaskOfObjectDelegate();
+        DispatchRequest GetDispatchRequest();
     }
 }
