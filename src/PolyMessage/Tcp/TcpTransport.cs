@@ -5,7 +5,7 @@ using System.Threading;
 namespace PolyMessage.Tcp
 {
     // TODO: use timeouts
-    public class TcpTransport : ITransport
+    public class TcpTransport : PolyTransport
     {
         private readonly Uri _address;
         // timeouts
@@ -29,11 +29,11 @@ namespace PolyMessage.Tcp
             _sendTimeout = sendTimeout;
         }
 
-        public string DisplayName => "TCP";
+        public override string DisplayName => "TCP";
 
-        public Uri Address => _address;
+        public override Uri Address => _address;
 
-        public TimeSpan ReceiveTimeout
+        public override TimeSpan ReceiveTimeout
         {
             get { return _receiveTimeout;}
             set
@@ -44,7 +44,7 @@ namespace PolyMessage.Tcp
             }
         }
 
-        public TimeSpan SendTimeout
+        public override TimeSpan SendTimeout
         {
             get { return _sendTimeout; }
             set
@@ -55,12 +55,12 @@ namespace PolyMessage.Tcp
             }
         }
 
-        public IListener CreateListener()
+        public override PolyListener CreateListener()
         {
             return new TcpListener(DisplayName, _address);
         }
 
-        public IChannel CreateClient()
+        public override PolyChannel CreateClient()
         {
             // TODO: initialize TCP client without connecting
             TcpClient tcpClient = new TcpClient(_address.Host, _address.Port);

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PolyMessage.Binary
 {
-    public class BinaryFormat : IFormat
+    public class BinaryFormat : PolyFormat
     {
         private readonly BinaryFormatter _formatter;
 
@@ -14,15 +14,15 @@ namespace PolyMessage.Binary
             _formatter = new BinaryFormatter();
         }
 
-        public string DisplayName => "Binary";
+        public override string DisplayName => "Binary";
 
-        public Task Write(object obj, IChannel channel, CancellationToken cancelToken)
+        public override Task Write(object obj, PolyChannel channel, CancellationToken cancelToken)
         {
             _formatter.Serialize(channel.Stream, obj);
             return Task.CompletedTask;
         }
 
-        public Task<object> Read(Type objType, IChannel channel, CancellationToken cancelToken)
+        public override Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken)
         {
             object obj = _formatter.Deserialize(channel.Stream);
             return Task.FromResult(obj);

@@ -17,8 +17,8 @@ namespace PolyMessage
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         // transport/format
-        private readonly ITransport _transport;
-        private readonly IFormat _format;
+        private readonly PolyTransport _transport;
+        private readonly PolyFormat _format;
         // metadata
         private readonly List<Type> _contracts;
         private readonly List<Operation> _operations;
@@ -27,7 +27,7 @@ namespace PolyMessage
         // messaging
         private readonly object _setupMessagingLock;
         private volatile IMessenger _messenger;
-        private IChannel _channel;
+        private PolyChannel _channel;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
@@ -38,11 +38,11 @@ namespace PolyMessage
         // stop/dispose
         private readonly CancellationTokenSource _cancelTokenSource;
 
-        public PolyClient(ITransport transport, IFormat format)
+        public PolyClient(PolyTransport transport, PolyFormat format)
             : this(transport, format, new NullLoggerFactory())
         {}
 
-        public PolyClient(ITransport transport, IFormat format, ILoggerFactory loggerFactory)
+        public PolyClient(PolyTransport transport, PolyFormat format, ILoggerFactory loggerFactory)
         {
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));

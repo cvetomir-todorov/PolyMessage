@@ -9,14 +9,14 @@ namespace PolyMessage.Server
 {
     internal interface IAcceptor : IDisposable
     {
-        Task Start(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken);
+        Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken);
 
         void Stop();
     }
 
     internal sealed class Acceptor : IAcceptor
     {
-        private IListener _listener;
+        private PolyListener _listener;
         private readonly HashSet<IProcessor> _processors;
         // logging
         private readonly ILoggerFactory _loggerFactory;
@@ -55,7 +55,7 @@ namespace PolyMessage.Server
             _logger.LogTrace("Stopped.");
         }
 
-        public async Task Start(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
+        public async Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             if (_isDisposed)
                 throw new InvalidOperationException("Acceptor is already stopped.");
@@ -80,14 +80,14 @@ namespace PolyMessage.Server
             }
         }
 
-        private async Task DoStart(ITransport transport, IFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task DoStart(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             _listener = transport.CreateListener();
             await _listener.PrepareAccepting().ConfigureAwait(false);
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
-                IChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
+                PolyChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
                 _logger.LogTrace("Accepted client.");
 
                 IProcessor processor = new Processor(_loggerFactory, format, channel);

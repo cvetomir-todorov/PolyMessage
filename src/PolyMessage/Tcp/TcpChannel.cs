@@ -4,7 +4,7 @@ using System.Net.Sockets;
 
 namespace PolyMessage.Tcp
 {
-    internal sealed class TcpChannel : IChannel
+    internal sealed class TcpChannel : PolyChannel
     {
         private readonly string _displayName;
         private readonly TcpClient _tcpClient;
@@ -18,16 +18,20 @@ namespace PolyMessage.Tcp
             _tcpStream = _tcpClient.GetStream();
         }
 
-        public void Dispose()
+        protected override void DoDispose(bool isDisposing)
         {
             if (_isDisposed)
                 return;
 
-            _tcpStream.Dispose();
-            _tcpClient.Close();
-            _tcpClient.Dispose();
+            if (isDisposing)
+            {
+                _tcpStream.Dispose();
+                _tcpClient.Close();
+                _tcpClient.Dispose();
+                _isDisposed = true;
+            }
 
-            _isDisposed = true;
+            base.DoDispose(isDisposing);
         }
 
         private void EnsureNotDisposed()
@@ -36,9 +40,9 @@ namespace PolyMessage.Tcp
                 throw new InvalidOperationException("TCP channel is already disposed.");
         }
 
-        public string DisplayName => _displayName;
+        public override string DisplayName => _displayName;
 
-        public Stream Stream
+        public override Stream Stream
         {
             get
             {

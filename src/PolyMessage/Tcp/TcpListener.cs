@@ -6,7 +6,7 @@ using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
 namespace PolyMessage.Tcp
 {
-    internal sealed class TcpListener : IListener
+    internal sealed class TcpListener : PolyListener
     {
         private readonly string _displayName;
         private readonly Uri _address;
@@ -19,13 +19,18 @@ namespace PolyMessage.Tcp
             _address = address;
         }
 
-        public void Dispose()
+        protected override void DoDispose(bool isDisposing)
         {
             if (_isDisposed)
                 return;
 
-            _tcpListener?.Stop();
-            _isDisposed = true;
+            if (isDisposing)
+            {
+                _tcpListener?.Stop();
+                _isDisposed = true;
+            }
+
+            base.DoDispose(isDisposing);
         }
 
         private void EnsureNotDisposed()
@@ -34,9 +39,9 @@ namespace PolyMessage.Tcp
                 throw new InvalidOperationException("TCP transport is already disposed.");
         }
 
-        public string DisplayName => _displayName;
+        public override string DisplayName => _displayName;
 
-        public Task PrepareAccepting()
+        public override Task PrepareAccepting()
         {
             EnsureNotDisposed();
 
@@ -46,7 +51,7 @@ namespace PolyMessage.Tcp
             return Task.CompletedTask;
         }
 
-        public async Task<IChannel> AcceptClient()
+        public override async Task<PolyChannel> AcceptClient()
         {
             EnsureNotDisposed();
 
@@ -54,7 +59,7 @@ namespace PolyMessage.Tcp
             return new TcpChannel(_displayName, tcpClient);
         }
 
-        public void StopAccepting()
+        public override void StopAccepting()
         {
             Dispose();
         }

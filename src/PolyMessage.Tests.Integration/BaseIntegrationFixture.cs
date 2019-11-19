@@ -54,16 +54,16 @@ namespace PolyMessage.Tests.Integration
 
         private static PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            ITransport hostTransport = new TcpTransport(serverAddress);
-            IFormat hostFormat = new BinaryFormat();
+            PolyTransport hostTransport = new TcpTransport(serverAddress);
+            PolyFormat hostFormat = new BinaryFormat();
             PolyHost host = new PolyHost(hostTransport, hostFormat, serviceProvider);
             return host;
         }
 
         protected static PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            ITransport clientTransport = new TcpTransport(serverAddress);
-            IFormat clientFormat = new BinaryFormat();
+            PolyTransport clientTransport = new TcpTransport(serverAddress);
+            PolyFormat clientFormat = new BinaryFormat();
             PolyClient client = new PolyClient(clientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;
         }

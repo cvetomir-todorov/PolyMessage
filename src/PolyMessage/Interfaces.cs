@@ -5,47 +5,55 @@ using System.Threading.Tasks;
 
 namespace PolyMessage
 {
-    public interface IFormat
+    public abstract class PolyFormat
     {
-        string DisplayName { get; }
+        public abstract string DisplayName { get; }
 
-        Task Write(object obj, IChannel channel, CancellationToken cancelToken);
+        public abstract Task Write(object obj, PolyChannel channel, CancellationToken cancelToken);
 
-        Task<object> Read(Type objType, IChannel channel, CancellationToken cancelToken);
+        public abstract Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken);
     }
 
-    public interface ITransport
+    public abstract class PolyTransport
     {
-        string DisplayName { get; }
+        public abstract string DisplayName { get; }
 
-        Uri Address { get; }
+        public abstract Uri Address { get; }
 
-        TimeSpan ReceiveTimeout { get; set; }
+        public abstract TimeSpan ReceiveTimeout { get; set; }
 
-        TimeSpan SendTimeout { get; set; }
+        public abstract TimeSpan SendTimeout { get; set; }
 
-        IListener CreateListener();
+        public abstract PolyListener CreateListener();
 
-        IChannel CreateClient();
+        public abstract PolyChannel CreateClient();
     }
 
-    public interface IListener : IDisposable
+    public abstract class PolyListener : IDisposable
     {
-        string DisplayName { get; }
+        public void Dispose() => DoDispose(true);
 
-        Task PrepareAccepting();
+        protected virtual void DoDispose(bool isDisposing){}
 
-        Task<IChannel> AcceptClient();
+        public abstract string DisplayName { get; }
 
-        void StopAccepting();
+        public abstract Task PrepareAccepting();
+
+        public abstract Task<PolyChannel> AcceptClient();
+
+        public abstract void StopAccepting();
     }
 
-    public interface IChannel : IDisposable
+    public abstract class PolyChannel : IDisposable
     {
-        string DisplayName { get; }
+        public void Dispose() => DoDispose(true);
+
+        protected virtual void DoDispose(bool isDisposing) {}
+
+        public abstract string DisplayName { get; }
 
         // FEAT: hide this and expose just send/receive byte[]
-        Stream Stream { get; }
+        public abstract Stream Stream { get; }
     }
 
     public enum CommunicationState

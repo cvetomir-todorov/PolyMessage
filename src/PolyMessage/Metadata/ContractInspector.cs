@@ -58,6 +58,7 @@ namespace PolyMessage.Metadata
             int messageID = messageAttribute.ID;
             if (messageID == 0)
             {
+                // TODO: make sure this is unique via some other method
                 messageID = messageType.GetHashCode();
             }
 

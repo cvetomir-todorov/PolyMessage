@@ -8,9 +8,9 @@ namespace PolyMessage.Messaging
 {
     internal interface IMessenger
     {
-        Task Send(object message, IFormat format, IChannel channel, CancellationToken cancelToken);
+        Task Send(object message, PolyFormat format, PolyChannel channel, CancellationToken cancelToken);
 
-        Task<object> Receive(IFormat format, IChannel channel, CancellationToken cancelToken);
+        Task<object> Receive(PolyFormat format, PolyChannel channel, CancellationToken cancelToken);
     }
 
     internal sealed class ProtocolMessenger : IMessenger
@@ -24,7 +24,7 @@ namespace PolyMessage.Messaging
             _messageMetadata = messageMetadata;
         }
 
-        public async Task Send(object message, IFormat format, IChannel channel, CancellationToken cancelToken)
+        public async Task Send(object message, PolyFormat format, PolyChannel channel, CancellationToken cancelToken)
         {
             PolyHeader header = new PolyHeader();
             header.MessageID = _messageMetadata.GetMessageID(message.GetType());
@@ -38,7 +38,7 @@ namespace PolyMessage.Messaging
             _logger.LogTrace("Sent message with ID {0}.", header.MessageID);
         }
 
-        public async Task<object> Receive(IFormat format, IChannel channel, CancellationToken cancelToken)
+        public async Task<object> Receive(PolyFormat format, PolyChannel channel, CancellationToken cancelToken)
         {
             _logger.LogTrace("Receiving header...");
             PolyHeader header = (PolyHeader) await format.Read(typeof(PolyHeader), channel, cancelToken).ConfigureAwait(false);

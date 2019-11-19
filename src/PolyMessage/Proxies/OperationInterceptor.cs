@@ -14,8 +14,8 @@ namespace PolyMessage.Proxies
         private readonly ILogger _logger;
         private readonly string _clientID;
         private readonly IMessenger _messenger;
-        private readonly IFormat _format;
-        private readonly IChannel _channel;
+        private readonly PolyFormat _format;
+        private readonly PolyChannel _channel;
         private readonly CancellationToken _cancelToken;
         private readonly IMessageMetadata _messageMetadata;
         private readonly CastToTaskOfResponse _castDelegate;
@@ -24,8 +24,8 @@ namespace PolyMessage.Proxies
             ILogger logger,
             string clientID,
             IMessenger messenger,
-            IFormat format,
-            IChannel channel,
+            PolyFormat format,
+            PolyChannel channel,
             CancellationToken cancelToken,
             IMessageMetadata messageMetadata,
             CastToTaskOfResponse castDelegate)

@@ -16,8 +16,8 @@ namespace PolyMessage.Server
     internal sealed class Processor : IProcessor
     {
         private readonly ILogger _logger;
-        private readonly IFormat _format;
-        private readonly IChannel _channel;
+        private readonly PolyFormat _format;
+        private readonly PolyChannel _channel;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -26,7 +26,7 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Processor(ILoggerFactory loggerFactory, IFormat format, IChannel channel)
+        public Processor(ILoggerFactory loggerFactory, PolyFormat format, PolyChannel channel)
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _format = format;

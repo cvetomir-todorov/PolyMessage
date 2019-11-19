@@ -12,7 +12,7 @@ using PolyMessage.Server;
 namespace PolyMessage
 {
     /// <summary>
-    /// Creates a host for communicating via a certain <see cref="ITransport"/>  with messages in a certain <see cref="IFormat"/>.
+    /// Creates a host for communicating via a certain <see cref="PolyTransport"/>  with messages in a certain <see cref="PolyFormat"/>.
     /// </summary>
     public sealed class PolyHost : IDisposable
     {
@@ -21,8 +21,8 @@ namespace PolyMessage
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         // transport/format
-        private readonly ITransport _transport;
-        private readonly IFormat _format;
+        private readonly PolyTransport _transport;
+        private readonly PolyFormat _format;
         // metadata
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
@@ -32,7 +32,7 @@ namespace PolyMessage
         private readonly CancellationTokenSource _cancelTokenSource;
         private bool _isDisposed;
 
-        public PolyHost(ITransport transport, IFormat format, IServiceProvider serviceProvider)
+        public PolyHost(PolyTransport transport, PolyFormat format, IServiceProvider serviceProvider)
         {
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
