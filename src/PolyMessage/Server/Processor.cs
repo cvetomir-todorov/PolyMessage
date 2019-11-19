@@ -11,6 +11,8 @@ namespace PolyMessage.Server
         Task Start(ServerComponents serverComponents, CancellationToken cancelToken);
 
         void Stop();
+
+        PolyChannel ConnectedClient { get; }
     }
 
     internal sealed class Processor : IProcessor
@@ -98,6 +100,11 @@ namespace PolyMessage.Server
         public void Stop()
         {
             Dispose();
+        }
+
+        public PolyChannel ConnectedClient
+        {
+            get { return _channel; }
         }
     }
 }

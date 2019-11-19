@@ -52,6 +52,10 @@ namespace PolyMessage
 
         public abstract string DisplayName { get; }
 
+        public abstract Uri LocalAddress { get; }
+
+        public abstract Uri RemoteAddress { get; }
+
         // FEAT: hide this and expose just send/receive byte[]
         public abstract Stream Stream { get; }
     }

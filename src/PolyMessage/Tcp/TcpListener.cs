@@ -10,13 +10,15 @@ namespace PolyMessage.Tcp
     {
         private readonly string _displayName;
         private readonly Uri _address;
+        private readonly TcpSettings _settings;
         private DotNetTcpListener _tcpListener;
         private bool _isDisposed;
 
-        public TcpListener(string displayName, Uri address)
+        public TcpListener(string displayName, Uri address, TcpSettings settings)
         {
             _displayName = displayName;
             _address = address;
+            _settings = settings;
         }
 
         protected override void DoDispose(bool isDisposing)
@@ -56,7 +58,7 @@ namespace PolyMessage.Tcp
             EnsureNotDisposed();
 
             TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
-            return new TcpChannel(_displayName, tcpClient);
+            return new TcpChannel(_displayName, tcpClient, _settings);
         }
 
         public override void StopAccepting()

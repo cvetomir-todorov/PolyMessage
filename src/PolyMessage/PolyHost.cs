@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -113,6 +114,13 @@ namespace PolyMessage
         public void Stop()
         {
             Dispose();
+        }
+
+        internal PolyTransport Transport => _transport;
+
+        internal IEnumerable<PolyChannel> GetConnectedClients()
+        {
+            return _acceptor.GetActiveProcessors().Select(activeProcessor => activeProcessor.ConnectedClient);
         }
     }
 }

@@ -8,6 +8,7 @@ namespace PolyMessage.Tcp
     public class TcpTransport : PolyTransport
     {
         private readonly Uri _address;
+        private readonly TcpSettings _settings;
         // timeouts
         public static readonly TimeSpan InfiniteTimeout = Timeout.InfiniteTimeSpan;
         private TimeSpan _receiveTimeout;
@@ -25,9 +26,12 @@ namespace PolyMessage.Tcp
                 throw new ArgumentException("Scheme should be TCP.");
 
             _address = address;
+            _settings = new TcpSettings();
             _receiveTimeout = receiveTimeout;
             _sendTimeout = sendTimeout;
         }
+
+        public TcpSettings Settings => _settings;
 
         public override string DisplayName => "TCP";
 
@@ -57,14 +61,14 @@ namespace PolyMessage.Tcp
 
         public override PolyListener CreateListener()
         {
-            return new TcpListener(DisplayName, _address);
+            return new TcpListener(DisplayName, _address, _settings);
         }
 
         public override PolyChannel CreateClient()
         {
             // TODO: initialize TCP client without connecting
             TcpClient tcpClient = new TcpClient(_address.Host, _address.Port);
-            return new TcpChannel(DisplayName, tcpClient);
+            return new TcpChannel(DisplayName, tcpClient, _settings);
         }
     }
 }

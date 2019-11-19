@@ -8,14 +8,19 @@ namespace PolyMessage.Tcp
     {
         private readonly string _displayName;
         private readonly TcpClient _tcpClient;
+        private readonly TcpSettings _settings;
         private readonly Stream _tcpStream;
         private bool _isDisposed;
 
-        public TcpChannel(string displayName, TcpClient tcpClient)
+        public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings)
         {
             _displayName = displayName;
             _tcpClient = tcpClient;
+            _settings = settings;
             _tcpStream = _tcpClient.GetStream();
+            _tcpClient.NoDelay = settings.NoDelay;
+            LocalAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
+            RemoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
         }
 
         protected override void DoDispose(bool isDisposing)
@@ -41,6 +46,10 @@ namespace PolyMessage.Tcp
         }
 
         public override string DisplayName => _displayName;
+
+        public override Uri LocalAddress { get; }
+
+        public override Uri RemoteAddress { get; }
 
         public override Stream Stream
         {

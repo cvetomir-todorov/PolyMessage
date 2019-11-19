@@ -12,6 +12,8 @@ namespace PolyMessage.Server
         Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken);
 
         void Stop();
+
+        IEnumerable<IProcessor> GetActiveProcessors();
     }
 
     internal sealed class Acceptor : IAcceptor
@@ -101,6 +103,11 @@ namespace PolyMessage.Server
         public void Stop()
         {
             Dispose();
+        }
+
+        public IEnumerable<IProcessor> GetActiveProcessors()
+        {
+            return new List<IProcessor>(_processors);
         }
     }
 }

@@ -156,5 +156,27 @@ namespace PolyMessage
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }
+
+        public Uri LocalAddress
+        {
+            get
+            {
+                EnsureState(CommunicationState.Opened, "get local address.");
+                return _channel.LocalAddress;
+            }
+        }
+
+        public Uri RemoteAddress
+        {
+            get
+            {
+                EnsureState(CommunicationState.Opened, "get remote address.");
+                return _channel.RemoteAddress;
+            }
+        }
+
+        internal PolyTransport Transport => _transport;
+
+        internal PolyChannel Channel => _channel;
     }
 }
