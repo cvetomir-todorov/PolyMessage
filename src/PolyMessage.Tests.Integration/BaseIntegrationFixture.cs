@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
 {
-    // TODO: figure out how to control XUnit test parallelism
     public abstract class BaseIntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
