@@ -12,9 +12,9 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.RequestResponse
 {
-    public class Tests : BaseIntegrationFixture
+    public class RequestResponseTests : BaseIntegrationFixture
     {
-        public Tests(ITestOutputHelper output) : base(output, services =>
+        public RequestResponseTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<ISingleOperationContract, SingleOperationImplementor>();
             services.AddScoped<IMultipleOperationsContract, MultipleOperationsImplementor>();

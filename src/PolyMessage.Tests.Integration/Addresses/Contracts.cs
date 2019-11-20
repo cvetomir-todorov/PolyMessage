@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace PolyMessage.Tests.Integration.Settings
+namespace PolyMessage.Tests.Integration.Addresses
 {
     public sealed class Implementor : IContract
     {

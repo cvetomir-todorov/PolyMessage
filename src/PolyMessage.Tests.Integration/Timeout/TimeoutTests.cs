@@ -9,13 +9,13 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.Timeout
 {
-    public class Tests : BaseIntegrationFixture
+    public class TimeoutTests : BaseIntegrationFixture
     {
         private readonly TimeSpan _timeout;
         private readonly TcpTransport _hostTransport;
         private readonly PolyClient _client;
 
-        public Tests(ITestOutputHelper output) : base(output, services =>
+        public TimeoutTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })

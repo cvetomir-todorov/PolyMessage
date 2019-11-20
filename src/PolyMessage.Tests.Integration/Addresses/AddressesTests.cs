@@ -8,11 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PolyMessage.Tests.Integration.Settings
+namespace PolyMessage.Tests.Integration.Addresses
 {
-    public class Tests : BaseIntegrationFixture
+    public class AddressesTests : BaseIntegrationFixture
     {
-        public Tests(ITestOutputHelper output) : base(output, services =>
+        public AddressesTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })
