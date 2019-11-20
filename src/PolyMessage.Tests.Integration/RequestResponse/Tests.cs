@@ -136,7 +136,6 @@ namespace PolyMessage.Tests.Integration.RequestResponse
 
         private async Task<TimeSpan> MakeRequests(PolyClient client, int messagesCount)
         {
-            // currently this connects to the server
             client.AddContract<IMultipleOperationsContract>();
             client.Connect();
             IMultipleOperationsContract proxy = client.Get<IMultipleOperationsContract>();

@@ -9,7 +9,11 @@ namespace PolyMessage.Tcp
         private readonly string _displayName;
         private readonly TcpClient _tcpClient;
         private readonly TcpSettings _settings;
-        private readonly Stream _tcpStream;
+        // only available when the TCP client is not initially connected
+        private readonly Uri _connectAddress;
+        private Stream _tcpStream;
+        private Uri _localAddress;
+        private Uri _remoteAddress;
         private bool _isDisposed;
 
         public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings)
@@ -17,10 +21,14 @@ namespace PolyMessage.Tcp
             _displayName = displayName;
             _tcpClient = tcpClient;
             _settings = settings;
-            _tcpStream = _tcpClient.GetStream();
-            _tcpClient.NoDelay = settings.NoDelay;
-            LocalAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
-            RemoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
+        }
+
+        public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings, Uri connectAddress)
+        {
+            _displayName = displayName;
+            _tcpClient = tcpClient;
+            _settings = settings;
+            _connectAddress = connectAddress;
         }
 
         protected override void DoDispose(bool isDisposing)
@@ -45,17 +53,56 @@ namespace PolyMessage.Tcp
                 throw new InvalidOperationException("TCP channel is already disposed.");
         }
 
+        private void EnsureConnected()
+        {
+            if (_tcpStream == null)
+            {
+                if (!_tcpClient.Connected)
+                {
+                    _tcpClient.Connect(_connectAddress.Host, _connectAddress.Port);
+                }
+
+                _tcpStream = _tcpClient.GetStream();
+                _tcpClient.NoDelay = _settings.NoDelay;
+                _localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
+                _remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
+            }
+        }
+
         public override string DisplayName => _displayName;
 
-        public override Uri LocalAddress { get; }
+        public override void Open()
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+        }
 
-        public override Uri RemoteAddress { get; }
+        public override Uri LocalAddress
+        {
+            get
+            {
+                EnsureNotDisposed();
+                EnsureConnected();
+                return _localAddress;
+            }
+        }
+
+        public override Uri RemoteAddress
+        {
+            get
+            {
+                EnsureNotDisposed();
+                EnsureConnected();
+                return _remoteAddress;
+            }
+        }
 
         public override Stream Stream
         {
             get
             {
                 EnsureNotDisposed();
+                EnsureConnected();
                 return _tcpStream;
             }
         }

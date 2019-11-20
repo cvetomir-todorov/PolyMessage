@@ -90,6 +90,7 @@ namespace PolyMessage.Server
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 PolyChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
+                channel.Open();
                 _logger.LogTrace("Accepted client.");
 
                 IProcessor processor = new Processor(_loggerFactory, format, channel);

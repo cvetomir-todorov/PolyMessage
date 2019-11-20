@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -35,6 +36,24 @@ namespace PolyMessage.Tests.Integration.Settings
             await client.Get<IContract>().Operation(new Request1());
         }
 
+        private void VerifyAddress(Uri actualAddress, Uri expectedAddress, bool samePorts)
+        {
+            actualAddress.Scheme.Should().Be(expectedAddress.Scheme);
+
+            IPAddress actualIP = IPAddress.Parse(actualAddress.Host).MapToIPv6();
+            IPAddress expectedIP = IPAddress.Parse(expectedAddress.Host).MapToIPv6();
+            actualIP.Should().Be(expectedIP);
+
+            if (samePorts)
+            {
+                actualAddress.Port.Should().Be(expectedAddress.Port);
+            }
+            else
+            {
+                actualAddress.Port.Should().NotBe(expectedAddress.Port);
+            }
+        }
+
         [Fact]
         public async Task ExposeLocalAndRemoteAddresses()
         {
@@ -46,17 +65,11 @@ namespace PolyMessage.Tests.Integration.Settings
             // assert
             using (new AssertionScope())
             {
-                localClient.LocalAddress.Scheme.Should().Be(ServerAddress.Scheme);
-                localClient.LocalAddress.Host.Should().Be(ServerAddress.Host);
-                localClient.LocalAddress.Port.Should().NotBe(ServerAddress.Port);
-                localClient.RemoteAddress.Should().Be(ServerAddress);
+                VerifyAddress(localClient.LocalAddress, expectedAddress: ServerAddress, samePorts: false);
+                VerifyAddress(localClient.RemoteAddress, expectedAddress: serverSide.LocalAddress, samePorts: true);
 
-                serverSide.LocalAddress.Should().Be(ServerAddress);
-                serverSide.RemoteAddress.Scheme.Should().Be(ServerAddress.Scheme);
-                serverSide.RemoteAddress.Host.Should().Be(ServerAddress.Host);
-                serverSide.RemoteAddress.Port.Should().NotBe(ServerAddress.Port);
-
-                localClient.LocalAddress.Should().Be(serverSide.RemoteAddress);
+                VerifyAddress(serverSide.LocalAddress, expectedAddress: ServerAddress, samePorts: true);
+                VerifyAddress(serverSide.RemoteAddress, expectedAddress: localClient.LocalAddress, samePorts: true);
             }
         }
     }

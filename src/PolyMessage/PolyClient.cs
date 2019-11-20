@@ -113,6 +113,7 @@ namespace PolyMessage
                     if (_messenger == null)
                     {
                         _channel = _transport.CreateClient();
+                        _channel.Open();
                         _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
@@ -130,16 +131,12 @@ namespace PolyMessage
                 throw new InvalidOperationException($"{contractType.Name} should be added before connecting.");
 
             if (!_proxies.TryGetValue(contractType, out object proxy))
-            {
                 lock (_createProxyLock)
-                {
                     if (!_proxies.TryGetValue(contractType, out proxy))
                     {
                         proxy = CreateProxy(contractType);
                         _proxies.Add(contractType, proxy);
                     }
-                }
-            }
 
             TContract contract = (TContract) proxy;
             return contract;

@@ -20,10 +20,6 @@ namespace PolyMessage
 
         public abstract Uri Address { get; }
 
-        public abstract TimeSpan ReceiveTimeout { get; set; }
-
-        public abstract TimeSpan SendTimeout { get; set; }
-
         public abstract PolyListener CreateListener();
 
         public abstract PolyChannel CreateClient();
@@ -51,6 +47,8 @@ namespace PolyMessage
         protected virtual void DoDispose(bool isDisposing) {}
 
         public abstract string DisplayName { get; }
+
+        public abstract void Open();
 
         public abstract Uri LocalAddress { get; }
 
