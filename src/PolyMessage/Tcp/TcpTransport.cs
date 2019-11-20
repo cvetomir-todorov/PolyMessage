@@ -3,7 +3,6 @@ using System.Net.Sockets;
 
 namespace PolyMessage.Tcp
 {
-    // TODO: use timeouts
     public class TcpTransport : PolyTransport
     {
         private readonly Uri _address;

@@ -21,7 +21,7 @@ namespace PolyMessage
     {
         public static PolyConnectionException ConnectionClosed(IOException ioException)
         {
-            return new PolyConnectionException("Connection has been closed. See inner exception for details.", ioException);
+            return new PolyConnectionException("Connection has been closed.", ioException);
         }
 
         public PolyConnectionException(string message) : base(message)

@@ -15,7 +15,9 @@ namespace PolyMessage.Tests.Integration
     public abstract class BaseIntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
+        protected PolyTransport HostTransport { get; private set; }
         protected PolyHost Host { get; }
+        protected PolyTransport ClientTransport { get; private set; }
         protected List<PolyClient> Clients { get; }
 
         protected BaseIntegrationFixture(ITestOutputHelper output) : this(output, collection => {})
@@ -52,19 +54,19 @@ namespace PolyMessage.Tests.Integration
             return addressBuilder.Uri;
         }
 
-        private static PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
+        private PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            PolyTransport hostTransport = new TcpTransport(serverAddress);
+            HostTransport = new TcpTransport(serverAddress);
             PolyFormat hostFormat = new BinaryFormat();
-            PolyHost host = new PolyHost(hostTransport, hostFormat, serviceProvider);
+            PolyHost host = new PolyHost(HostTransport, hostFormat, serviceProvider);
             return host;
         }
 
-        protected static PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
+        protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            PolyTransport clientTransport = new TcpTransport(serverAddress);
+            ClientTransport = new TcpTransport(serverAddress);
             PolyFormat clientFormat = new BinaryFormat();
-            PolyClient client = new PolyClient(clientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
+            PolyClient client = new PolyClient(ClientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;
         }
 

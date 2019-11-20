@@ -3,41 +3,30 @@ using System.Threading;
 
 namespace PolyMessage.Tcp
 {
+    /// <summary>
+    /// The settings specific to the TCP transport.
+    /// </summary>
     public sealed class TcpSettings
     {
+        /// <summary>
+        /// The infinite timeout as defined in <see cref="Timeout.InfiniteTimeSpan"/> field.
+        /// </summary>
         public static readonly TimeSpan InfiniteTimeout = Timeout.InfiniteTimeSpan;
-        private TimeSpan _receiveTimeout;
-        private TimeSpan _sendTimeout;
 
         public TcpSettings()
         {
-            _receiveTimeout = InfiniteTimeout;
-            _sendTimeout = InfiniteTimeout;
             NoDelay = true;
+            ServerSideClientIdleTimeout = InfiniteTimeout;
         }
 
-        public TimeSpan ReceiveTimeout
-        {
-            get { return _receiveTimeout; }
-            set
-            {
-                if (value <= TimeSpan.Zero)
-                    throw new ArgumentException("Timeout should be greater than zero.");
-                _receiveTimeout = value;
-            }
-        }
-
-        public TimeSpan SendTimeout
-        {
-            get { return _sendTimeout; }
-            set
-            {
-                if (value <= TimeSpan.Zero)
-                    throw new ArgumentException("Timeout should be greater than zero.");
-                _sendTimeout = value;
-            }
-        }
-
+        /// <summary>
+        /// The TCP setting for using Nagle's algorithm.
+        /// </summary>
         public bool NoDelay { get; set; }
+
+        /// <summary>
+        /// The interval during which a client is allowed to be idle before being disconnected from the server.
+        /// </summary>
+        public TimeSpan ServerSideClientIdleTimeout { get; set; }
     }
 }

@@ -58,6 +58,7 @@ namespace PolyMessage.Tcp
             EnsureNotDisposed();
 
             TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
+            tcpClient.ReceiveTimeout = (int) _settings.ServerSideClientIdleTimeout.TotalMilliseconds;
             return new TcpChannel(_displayName, tcpClient, _settings);
         }
 
