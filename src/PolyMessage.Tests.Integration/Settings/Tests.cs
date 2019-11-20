@@ -18,24 +18,6 @@ namespace PolyMessage.Tests.Integration.Settings
         })
         {}
 
-        private PolyClient Setup()
-        {
-            PolyClient client = CreateClient(ServerAddress, ServiceProvider);
-            Clients.Add(client);
-
-            Host.AddContract<IContract>();
-            client.AddContract<IContract>();
-
-            return client;
-        }
-
-        private async Task Connect(PolyClient client)
-        {
-            await StartHost();
-            client.Connect();
-            await client.Get<IContract>().Operation(new Request1());
-        }
-
         private void VerifyAddress(Uri actualAddress, Uri expectedAddress, bool samePorts)
         {
             actualAddress.Scheme.Should().Be(expectedAddress.Scheme);
@@ -58,8 +40,15 @@ namespace PolyMessage.Tests.Integration.Settings
         public async Task ExposeLocalAndRemoteAddresses()
         {
             // arrange & act
-            PolyClient localClient = Setup();
-            await Connect(localClient);
+            PolyClient localClient = CreateClient(ServerAddress, ServiceProvider);
+            Clients.Add(localClient);
+
+            Host.AddContract<IContract>();
+            localClient.AddContract<IContract>();
+
+            await StartHost();
+            localClient.Connect();
+            await localClient.Get<IContract>().Operation(new Request1());
             PolyChannel serverSide = Host.GetConnectedClients().First();
 
             // assert
@@ -73,29 +62,4 @@ namespace PolyMessage.Tests.Integration.Settings
             }
         }
     }
-
-    public sealed class Implementor : IContract
-    {
-        public Task<Response1> Operation(Request1 request)
-        {
-            return Task.FromResult(new Response1());
-        }
-    }
-
-    [PolyContract]
-    public interface IContract
-    {
-        [PolyRequestResponse]
-        Task<Response1> Operation(Request1 request);
-    }
-
-    [Serializable]
-    [PolyMessage]
-    public sealed class Request1
-    {}
-
-    [Serializable]
-    [PolyMessage]
-    public sealed class Response1
-    {}
 }
