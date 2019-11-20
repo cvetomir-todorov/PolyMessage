@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace PolyMessage.Tests.Integration.Timeout
+namespace PolyMessage.Tests.Integration.Tcp
 {
     public sealed class Implementor : IContract
     {

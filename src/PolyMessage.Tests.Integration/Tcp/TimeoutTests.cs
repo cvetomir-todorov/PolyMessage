@@ -7,13 +7,12 @@ using PolyMessage.Tcp;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PolyMessage.Tests.Integration.Timeout
+namespace PolyMessage.Tests.Integration.Tcp
 {
     public class TimeoutTests : BaseIntegrationFixture
     {
         private readonly TimeSpan _timeout;
         private readonly TcpTransport _hostTransport;
-        private readonly PolyClient _client;
 
         public TimeoutTests(ITestOutputHelper output) : base(output, services =>
         {
@@ -23,17 +22,10 @@ namespace PolyMessage.Tests.Integration.Timeout
             _timeout = TimeSpan.FromSeconds(1);
             _hostTransport = HostTransport as TcpTransport;
 
-            _client = CreateClient(ServerAddress, ServiceProvider);
-            Clients.Add(_client);
+            Client = CreateClient();
 
             Host.AddContract<IContract>();
-            _client.AddContract<IContract>();
-        }
-
-        private async Task Start()
-        {
-            await StartHost();
-            _client.Connect();
+            Client.AddContract<IContract>();
         }
 
         [Fact]
@@ -43,10 +35,11 @@ namespace PolyMessage.Tests.Integration.Timeout
             _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
 
             // act
-            await Start();
-            IContract contract = _client.Get<IContract>();
-
+            await StartHost();
+            Client.Connect();
+            IContract contract = Client.Get<IContract>();
             await contract.Operation(new Request1());
+
             await Task.Delay(_timeout * 2);
             Func<Task> act = async () => await contract.Operation(new Request1());
 
@@ -54,7 +47,7 @@ namespace PolyMessage.Tests.Integration.Timeout
             using (new AssertionScope())
             {
                 act.Should().Throw<PolyConnectionException>();
-                _client.Connection.State.Should().Be(PolyConnectionState.Closed);
+                Client.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }
     }

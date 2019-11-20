@@ -10,17 +10,14 @@ namespace PolyMessage.Tests.Integration.Connection
 {
     public class StateTests : BaseIntegrationFixture
     {
-        private readonly PolyClient _client;
-
         public StateTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })
         {
-            _client = CreateClient(ServerAddress, ServiceProvider);
-            Clients.Add(_client);
+            Client = CreateClient();
 
-            _client.AddContract<IContract>();
+            Client.AddContract<IContract>();
             Host.AddContract<IContract>();
         }
 
@@ -35,17 +32,17 @@ namespace PolyMessage.Tests.Integration.Connection
             // act & assert
             using (new AssertionScope())
             {
-                _client.Connection.State.Should().Be(PolyConnectionState.Created);
+                Client.Connection.State.Should().Be(PolyConnectionState.Created);
 
                 if (hasConnectedToServer)
                 {
-                    _client.Connect();
-                    await _client.Get<IContract>().Operation(new Request1());
-                    _client.Connection.State.Should().Be(PolyConnectionState.Opened);
+                    Client.Connect();
+                    await Client.Get<IContract>().Operation(new Request1());
+                    Client.Connection.State.Should().Be(PolyConnectionState.Opened);
                 }
 
-                _client.Dispose();
-                _client.Connection.State.Should().Be(PolyConnectionState.Closed);
+                Client.Disconnect();
+                Client.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }
 
@@ -58,13 +55,13 @@ namespace PolyMessage.Tests.Integration.Connection
             // act & assert
             using (new AssertionScope())
             {
-                _client.Connect();
-                await _client.Get<IContract>().Operation(new Request1());
+                Client.Connect();
+                await Client.Get<IContract>().Operation(new Request1());
 
                 PolyChannel remoteClient = Host.GetConnectedClients().First();
                 remoteClient.Connection.State.Should().Be(PolyConnectionState.Opened);
 
-                remoteClient.Dispose();
+                remoteClient.Close();
                 remoteClient.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }

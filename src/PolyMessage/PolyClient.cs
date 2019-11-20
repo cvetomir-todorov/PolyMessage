@@ -163,5 +163,10 @@ namespace PolyMessage
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }
+
+        public void Disconnect()
+        {
+            Dispose();
+        }
     }
 }

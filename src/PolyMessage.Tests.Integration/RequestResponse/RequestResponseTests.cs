@@ -28,16 +28,15 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         public async Task SendMessagesUsingSingleOperationContract(int messagesCount)
         {
             // arrange
-            Clients.Add(CreateClient(ServerAddress, ServiceProvider));
-            PolyClient client = Clients[0];
+            Client = CreateClient();
 
             // act & assert
             Host.AddContract<ISingleOperationContract>();
             await StartHost();
 
-            client.AddContract<ISingleOperationContract>();
-            client.Connect();
-            ISingleOperationContract proxy = client.Get<ISingleOperationContract>();
+            Client.AddContract<ISingleOperationContract>();
+            Client.Connect();
+            ISingleOperationContract proxy = Client.Get<ISingleOperationContract>();
             const string request = "request";
 
             using (new AssertionScope())
@@ -57,16 +56,15 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         public async Task SendMessagesUsingMultipleOperationsContract(int messagesCount)
         {
             // arrange
-            Clients.Add(CreateClient(ServerAddress, ServiceProvider));
-            PolyClient client = Clients[0];
+            Client = CreateClient();
 
             // act & assert
             Host.AddContract<IMultipleOperationsContract>();
             await StartHost();
 
-            client.AddContract<IMultipleOperationsContract>();
-            client.Connect();
-            IMultipleOperationsContract proxy = client.Get<IMultipleOperationsContract>();
+            Client.AddContract<IMultipleOperationsContract>();
+            Client.Connect();
+            IMultipleOperationsContract proxy = Client.Get<IMultipleOperationsContract>();
             const string request = "request";
 
             using (new AssertionScope())
@@ -95,7 +93,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
             // arrange
             for (int i = 0; i < clientsCount; ++i)
             {
-                PolyClient client = CreateClient(ServerAddress, ServiceProvider);
+                PolyClient client = CreateClient();
                 Clients.Add(client);
             }
 

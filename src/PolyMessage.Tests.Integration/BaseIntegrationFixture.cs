@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
 {
-    // TODO: add a single client instance for easier testing
     public abstract class BaseIntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
         protected PolyTransport HostTransport { get; private set; }
         protected PolyHost Host { get; }
         protected PolyTransport ClientTransport { get; private set; }
+        protected PolyClient Client { get; set; }
         protected List<PolyClient> Clients { get; }
 
         protected BaseIntegrationFixture(ITestOutputHelper output) : this(output, collection => {})
@@ -28,6 +28,7 @@ namespace PolyMessage.Tests.Integration
         {
             ServerAddress = GetServerAddress();
             Host = CreateHost(ServerAddress, ServiceProvider);
+            Client = CreateClient();
             Clients = new List<PolyClient>();
         }
 
@@ -35,9 +36,10 @@ namespace PolyMessage.Tests.Integration
         {
             if (disposingInsteadOfFinalizing)
             {
+                Client.Disconnect();
                 foreach (PolyClient client in Clients)
                 {
-                    client.Dispose();
+                    client.Disconnect();
                 }
                 Host.Stop();
             }
@@ -63,7 +65,11 @@ namespace PolyMessage.Tests.Integration
             return host;
         }
 
-        // TODO: add an overload with the server address and service provider from this class
+        protected PolyClient CreateClient()
+        {
+            return CreateClient(ServerAddress, ServiceProvider);
+        }
+
         protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
             ClientTransport = new TcpTransport(serverAddress);
