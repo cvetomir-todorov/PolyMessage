@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -54,8 +53,17 @@ namespace PolyMessage
 
         public abstract Uri RemoteAddress { get; }
 
-        // FEAT: hide this and expose just send/receive byte[]
-        public abstract Stream Stream { get; }
+        public abstract int Read(byte[] buffer, int offset, int count);
+
+        public abstract Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken);
+
+        public abstract void Write(byte[] buffer, int offset, int count);
+
+        public abstract Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken);
+
+        public abstract void Flush();
+
+        public abstract Task FlushAsync(CancellationToken cancelToken);
     }
 
     public enum CommunicationState

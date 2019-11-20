@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PolyMessage.Tcp
 {
@@ -11,7 +13,7 @@ namespace PolyMessage.Tcp
         private readonly TcpSettings _settings;
         // only available when the TCP client is not initially connected
         private readonly Uri _connectAddress;
-        private Stream _tcpStream;
+        private NetworkStream _tcpStream;
         private Uri _localAddress;
         private Uri _remoteAddress;
         private bool _isDisposed;
@@ -97,13 +99,93 @@ namespace PolyMessage.Tcp
             }
         }
 
-        public override Stream Stream
+        public override int Read(byte[] buffer, int offset, int count)
         {
-            get
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
             {
-                EnsureNotDisposed();
-                EnsureConnected();
-                return _tcpStream;
+                return _tcpStream.Read(buffer, offset, count);
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
+            }
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
+            {
+                return _tcpStream.ReadAsync(buffer, offset, count, cancelToken);
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
+            }
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
+            {
+                _tcpStream.Write(buffer, offset, count);
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
+            }
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
+            {
+                return _tcpStream.WriteAsync(buffer, offset, count, cancelToken);
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
+            }
+        }
+
+        public override void Flush()
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
+            {
+                _tcpStream.Flush();
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
+            }
+        }
+
+        public override Task FlushAsync(CancellationToken cancelToken)
+        {
+            EnsureNotDisposed();
+            EnsureConnected();
+            try
+            {
+                return _tcpStream.FlushAsync(cancelToken);
+            }
+            catch (IOException ioException)
+            {
+                Dispose();
+                throw PolyConnectionException.ConnectionClosed(ioException);
             }
         }
     }

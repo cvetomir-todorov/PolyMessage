@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,14 +19,20 @@ namespace PolyMessage.Binary
 
         public override Task Write(object obj, PolyChannel channel, CancellationToken cancelToken)
         {
-            _formatter.Serialize(channel.Stream, obj);
-            return Task.CompletedTask;
+            using (Stream channelStream = new ChannelStream(channel))
+            {
+                _formatter.Serialize(channelStream, obj);
+                return Task.CompletedTask;
+            }
         }
 
         public override Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken)
         {
-            object obj = _formatter.Deserialize(channel.Stream);
-            return Task.FromResult(obj);
+            using (Stream channelStream = new ChannelStream(channel))
+            {
+                object obj = _formatter.Deserialize(channelStream);
+                return Task.FromResult(obj);
+            }
         }
     }
 }
