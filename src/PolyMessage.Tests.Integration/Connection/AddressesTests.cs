@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PolyMessage.Tests.Integration.Addresses
+namespace PolyMessage.Tests.Integration.Connection
 {
     public class AddressesTests : BaseIntegrationFixture
     {
@@ -37,7 +37,7 @@ namespace PolyMessage.Tests.Integration.Addresses
         }
 
         [Fact]
-        public async Task ExposeLocalAndRemoteAddresses()
+        public async Task ExposeClientAddresses()
         {
             // arrange & act
             PolyClient localClient = CreateClient(ServerAddress, ServiceProvider);
@@ -49,16 +49,38 @@ namespace PolyMessage.Tests.Integration.Addresses
             await StartHost();
             localClient.Connect();
             await localClient.Get<IContract>().Operation(new Request1());
-            PolyChannel serverSide = Host.GetConnectedClients().First();
+            PolyChannel remoteClient = Host.GetConnectedClients().First();
 
             // assert
             using (new AssertionScope())
             {
-                VerifyAddress(localClient.LocalAddress, expectedAddress: ServerAddress, samePorts: false);
-                VerifyAddress(localClient.RemoteAddress, expectedAddress: serverSide.LocalAddress, samePorts: true);
+                VerifyAddress(localClient.Connection.LocalAddress, expectedAddress: ServerAddress, samePorts: false);
+                VerifyAddress(localClient.Connection.RemoteAddress, expectedAddress: ServerAddress, samePorts: true);
+                localClient.Connection.RemoteAddress.Port.Should().Be(remoteClient.Connection.LocalAddress.Port);
+            }
+        }
 
-                VerifyAddress(serverSide.LocalAddress, expectedAddress: ServerAddress, samePorts: true);
-                VerifyAddress(serverSide.RemoteAddress, expectedAddress: localClient.LocalAddress, samePorts: true);
+        [Fact]
+        public async Task ExposeServerAddresses()
+        {
+            // arrange & act
+            PolyClient localClient = CreateClient(ServerAddress, ServiceProvider);
+            Clients.Add(localClient);
+
+            Host.AddContract<IContract>();
+            localClient.AddContract<IContract>();
+
+            await StartHost();
+            localClient.Connect();
+            await localClient.Get<IContract>().Operation(new Request1());
+            PolyChannel remoteClient = Host.GetConnectedClients().First();
+
+            // assert
+            using (new AssertionScope())
+            {
+                VerifyAddress(remoteClient.Connection.LocalAddress, expectedAddress: ServerAddress, samePorts: true);
+                VerifyAddress(remoteClient.Connection.RemoteAddress, expectedAddress: ServerAddress, samePorts: false);
+                remoteClient.Connection.RemoteAddress.Port.Should().Be(localClient.Connection.LocalAddress.Port);
             }
         }
     }

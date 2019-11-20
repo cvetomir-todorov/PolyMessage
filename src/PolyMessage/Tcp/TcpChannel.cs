@@ -11,11 +11,10 @@ namespace PolyMessage.Tcp
         private readonly string _displayName;
         private readonly TcpClient _tcpClient;
         private readonly TcpSettings _settings;
+        private readonly PolyConnection _connection;
         // only available when the TCP client is not initially connected
         private readonly Uri _connectAddress;
         private NetworkStream _tcpStream;
-        private Uri _localAddress;
-        private Uri _remoteAddress;
         private bool _isDisposed;
 
         public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings)
@@ -23,6 +22,7 @@ namespace PolyMessage.Tcp
             _displayName = displayName;
             _tcpClient = tcpClient;
             _settings = settings;
+            _connection = new PolyConnection();
         }
 
         public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings, Uri connectAddress)
@@ -30,6 +30,7 @@ namespace PolyMessage.Tcp
             _displayName = displayName;
             _tcpClient = tcpClient;
             _settings = settings;
+            _connection = new PolyConnection();
             _connectAddress = connectAddress;
         }
 
@@ -43,6 +44,7 @@ namespace PolyMessage.Tcp
                 _tcpStream.Dispose();
                 _tcpClient.Close();
                 _tcpClient.Dispose();
+                _connection.SetClosed();
                 _isDisposed = true;
             }
 
@@ -66,8 +68,9 @@ namespace PolyMessage.Tcp
 
                 _tcpStream = _tcpClient.GetStream();
                 _tcpClient.NoDelay = _settings.NoDelay;
-                _localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
-                _remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
+                Uri localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
+                Uri remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
+                _connection.SetOpened(localAddress, remoteAddress);
             }
         }
 
@@ -79,25 +82,12 @@ namespace PolyMessage.Tcp
             EnsureConnected();
         }
 
-        public override Uri LocalAddress
+        public override void Close()
         {
-            get
-            {
-                EnsureNotDisposed();
-                EnsureConnected();
-                return _localAddress;
-            }
+            Dispose();
         }
 
-        public override Uri RemoteAddress
-        {
-            get
-            {
-                EnsureNotDisposed();
-                EnsureConnected();
-                return _remoteAddress;
-            }
-        }
+        public override PolyConnection Connection => _connection;
 
         public override int Read(byte[] buffer, int offset, int count)
         {

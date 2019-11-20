@@ -12,6 +12,7 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
 {
+    // TODO: add a single client instance for easier testing
     public abstract class BaseIntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
@@ -62,6 +63,7 @@ namespace PolyMessage.Tests.Integration
             return host;
         }
 
+        // TODO: add an overload with the server address and service provider from this class
         protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
             ClientTransport = new TcpTransport(serverAddress);

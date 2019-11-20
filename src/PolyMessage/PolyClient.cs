@@ -28,6 +28,7 @@ namespace PolyMessage
         private readonly object _setupMessagingLock;
         private volatile IMessenger _messenger;
         private PolyChannel _channel;
+        private PolyConnection _connection;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
@@ -37,6 +38,7 @@ namespace PolyMessage
         private readonly string _id;
         // stop/dispose
         private readonly CancellationTokenSource _cancelTokenSource;
+        private bool _isDisposed;
 
         public PolyClient(PolyTransport transport, PolyFormat format)
             : this(transport, format, new NullLoggerFactory())
@@ -63,6 +65,7 @@ namespace PolyMessage
             _contractInspector = new ContractInspector(loggerFactory);
             // messaging
             _setupMessagingLock = new object();
+            _connection = new PolyConnection();
             // proxies
             _proxyGenerator = new ProxyGenerator();
             _createProxyLock = new object();
@@ -75,28 +78,35 @@ namespace PolyMessage
 
         public void Dispose()
         {
-            if (State == CommunicationState.Closed)
+            if (_isDisposed)
                 return;
 
             _cancelTokenSource.Cancel();
             _cancelTokenSource.Dispose();
-            _channel?.Dispose();
+            if (_channel == null)
+            {
+                _connection.SetClosed();
+            }
+            else
+            {
+                _channel.Close();
+            }
             _logger.LogInformation("[{0}] Stopped", _id);
 
-            State = CommunicationState.Closed;
+            _isDisposed = true;
         }
 
-        public CommunicationState State { get; private set; }
+        public PolyConnection Connection => _connection;
 
-        private void EnsureState(CommunicationState expectedState, string action)
+        private void EnsureState(PolyConnectionState expectedState, string action)
         {
-            if (State != expectedState)
+            if (_connection.State != expectedState)
                 throw new InvalidOperationException($"[{_id}] should be in {expectedState} state in order to {action}.");
         }
 
         public void AddContract<TContract>() where TContract : class
         {
-            EnsureState(CommunicationState.Created, "add contract");
+            EnsureState(PolyConnectionState.Created, "add contract");
 
             Type contractType = typeof(TContract);
             IEnumerable<Operation> operations = _contractInspector.InspectContract(contractType);
@@ -106,7 +116,7 @@ namespace PolyMessage
 
         public void Connect()
         {
-            EnsureState(CommunicationState.Created, "connect to the server");
+            EnsureState(PolyConnectionState.Created, "connect to the server");
 
             if (_messenger == null)
                 lock (_setupMessagingLock)
@@ -114,17 +124,17 @@ namespace PolyMessage
                     {
                         _channel = _transport.CreateClient();
                         _channel.Open();
+                        _connection = _channel.Connection;
                         _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
                         _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
-                        State = CommunicationState.Opened;
                     }
         }
 
         public TContract Get<TContract>() where TContract : class
         {
-            EnsureState(CommunicationState.Opened, "get a proxy for sending messages");
+            EnsureState(PolyConnectionState.Opened, "get a proxy for sending messages");
 
             Type contractType = typeof(TContract);
             if (!_contracts.Contains(contractType))
@@ -153,27 +163,5 @@ namespace PolyMessage
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
             return proxy;
         }
-
-        public Uri LocalAddress
-        {
-            get
-            {
-                EnsureState(CommunicationState.Opened, "get local address.");
-                return _channel.LocalAddress;
-            }
-        }
-
-        public Uri RemoteAddress
-        {
-            get
-            {
-                EnsureState(CommunicationState.Opened, "get remote address.");
-                return _channel.RemoteAddress;
-            }
-        }
-
-        internal PolyTransport Transport => _transport;
-
-        internal PolyChannel Channel => _channel;
     }
 }

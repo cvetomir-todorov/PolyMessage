@@ -49,9 +49,9 @@ namespace PolyMessage
 
         public abstract void Open();
 
-        public abstract Uri LocalAddress { get; }
+        public abstract void Close();
 
-        public abstract Uri RemoteAddress { get; }
+        public abstract PolyConnection Connection { get; }
 
         public abstract int Read(byte[] buffer, int offset, int count);
 
@@ -64,10 +64,5 @@ namespace PolyMessage
         public abstract void Flush();
 
         public abstract Task FlushAsync(CancellationToken cancelToken);
-    }
-
-    public enum CommunicationState
-    {
-        Created, Opened, Closed
     }
 }

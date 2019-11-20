@@ -116,8 +116,6 @@ namespace PolyMessage
             Dispose();
         }
 
-        internal PolyTransport Transport => _transport;
-
         internal IEnumerable<PolyChannel> GetConnectedClients()
         {
             return _acceptor.GetActiveProcessors().Select(activeProcessor => activeProcessor.ConnectedClient);

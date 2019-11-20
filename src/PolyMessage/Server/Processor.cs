@@ -19,7 +19,7 @@ namespace PolyMessage.Server
     {
         private readonly ILogger _logger;
         private readonly PolyFormat _format;
-        private readonly PolyChannel _channel;
+        private readonly PolyChannel _connectedClient;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -28,11 +28,11 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Processor(ILoggerFactory loggerFactory, PolyFormat format, PolyChannel channel)
+        public Processor(ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _format = format;
-            _channel = channel;
+            _connectedClient = connectedClient;
             // identity
             _id = "Processor" + Interlocked.Increment(ref _generation);
             // stop/dispose
@@ -45,7 +45,7 @@ namespace PolyMessage.Server
                 return;
 
             _isStopRequested = true;
-            _channel.Dispose();
+            _connectedClient.Close();
             _logger.LogTrace("[{0}] Waiting worker thread...", _id);
             _stoppedEvent.Wait();
             _stoppedEvent.Dispose();
@@ -84,7 +84,7 @@ namespace PolyMessage.Server
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 _logger.LogTrace("[{0}] Receiving request...", _id);
-                object requestMessage = await serverComponents.Messenger.Receive(_format, _channel, cancelToken).ConfigureAwait(false);
+                object requestMessage = await serverComponents.Messenger.Receive(_format, _connectedClient, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
                 // TODO: try/catch here to avoid client hanging when infinite timeout is set
@@ -92,7 +92,7 @@ namespace PolyMessage.Server
                 object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, operation).ConfigureAwait(false);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
-                await serverComponents.Messenger.Send(responseMessage, _format, _channel, cancelToken).ConfigureAwait(false);
+                await serverComponents.Messenger.Send(responseMessage, _format, _connectedClient, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
             }
         }
@@ -104,7 +104,7 @@ namespace PolyMessage.Server
 
         public PolyChannel ConnectedClient
         {
-            get { return _channel; }
+            get { return _connectedClient; }
         }
     }
 }

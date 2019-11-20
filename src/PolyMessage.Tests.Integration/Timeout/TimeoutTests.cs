@@ -54,7 +54,7 @@ namespace PolyMessage.Tests.Integration.Timeout
             using (new AssertionScope())
             {
                 act.Should().Throw<PolyConnectionException>();
-                _client.State.Should().Be(CommunicationState.Closed);
+                _client.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }
     }
