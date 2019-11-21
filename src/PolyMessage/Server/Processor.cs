@@ -70,6 +70,7 @@ namespace PolyMessage.Server
 
             try
             {
+                // TODO: catch expected exceptions when stopping the channel
                 await DoStart(serverComponents, cancelToken).ConfigureAwait(false);
             }
             catch (Exception exception)

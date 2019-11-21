@@ -30,7 +30,7 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing){}
 
-        public abstract Task PrepareAccepting();
+        public abstract void PrepareAccepting();
 
         public abstract Task<PolyChannel> AcceptClient();
 

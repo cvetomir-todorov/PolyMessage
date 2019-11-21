@@ -27,12 +27,13 @@ namespace PolyMessage.Tcp
 
         public override PolyListener CreateListener()
         {
-            return new TcpListener(_address, _settings);
+            return new TcpListener(this);
         }
 
         public override PolyChannel CreateClient()
         {
             TcpClient tcpClient = new TcpClient();
+            // TODO: pass the transport itself
             return new TcpChannel(tcpClient, _settings, connectAddress: _address);
         }
     }

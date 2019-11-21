@@ -9,16 +9,14 @@ namespace PolyMessage.Tcp
     internal sealed class TcpListener : PolyListener
     {
         // TCP
-        private readonly Uri _address;
-        private readonly TcpSettings _settings;
+        private readonly TcpTransport _tcpTransport;
         private DotNetTcpListener _tcpListener;
         // stop/dispose
         private bool _isDisposed;
 
-        public TcpListener(Uri address, TcpSettings settings)
+        public TcpListener(TcpTransport tcpTransport)
         {
-            _address = address;
-            _settings = settings;
+            _tcpTransport = tcpTransport;
         }
 
         protected override void DoDispose(bool isDisposing)
@@ -38,26 +36,32 @@ namespace PolyMessage.Tcp
         private void EnsureNotDisposed()
         {
             if (_isDisposed)
-                throw new InvalidOperationException("TCP transport is already disposed.");
+                throw new InvalidOperationException($"{_tcpTransport.DisplayName} listener is already disposed.");
         }
 
-        public override Task PrepareAccepting()
+        public override void PrepareAccepting()
         {
             EnsureNotDisposed();
 
-            IPAddress hostname = IPAddress.Parse(_address.Host);
-            _tcpListener = new DotNetTcpListener(hostname, _address.Port);
+            IPAddress hostname = IPAddress.Parse(_tcpTransport.Address.Host);
+            _tcpListener = new DotNetTcpListener(hostname, _tcpTransport.Address.Port);
             _tcpListener.Start();
-            return Task.CompletedTask;
         }
 
         public override async Task<PolyChannel> AcceptClient()
         {
             EnsureNotDisposed();
 
-            TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
-            tcpClient.ReceiveTimeout = (int) _settings.ServerSideClientIdleTimeout.TotalMilliseconds;
-            return new TcpChannel(tcpClient, _settings);
+            try
+            {
+                TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
+                tcpClient.ReceiveTimeout = (int) _tcpTransport.Settings.ServerSideClientIdleTimeout.TotalMilliseconds;
+                return new TcpChannel(tcpClient, _tcpTransport.Settings);
+            }
+            catch (ObjectDisposedException objectDisposedException) when (objectDisposedException.ObjectName == typeof(Socket).FullName)
+            {
+                throw new PolyListenerStoppedException(_tcpTransport, objectDisposedException);
+            }
         }
 
         public override void StopAccepting()

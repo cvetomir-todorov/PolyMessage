@@ -27,4 +27,15 @@ namespace PolyMessage
         public PolyConnectionException(string message, Exception innerException) : base(message, innerException)
         {}
     }
+
+    [Serializable]
+    public class PolyListenerStoppedException : PolyException
+    {
+        public PolyListenerStoppedException(PolyTransport transport, Exception exception) : base("The listener stopped.", exception)
+        {
+            Transport = transport;
+        }
+
+        public PolyTransport Transport { get; }
+    }
 }

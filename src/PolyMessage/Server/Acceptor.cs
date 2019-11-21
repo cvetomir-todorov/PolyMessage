@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -69,13 +68,13 @@ namespace PolyMessage.Server
             {
                 await DoStart(transport, format, serverComponents, cancelToken).ConfigureAwait(false);
             }
-            catch (ObjectDisposedException objectDisposedException) when (objectDisposedException.ObjectName == typeof(Socket).FullName)
+            catch (PolyListenerStoppedException stoppedException)
             {
-                // TODO: catch this exception in the transport logic and throw a recognizable one
-                _logger.LogTrace("Disposed the listener for {0} transport.", transport.DisplayName);
+                _logger.LogInformation("Listener for transport {0} at address {1} has stopped.", stoppedException.Transport.DisplayName, stoppedException.Transport.Address);
             }
             catch (Exception exception)
             {
+                // TODO: set exception as the first parameter
                 _logger.LogError("Unexpected: {0}", exception);
             }
             finally
@@ -88,12 +87,13 @@ namespace PolyMessage.Server
         private async Task DoStart(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             _listener = transport.CreateListener();
-            await _listener.PrepareAccepting().ConfigureAwait(false);
+            _listener.PrepareAccepting();
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 PolyChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
                 channel.Open();
+                // TODO: make trace and possibly debug calls with a check
                 _logger.LogTrace("Accepted client.");
 
                 IProcessor processor = new Processor(_loggerFactory, format, channel);
