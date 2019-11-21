@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +21,7 @@ namespace PolyMessage.Server
     internal sealed class Acceptor : IAcceptor
     {
         private PolyListener _listener;
-        private readonly HashSet<IProcessor> _processors;
+        private readonly ConcurrentDictionary<string, IProcessor> _processors;
         // logging
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
@@ -32,7 +34,7 @@ namespace PolyMessage.Server
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
-            _processors = new HashSet<IProcessor>();
+            _processors = new ConcurrentDictionary<string, IProcessor>();
             _stoppedEvent = new ManualResetEventSlim(initialState: false);
         }
 
@@ -41,10 +43,11 @@ namespace PolyMessage.Server
             if (_isDisposed)
                 return;
 
-            foreach (IProcessor processor in _processors)
+            foreach (KeyValuePair<string, IProcessor> processorKvp in _processors)
             {
-                processor.Stop();
+                processorKvp.Value.Stop();
             }
+            _processors.Clear();
             _listener?.StopAccepting();
             _isStopRequested = true;
             _logger.LogTrace("Waiting worker thread...");
@@ -94,10 +97,29 @@ namespace PolyMessage.Server
                 _logger.LogTrace("Accepted client.");
 
                 IProcessor processor = new Processor(_loggerFactory, format, channel);
-                // TODO: add stopped event so that we remove the processor when it has finished
-                _processors.Add(processor);
+                bool added = _processors.TryAdd(processor.ID, processor);
+                if (added)
+                {
+                    Task _ = Task.Run(() => RunProcessor(processor, serverComponents, cancelToken), cancelToken);
+                }
+                else
+                {
+                    _logger.LogCritical("Could not add processor with ID {0}.", processor.ID);
+                }
+            }
+        }
 
-                Task _ = Task.Run(async () => await processor.Start(serverComponents, cancelToken), cancelToken);
+        private async Task RunProcessor(IProcessor processor, ServerComponents serverComponents, CancellationToken cancelToken)
+        {
+            try
+            {
+                await processor.Start(serverComponents, cancelToken);
+            }
+            finally
+            {
+                bool isRemoved = _processors.TryRemove(processor.ID, out _);
+                if (!isRemoved)
+                    _logger.LogCritical("Failed to remove processor with ID {0}.", processor.ID);
             }
         }
 
@@ -108,7 +130,7 @@ namespace PolyMessage.Server
 
         public IEnumerable<IProcessor> GetActiveProcessors()
         {
-            return new List<IProcessor>(_processors);
+            return new List<IProcessor>(_processors.Select(kvp => kvp.Value));
         }
     }
 }

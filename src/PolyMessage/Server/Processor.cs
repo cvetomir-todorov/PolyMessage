@@ -8,6 +8,8 @@ namespace PolyMessage.Server
 {
     internal interface IProcessor : IDisposable
     {
+        string ID { get; }
+
         Task Start(ServerComponents serverComponents, CancellationToken cancelToken);
 
         void Stop();
@@ -59,6 +61,8 @@ namespace PolyMessage.Server
             if (_isDisposed)
                 throw new InvalidOperationException("Processor is already stopped.");
         }
+
+        public string ID => _id;
 
         public async Task Start(ServerComponents serverComponents, CancellationToken cancelToken)
         {
