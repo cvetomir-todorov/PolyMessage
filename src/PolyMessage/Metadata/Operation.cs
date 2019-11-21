@@ -19,7 +19,7 @@ namespace PolyMessage.Metadata
 
         public override string ToString()
         {
-            return $"{ContractType} Operation={Method.Name} Request={RequestType.Name}(ID={RequestID}) Response={ResponseType.Name}(ID={ResponseID})";
+            return $"{ContractType.Name} Operation={Method.Name} Request={RequestType.Name}(ID={RequestID}) Response={ResponseType.Name}(ID={ResponseID})";
         }
     }
 }

@@ -74,8 +74,7 @@ namespace PolyMessage.Server
             }
             catch (Exception exception)
             {
-                // TODO: set exception as the first parameter
-                _logger.LogError("Unexpected: {0}", exception);
+                _logger.LogError(exception, "Unexpected error occurred.");
             }
             finally
             {

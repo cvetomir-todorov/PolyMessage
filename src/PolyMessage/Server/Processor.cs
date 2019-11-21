@@ -82,7 +82,7 @@ namespace PolyMessage.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError("[{0}] Unexpected: {1}", _id, exception);
+                _logger.LogError(exception, "[{0}] Unexpected error occurred.", _id);
             }
             finally
             {
