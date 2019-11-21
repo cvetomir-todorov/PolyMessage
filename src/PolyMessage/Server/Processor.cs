@@ -27,6 +27,7 @@ namespace PolyMessage.Server
         private readonly string _id;
         // stop/dispose
         private readonly ManualResetEventSlim _stoppedEvent;
+        private readonly object _disposeLock;
         private bool _isDisposed;
         private bool _isStopRequested;
 
@@ -39,21 +40,25 @@ namespace PolyMessage.Server
             _id = "Processor" + Interlocked.Increment(ref _generation);
             // stop/dispose
             _stoppedEvent = new ManualResetEventSlim(initialState: false);
+            _disposeLock = new object();
         }
 
         public void Dispose()
         {
-            if (_isDisposed)
-                return;
+            // it is possible for the processor to be stopped from different threads
+            if (!_isDisposed)
+                lock (_disposeLock)
+                    if (!_isDisposed)
+                    {
+                        _isStopRequested = true;
+                        _connectedClient.Close();
+                        _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
+                        _stoppedEvent.Wait();
+                        _stoppedEvent.Dispose();
 
-            _isStopRequested = true;
-            _connectedClient.Close();
-            _logger.LogTrace("[{0}] Waiting worker thread...", _id);
-            _stoppedEvent.Wait();
-            _stoppedEvent.Dispose();
-
-            _isDisposed = true;
-            _logger.LogTrace("[{0}] Stopped.", _id);
+                        _isDisposed = true;
+                        _logger.LogTrace("[{0}] Stopped.", _id);
+                    }
         }
 
         private void EnsureNotDisposed()

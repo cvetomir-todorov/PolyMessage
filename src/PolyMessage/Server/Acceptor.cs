@@ -49,7 +49,7 @@ namespace PolyMessage.Server
             _processors.Clear();
             _listener?.StopAccepting();
             _isStopRequested = true;
-            _logger.LogTrace("Waiting worker thread...");
+            _logger.LogTrace("Waiting for worker thread...");
             _stoppedEvent.Wait();
 
             _listener?.Dispose();
@@ -90,36 +90,32 @@ namespace PolyMessage.Server
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
-                PolyChannel channel = await _listener.AcceptClient().ConfigureAwait(false);
-                channel.Open();
-                // TODO: make trace and possibly debug calls with a check
-                _logger.LogTrace("Accepted client.");
-
-                IProcessor processor = new Processor(_loggerFactory, format, channel);
-                bool added = _processors.TryAdd(processor.ID, processor);
-                if (added)
-                {
-                    Task _ = Task.Run(() => RunProcessor(processor, serverComponents, cancelToken), cancelToken);
-                }
-                else
-                {
-                    _logger.LogCritical("Could not add processor with ID {0}.", processor.ID);
-                }
+                PolyChannel client = await _listener.AcceptClient().ConfigureAwait(false);
+                Task _ = Task.Run(() => ProcessClient(format, client, serverComponents, cancelToken), cancelToken);
             }
         }
 
-        private async Task RunProcessor(IProcessor processor, ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task ProcessClient(PolyFormat format, PolyChannel client, ServerComponents serverComponents, CancellationToken cancelToken)
         {
+            IProcessor processor = null;
             try
             {
+                processor = new Processor(_loggerFactory, format, client);
+                if (!_processors.TryAdd(processor.ID, processor))
+                    _logger.LogCritical("Could not add processor with ID {0}.", processor.ID);
+
+                client.Open();
                 await processor.Start(serverComponents, cancelToken);
             }
             finally
             {
-                processor.Stop();
-                bool isRemoved = _processors.TryRemove(processor.ID, out _);
-                if (!isRemoved)
-                    _logger.LogCritical("Failed to remove processor with ID {0}.", processor.ID);
+                if (processor != null)
+                {
+                    processor.Stop();
+                    bool isRemoved = _processors.TryRemove(processor.ID, out _);
+                    if (!isRemoved)
+                        _logger.LogCritical("Failed to remove processor with ID {0}.", processor.ID);
+                }
             }
         }
 
