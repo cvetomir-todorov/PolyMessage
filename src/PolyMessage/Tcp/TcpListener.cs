@@ -56,7 +56,7 @@ namespace PolyMessage.Tcp
             {
                 TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
                 tcpClient.ReceiveTimeout = (int) _tcpTransport.Settings.ServerSideClientIdleTimeout.TotalMilliseconds;
-                return new TcpChannel(tcpClient, _tcpTransport.Settings);
+                return new TcpChannel(tcpClient, _tcpTransport);
             }
             catch (ObjectDisposedException objectDisposedException) when (objectDisposedException.ObjectName == typeof(Socket).FullName)
             {

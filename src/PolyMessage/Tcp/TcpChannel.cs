@@ -11,25 +11,16 @@ namespace PolyMessage.Tcp
         private readonly PolyConnection _connection;
         // TCP
         private readonly TcpClient _tcpClient;
-        private readonly TcpSettings _settings;
-        private readonly Uri _connectAddress; // only available when the TCP client is not initially connected
+        private readonly TcpTransport _tcpTransport;
         private NetworkStream _tcpStream;
         // close/dispose
         private bool _isDisposed;
 
-        public TcpChannel(TcpClient tcpClient, TcpSettings settings)
+        public TcpChannel(TcpClient tcpClient, TcpTransport tcpTransport)
         {
             _tcpClient = tcpClient;
-            _settings = settings;
+            _tcpTransport = tcpTransport;
             _connection = new PolyConnection();
-        }
-
-        public TcpChannel(TcpClient tcpClient, TcpSettings settings, Uri connectAddress)
-        {
-            _tcpClient = tcpClient;
-            _settings = settings;
-            _connection = new PolyConnection();
-            _connectAddress = connectAddress;
         }
 
         protected override void DoDispose(bool isDisposing)
@@ -52,7 +43,7 @@ namespace PolyMessage.Tcp
         private void EnsureNotDisposed()
         {
             if (_isDisposed)
-                throw new InvalidOperationException("TCP channel is already disposed.");
+                throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is already disposed.");
         }
 
         private void EnsureConnected()
@@ -61,11 +52,11 @@ namespace PolyMessage.Tcp
             {
                 if (!_tcpClient.Connected)
                 {
-                    _tcpClient.Connect(_connectAddress.Host, _connectAddress.Port);
+                    _tcpClient.Connect(_tcpTransport.Address.Host, _tcpTransport.Address.Port);
                 }
 
                 _tcpStream = _tcpClient.GetStream();
-                _tcpClient.NoDelay = _settings.NoDelay;
+                _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
                 Uri localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
                 Uri remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
                 _connection.SetOpened(localAddress, remoteAddress);

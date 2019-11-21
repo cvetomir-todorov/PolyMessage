@@ -33,8 +33,7 @@ namespace PolyMessage.Tcp
         public override PolyChannel CreateClient()
         {
             TcpClient tcpClient = new TcpClient();
-            // TODO: pass the transport itself
-            return new TcpChannel(tcpClient, _settings, connectAddress: _address);
+            return new TcpChannel(tcpClient, this);
         }
     }
 }
