@@ -13,7 +13,7 @@ namespace PolyMessage.Tcp
             if (address == null)
                 throw new ArgumentNullException(nameof(address));
             if (!string.Equals(address.Scheme, "tcp", StringComparison.InvariantCultureIgnoreCase))
-                throw new ArgumentException("Scheme should be TCP.");
+                throw new ArgumentException("Uri scheme should be TCP.");
 
             _address = address;
             _settings = new TcpSettings();
@@ -27,13 +27,13 @@ namespace PolyMessage.Tcp
 
         public override PolyListener CreateListener()
         {
-            return new TcpListener(DisplayName, _address, _settings);
+            return new TcpListener(_address, _settings);
         }
 
         public override PolyChannel CreateClient()
         {
             TcpClient tcpClient = new TcpClient();
-            return new TcpChannel(DisplayName, tcpClient, _settings, _address);
+            return new TcpChannel(tcpClient, _settings, connectAddress: _address);
         }
     }
 }

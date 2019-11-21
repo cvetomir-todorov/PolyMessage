@@ -10,7 +10,7 @@ namespace PolyMessage.Metadata
         IEnumerable<Operation> InspectContract(Type contractType);
     }
 
-    // FEAT: validate contracts, operations, attributes and their values
+    // TODO: validate contracts, operations, attributes and their values
     internal sealed class ContractInspector : IContractInspector
     {
         private readonly ILogger _logger;
@@ -27,7 +27,7 @@ namespace PolyMessage.Metadata
 
             foreach (MethodInfo method in methods)
             {
-                //PolyRequestResponseAttribute operationAttribute = method.GetCustomAttribute<PolyRequestResponseAttribute>();
+                // methods have a single parameter representing the request message
                 ParameterInfo requestParameter = method.GetParameters()[0];
                 Type requestType = requestParameter.ParameterType;
                 // methods return Task<T> where T is the response message type
@@ -58,7 +58,7 @@ namespace PolyMessage.Metadata
             int messageID = messageAttribute.ID;
             if (messageID == 0)
             {
-                // TODO: make sure this is unique via some other method
+                // TODO: make sure message ID is unique via some other method
                 messageID = messageType.GetHashCode();
             }
 

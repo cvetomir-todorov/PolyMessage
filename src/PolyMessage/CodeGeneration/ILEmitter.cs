@@ -8,6 +8,7 @@ using PolyMessage.Metadata;
 
 namespace PolyMessage.CodeGeneration
 {
+    // TODO: optimize checks based on the message ID - currently there are a lot of comparisons and binary search may be viable
     internal sealed class ILEmitter : ICodeGenerator
     {
         public const string AssemblyName = "PolyMessage.Emitted";
@@ -83,7 +84,6 @@ namespace PolyMessage.CodeGeneration
                 labels[i] = il.DefineLabel();
             }
 
-            // TODO: consider optimizing these checks - currently there are a lot of comparisons
             for (int i = 0; i < operations.Count; ++i)
             {
                 // branch if message ID (arg0) is equal to the respective operation response ID
@@ -167,7 +167,6 @@ namespace PolyMessage.CodeGeneration
                 labels[i] = il.DefineLabel();
             }
 
-            // TODO: consider optimizing these checks - currently there are a lot of comparisons
             for (int i = 0; i < operations.Count; ++i)
             {
                 // branch if message ID (arg0) is equal to the respective operation response ID

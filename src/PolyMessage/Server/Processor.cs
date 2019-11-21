@@ -87,7 +87,6 @@ namespace PolyMessage.Server
                 object requestMessage = await serverComponents.Messenger.Receive(_format, _connectedClient, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
-                // TODO: try/catch here to avoid client hanging when infinite timeout is set
                 Operation operation = serverComponents.Router.ChooseOperation(requestMessage, serverComponents.MessageMetadata);
                 object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, operation).ConfigureAwait(false);
 
@@ -102,9 +101,6 @@ namespace PolyMessage.Server
             Dispose();
         }
 
-        public PolyChannel ConnectedClient
-        {
-            get { return _connectedClient; }
-        }
+        public PolyChannel ConnectedClient => _connectedClient;
     }
 }

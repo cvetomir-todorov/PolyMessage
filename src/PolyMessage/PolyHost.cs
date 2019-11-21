@@ -102,7 +102,6 @@ namespace PolyMessage
 
             IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new Dispatcher(_serviceProvider, messageMetadata, codeGenerator.GetDispatchRequest());
-
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 
             Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _cancelTokenSource.Token));

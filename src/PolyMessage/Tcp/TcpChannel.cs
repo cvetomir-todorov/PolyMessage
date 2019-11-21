@@ -8,26 +8,24 @@ namespace PolyMessage.Tcp
 {
     internal sealed class TcpChannel : PolyChannel
     {
-        private readonly string _displayName;
+        private readonly PolyConnection _connection;
+        // TCP
         private readonly TcpClient _tcpClient;
         private readonly TcpSettings _settings;
-        private readonly PolyConnection _connection;
-        // only available when the TCP client is not initially connected
-        private readonly Uri _connectAddress;
+        private readonly Uri _connectAddress; // only available when the TCP client is not initially connected
         private NetworkStream _tcpStream;
+        // close/dispose
         private bool _isDisposed;
 
-        public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings)
+        public TcpChannel(TcpClient tcpClient, TcpSettings settings)
         {
-            _displayName = displayName;
             _tcpClient = tcpClient;
             _settings = settings;
             _connection = new PolyConnection();
         }
 
-        public TcpChannel(string displayName, TcpClient tcpClient, TcpSettings settings, Uri connectAddress)
+        public TcpChannel(TcpClient tcpClient, TcpSettings settings, Uri connectAddress)
         {
-            _displayName = displayName;
             _tcpClient = tcpClient;
             _settings = settings;
             _connection = new PolyConnection();
@@ -74,7 +72,7 @@ namespace PolyMessage.Tcp
             }
         }
 
-        public override string DisplayName => _displayName;
+        public override PolyConnection Connection => _connection;
 
         public override void Open()
         {
@@ -86,8 +84,6 @@ namespace PolyMessage.Tcp
         {
             Dispose();
         }
-
-        public override PolyConnection Connection => _connection;
 
         public override int Read(byte[] buffer, int offset, int count)
         {

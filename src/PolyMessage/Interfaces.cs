@@ -30,8 +30,6 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing){}
 
-        public abstract string DisplayName { get; }
-
         public abstract Task PrepareAccepting();
 
         public abstract Task<PolyChannel> AcceptClient();
@@ -45,13 +43,11 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing) {}
 
-        public abstract string DisplayName { get; }
+        public abstract PolyConnection Connection { get; }
 
         public abstract void Open();
 
         public abstract void Close();
-
-        public abstract PolyConnection Connection { get; }
 
         public abstract int Read(byte[] buffer, int offset, int count);
 

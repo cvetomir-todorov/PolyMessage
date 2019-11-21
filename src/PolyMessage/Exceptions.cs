@@ -6,9 +6,6 @@ namespace PolyMessage
     [Serializable]
     public abstract class PolyException : Exception
     {
-        protected PolyException()
-        {}
-
         protected PolyException(string message) : base(message)
         {}
 

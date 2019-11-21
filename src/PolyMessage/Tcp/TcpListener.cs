@@ -8,15 +8,15 @@ namespace PolyMessage.Tcp
 {
     internal sealed class TcpListener : PolyListener
     {
-        private readonly string _displayName;
+        // TCP
         private readonly Uri _address;
         private readonly TcpSettings _settings;
         private DotNetTcpListener _tcpListener;
+        // stop/dispose
         private bool _isDisposed;
 
-        public TcpListener(string displayName, Uri address, TcpSettings settings)
+        public TcpListener(Uri address, TcpSettings settings)
         {
-            _displayName = displayName;
             _address = address;
             _settings = settings;
         }
@@ -41,8 +41,6 @@ namespace PolyMessage.Tcp
                 throw new InvalidOperationException("TCP transport is already disposed.");
         }
 
-        public override string DisplayName => _displayName;
-
         public override Task PrepareAccepting()
         {
             EnsureNotDisposed();
@@ -59,7 +57,7 @@ namespace PolyMessage.Tcp
 
             TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
             tcpClient.ReceiveTimeout = (int) _settings.ServerSideClientIdleTimeout.TotalMilliseconds;
-            return new TcpChannel(_displayName, tcpClient, _settings);
+            return new TcpChannel(tcpClient, _settings);
         }
 
         public override void StopAccepting()
