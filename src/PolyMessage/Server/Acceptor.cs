@@ -116,6 +116,7 @@ namespace PolyMessage.Server
             }
             finally
             {
+                processor.Stop();
                 bool isRemoved = _processors.TryRemove(processor.ID, out _);
                 if (!isRemoved)
                     _logger.LogCritical("Failed to remove processor with ID {0}.", processor.ID);
