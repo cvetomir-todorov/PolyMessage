@@ -87,7 +87,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
 
@@ -102,7 +102,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
 
@@ -117,7 +117,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
 
@@ -132,7 +132,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
 
@@ -147,7 +147,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
 
@@ -162,7 +162,7 @@ namespace PolyMessage.Tcp
             catch (IOException ioException)
             {
                 Dispose();
-                throw PolyConnectionException.ConnectionClosed(ioException);
+                throw new PolyConnectionClosedException(_tcpTransport, ioException);
             }
         }
     }

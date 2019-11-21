@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace PolyMessage
 {
@@ -14,18 +13,15 @@ namespace PolyMessage
     }
 
     [Serializable]
-    public class PolyConnectionException : PolyException
+    public class PolyConnectionClosedException : PolyException
     {
-        public static PolyConnectionException ConnectionClosed(IOException ioException)
+        public PolyConnectionClosedException(PolyTransport transport, Exception innerException)
+            : base("Connection has been closed.", innerException)
         {
-            return new PolyConnectionException("Connection has been closed.", ioException);
+            Transport = transport;
         }
 
-        public PolyConnectionException(string message) : base(message)
-        {}
-
-        public PolyConnectionException(string message, Exception innerException) : base(message, innerException)
-        {}
+        public PolyTransport Transport { get; }
     }
 
     [Serializable]
