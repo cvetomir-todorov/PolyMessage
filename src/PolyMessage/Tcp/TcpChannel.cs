@@ -86,8 +86,10 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
             }
         }
 
@@ -101,8 +103,10 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
             }
         }
 
@@ -116,8 +120,10 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
             }
         }
 
@@ -131,8 +137,10 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
             }
         }
 
@@ -146,8 +154,10 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
             }
         }
 
@@ -161,8 +171,31 @@ namespace PolyMessage.Tcp
             }
             catch (IOException ioException)
             {
-                Dispose();
-                throw new PolyConnectionClosedException(_tcpTransport, ioException);
+                PolyException polyException = TryHandleIOException(ioException);
+                if (polyException != null)
+                    throw polyException;
+                throw;
+            }
+        }
+
+        private PolyException TryHandleIOException(IOException ioException)
+        {
+            SocketException socketException = ioException.InnerException as SocketException;
+            if (socketException == null)
+            {
+                return null;
+            }
+
+            switch (socketException.SocketErrorCode)
+            {
+                case SocketError.TimedOut:
+                    Dispose();
+                    return new PolyConnectionClosedException(PolyConnectionCloseReason.RemoteTimedOut, _tcpTransport, ioException);
+                case SocketError.ConnectionAborted:
+                    Dispose();
+                    return new PolyConnectionClosedException(PolyConnectionCloseReason.RemoteAbortedConnection, _tcpTransport, ioException);
+                default:
+                    return null;
             }
         }
     }

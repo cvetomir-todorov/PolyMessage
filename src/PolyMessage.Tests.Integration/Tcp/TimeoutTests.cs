@@ -46,7 +46,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             // assert
             using (new AssertionScope())
             {
-                act.Should().Throw<PolyConnectionClosedException>();
+                act.Should().Throw<PolyConnectionClosedException>().Which.CloseReason.Should().Be(PolyConnectionCloseReason.RemoteAbortedConnection);
                 Client.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }

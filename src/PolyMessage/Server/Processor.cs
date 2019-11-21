@@ -70,8 +70,15 @@ namespace PolyMessage.Server
 
             try
             {
-                // TODO: catch expected exceptions when stopping the channel
                 await DoStart(serverComponents, cancelToken).ConfigureAwait(false);
+            }
+            catch (PolyFormatException formatException) when (formatException.FormatError == PolyFormatError.EndOfDataStream)
+            {
+                _logger.LogInformation("[{0}] Connection has been closed. Format error is {1}.", _id, formatException.FormatError);
+            }
+            catch (PolyConnectionClosedException connectionClosedException) when (connectionClosedException.CloseReason == PolyConnectionCloseReason.RemoteTimedOut)
+            {
+                _logger.LogInformation("[{0}] Connection has been closed. Reason is {1}.", _id, connectionClosedException.CloseReason);
             }
             catch (Exception exception)
             {

@@ -12,15 +12,22 @@ namespace PolyMessage
         {}
     }
 
+    public enum PolyConnectionCloseReason
+    {
+        RemoteTimedOut, RemoteAbortedConnection
+    }
+
     [Serializable]
     public class PolyConnectionClosedException : PolyException
     {
-        public PolyConnectionClosedException(PolyTransport transport, Exception innerException)
-            : base("Connection has been closed.", innerException)
+        public PolyConnectionClosedException(PolyConnectionCloseReason closeReason, PolyTransport transport, Exception innerException)
+            : base($"Transport {transport.DisplayName} connection has been closed with reason {closeReason}.", innerException)
         {
+            CloseReason = closeReason;
             Transport = transport;
         }
 
+        public PolyConnectionCloseReason CloseReason { get; }
         public PolyTransport Transport { get; }
     }
 
@@ -33,5 +40,24 @@ namespace PolyMessage
         }
 
         public PolyTransport Transport { get; }
+    }
+
+    public enum PolyFormatError
+    {
+        EndOfDataStream
+    }
+
+    [Serializable]
+    public class PolyFormatException : PolyException
+    {
+        public PolyFormatException(PolyFormatError formatError, PolyFormat format)
+            : base($"Format {format.DisplayName} IO operation resulted in an error {formatError}.")
+        {
+            FormatError = formatError;
+            Format = format;
+        }
+
+        public PolyFormatError FormatError { get; }
+        public PolyFormat Format { get; }
     }
 }
