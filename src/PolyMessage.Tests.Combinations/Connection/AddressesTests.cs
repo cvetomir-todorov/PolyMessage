@@ -1,4 +1,4 @@
-﻿using PolyMessage.Formats.Binary;
+﻿using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Formats.MessagePack;
 using Xunit.Abstractions;
 
@@ -6,12 +6,12 @@ namespace PolyMessage.Tests.Combinations.Connection
 {
     namespace AddressesTests
     {
-        public class Tcp_Binary : Integration.Connection.AddressesTests
+        public class Tcp_DotNetBinary : Integration.Connection.AddressesTests
         {
-            public Tcp_Binary(ITestOutputHelper output) : base(output)
+            public Tcp_DotNetBinary(ITestOutputHelper output) : base(output)
             {}
-            protected override PolyFormat CreateHostFormat() => new BinaryFormat();
-            protected override PolyFormat CreateClientFormat() => new BinaryFormat();
+            protected override PolyFormat CreateHostFormat() => new DotNetBinaryFormat();
+            protected override PolyFormat CreateClientFormat() => new DotNetBinaryFormat();
         }
 
         public class Tcp_MessagePack : Integration.Connection.AddressesTests

@@ -8,9 +8,24 @@ namespace PolyMessage
     {
         public abstract string DisplayName { get; }
 
-        public abstract Task Write(object obj, PolyChannel channel, CancellationToken cancelToken);
+        public abstract PolyFormatter CreateFormatter(PolyChannel channel);
+    }
 
-        public abstract Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken);
+    public abstract class PolyFormatter : IDisposable
+    {
+        public void Dispose()
+        {
+            DoDispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void DoDispose(bool isDisposing) {}
+
+        public abstract PolyFormat Format { get; }
+
+        public abstract Task Write(object obj, CancellationToken cancelToken);
+
+        public abstract Task<object> Read(Type objType, CancellationToken cancelToken);
     }
 
     public abstract class PolyTransport
@@ -32,7 +47,7 @@ namespace PolyMessage
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void DoDispose(bool isDisposing){}
+        protected virtual void DoDispose(bool isDisposing) {}
 
         public abstract void PrepareAccepting();
 

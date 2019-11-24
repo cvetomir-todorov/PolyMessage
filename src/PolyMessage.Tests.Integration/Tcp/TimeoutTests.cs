@@ -15,7 +15,7 @@ namespace PolyMessage.Tests.Integration.Tcp
         private readonly TimeSpan _timeout;
         private readonly TcpTransport _hostTransport;
 
-        public TimeoutTests(ITestOutputHelper output) : base(output, services =>
+        protected TimeoutTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })

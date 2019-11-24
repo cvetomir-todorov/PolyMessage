@@ -20,7 +20,7 @@ namespace PolyMessage.Server
     internal sealed class Processor : IProcessor
     {
         private readonly ILogger _logger;
-        private readonly PolyFormat _format;
+        private readonly PolyFormatter _formatter;
         private readonly PolyChannel _connectedClient;
         // identity
         private static int _generation;
@@ -34,7 +34,7 @@ namespace PolyMessage.Server
         public Processor(ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _format = format;
+            _formatter = format.CreateFormatter(connectedClient);
             _connectedClient = connectedClient;
             // identity
             _id = "Processor" + Interlocked.Increment(ref _generation);
@@ -52,6 +52,7 @@ namespace PolyMessage.Server
                     {
                         _isStopRequested = true;
                         _connectedClient.Close();
+                        _formatter.Dispose();
                         _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
                         _stoppedEvent.Wait();
                         _stoppedEvent.Dispose();
@@ -101,14 +102,14 @@ namespace PolyMessage.Server
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 _logger.LogTrace("[{0}] Receiving request...", _id);
-                object requestMessage = await serverComponents.Messenger.Receive(_id, _format, _connectedClient, cancelToken).ConfigureAwait(false);
+                object requestMessage = await serverComponents.Messenger.Receive(_id, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
                 Operation operation = serverComponents.Router.ChooseOperation(requestMessage, serverComponents.MessageMetadata);
                 object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, operation).ConfigureAwait(false);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
-                await serverComponents.Messenger.Send(_id, responseMessage, _format, _connectedClient, cancelToken).ConfigureAwait(false);
+                await serverComponents.Messenger.Send(_id, responseMessage, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
             }
         }

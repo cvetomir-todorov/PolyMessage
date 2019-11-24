@@ -33,6 +33,7 @@ namespace PolyMessage
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
         private readonly Dictionary<Type, object> _proxies;
+        private OperationInterceptor _operationInterceptor;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -91,6 +92,7 @@ namespace PolyMessage
             {
                 _channel.Close();
             }
+            _operationInterceptor?.Dispose();
             _logger.LogInformation("[{0}] Stopped", _id);
 
             _isDisposed = true;
@@ -158,9 +160,9 @@ namespace PolyMessage
             codeGenerator.GenerateCode(_operations);
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
-            IInterceptor operationInterceptor = new OperationInterceptor(
+            _operationInterceptor = new OperationInterceptor(
                 _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
-            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], operationInterceptor);
+            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], _operationInterceptor);
             return proxy;
         }
 
