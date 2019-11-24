@@ -26,7 +26,11 @@ namespace PolyMessage
 
     public abstract class PolyListener : IDisposable
     {
-        public void Dispose() => DoDispose(true);
+        public void Dispose()
+        {
+            DoDispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         protected virtual void DoDispose(bool isDisposing){}
 
@@ -39,7 +43,11 @@ namespace PolyMessage
 
     public abstract class PolyChannel : IDisposable
     {
-        public void Dispose() => DoDispose(true);
+        public void Dispose()
+        {
+            DoDispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         protected virtual void DoDispose(bool isDisposing) {}
 
