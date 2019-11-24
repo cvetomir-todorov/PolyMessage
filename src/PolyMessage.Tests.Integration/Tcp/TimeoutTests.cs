@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -9,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.Tcp
 {
-    public class TimeoutTests : BaseIntegrationFixture
+    public abstract class TimeoutTests : IntegrationFixture
     {
         private readonly TimeSpan _timeout;
         private readonly TcpTransport _hostTransport;
@@ -22,10 +23,39 @@ namespace PolyMessage.Tests.Integration.Tcp
             _timeout = TimeSpan.FromSeconds(1);
             _hostTransport = HostTransport as TcpTransport;
 
-            Client = CreateClient();
-
             Host.AddContract<IContract>();
-            Client.AddContract<IContract>();
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(4)]
+        public async Task RemoveUnneededProcessorsAfterIdleClientTimeout(int clientCount)
+        {
+            // arrange
+            _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
+
+            for (int i = 0; i < clientCount; ++i)
+            {
+                Clients.Add(CreateClient());
+                Clients[i].AddContract<IContract>();
+            }
+
+            // act & assert
+            await StartHost();
+            for (int i = 0; i < clientCount; ++i)
+            {
+                Clients[i].Connect();
+                await Clients[i].Get<IContract>().Operation(new Request1());
+            }
+
+            using (new AssertionScope())
+            {
+                Host.GetConnectedClients().Count().Should().Be(clientCount);
+                // make clients idle for > allowed idle timeout
+                await Task.Delay(_hostTransport.Settings.ServerSideClientIdleTimeout * 2);
+                Host.GetConnectedClients().Count().Should().Be(0);
+            }
         }
 
         [Fact]
@@ -33,6 +63,9 @@ namespace PolyMessage.Tests.Integration.Tcp
         {
             // arrange
             _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
+
+            Client = CreateClient();
+            Client.AddContract<IContract>();
 
             // act
             await StartHost();

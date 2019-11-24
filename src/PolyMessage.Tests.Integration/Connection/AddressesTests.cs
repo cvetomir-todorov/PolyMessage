@@ -10,9 +10,9 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.Connection
 {
-    public class AddressesTests : BaseIntegrationFixture
+    public abstract class AddressesTests : IntegrationFixture
     {
-        public AddressesTests(ITestOutputHelper output) : base(output, services =>
+        protected AddressesTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })

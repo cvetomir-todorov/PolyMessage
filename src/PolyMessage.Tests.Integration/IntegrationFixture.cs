@@ -6,13 +6,12 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Binary;
 using PolyMessage.Tcp;
 using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
 {
-    public abstract class BaseIntegrationFixture : BaseFixture
+    public abstract class IntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
         protected PolyTransport HostTransport { get; private set; }
@@ -21,10 +20,10 @@ namespace PolyMessage.Tests.Integration
         protected PolyClient Client { get; set; }
         protected List<PolyClient> Clients { get; }
 
-        protected BaseIntegrationFixture(ITestOutputHelper output) : this(output, collection => {})
+        protected IntegrationFixture(ITestOutputHelper output) : this(output, collection => {})
         {}
 
-        protected BaseIntegrationFixture(ITestOutputHelper output, Action<IServiceCollection> addServices) : base(output, addServices)
+        protected IntegrationFixture(ITestOutputHelper output, Action<IServiceCollection> addServices) : base(output, addServices)
         {
             ServerAddress = GetServerAddress();
             Host = CreateHost(ServerAddress, ServiceProvider);
@@ -60,10 +59,12 @@ namespace PolyMessage.Tests.Integration
         private PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
         {
             HostTransport = new TcpTransport(serverAddress);
-            PolyFormat hostFormat = new BinaryFormat();
+            PolyFormat hostFormat = CreateHostFormat();
             PolyHost host = new PolyHost(HostTransport, hostFormat, serviceProvider);
             return host;
         }
+
+        protected abstract PolyFormat CreateHostFormat();
 
         protected PolyClient CreateClient()
         {
@@ -73,10 +74,12 @@ namespace PolyMessage.Tests.Integration
         protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
             ClientTransport = new TcpTransport(serverAddress);
-            PolyFormat clientFormat = new BinaryFormat();
+            PolyFormat clientFormat = CreateClientFormat();
             PolyClient client = new PolyClient(ClientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;
         }
+
+        protected abstract PolyFormat CreateClientFormat();
 
         protected async Task StartHost()
         {

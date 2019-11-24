@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace PolyMessage.Tests.Integration.Tcp
@@ -19,11 +20,13 @@ namespace PolyMessage.Tests.Integration.Tcp
     }
 
     [Serializable]
+    [DataContract]
     [PolyMessage]
     public sealed class Request1
     {}
 
     [Serializable]
+    [DataContract]
     [PolyMessage]
     public sealed class Response1
     {}

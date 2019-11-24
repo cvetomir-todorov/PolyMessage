@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace PolyMessage.Tests.Integration.RequestResponse
@@ -19,16 +20,20 @@ namespace PolyMessage.Tests.Integration.RequestResponse
     }
 
     [Serializable]
+    [DataContract]
     [PolyMessage]
     public sealed class SingleOperationRequest
     {
+        [DataMember(Order = 1)]
         public string Data { get; set; }
     }
 
     [Serializable]
+    [DataContract]
     [PolyMessage]
     public sealed class SingleOperationResponse
     {
+        [DataMember(Order = 1)]
         public string Data { get; set; }
     }
 }

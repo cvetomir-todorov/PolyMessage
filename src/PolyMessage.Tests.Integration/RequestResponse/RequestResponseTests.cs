@@ -12,9 +12,9 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.RequestResponse
 {
-    public class RequestResponseTests : BaseIntegrationFixture
+    public abstract class RequestResponseTests : IntegrationFixture
     {
-        public RequestResponseTests(ITestOutputHelper output) : base(output, services =>
+        protected RequestResponseTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<ISingleOperationContract, SingleOperationImplementor>();
             services.AddScoped<IMultipleOperationsContract, MultipleOperationsImplementor>();
@@ -25,7 +25,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         [InlineData(1)]
         [InlineData(100)]
         [InlineData(1000)]
-        public async Task SendMessagesUsingSingleOperationContract(int messagesCount)
+        public async Task SingleOperationContract(int messagesCount)
         {
             // arrange
             Client = CreateClient();
@@ -53,7 +53,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         [InlineData(1)]
         [InlineData(100)]
         [InlineData(1000)]
-        public async Task SendMessagesUsingMultipleOperationsContract(int messagesCount)
+        public async Task MultipleOperationsContract(int messagesCount)
         {
             // arrange
             Client = CreateClient();
