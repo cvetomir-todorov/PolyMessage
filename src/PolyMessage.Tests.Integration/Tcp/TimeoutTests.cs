@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.DependencyInjection;
-using PolyMessage.Tcp;
+using PolyMessage.Transports.Tcp;
 using Xunit;
 using Xunit.Abstractions;
 

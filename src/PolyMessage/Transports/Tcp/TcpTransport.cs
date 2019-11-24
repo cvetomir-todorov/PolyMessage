@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace PolyMessage.Tcp
+namespace PolyMessage.Transports.Tcp
 {
     public class TcpTransport : PolyTransport
     {

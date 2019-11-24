@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace PolyMessage.Tcp
+namespace PolyMessage.Transports.Tcp
 {
     /// <summary>
     /// The settings specific to the <see cref="TcpTransport"/>.

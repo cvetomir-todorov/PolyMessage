@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PolyMessage.Tcp
+namespace PolyMessage.Transports.Tcp
 {
     internal sealed class TcpChannel : PolyChannel
     {

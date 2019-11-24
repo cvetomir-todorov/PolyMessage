@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
-namespace PolyMessage.Tcp
+namespace PolyMessage.Transports.Tcp
 {
     internal sealed class TcpListener : PolyListener
     {
