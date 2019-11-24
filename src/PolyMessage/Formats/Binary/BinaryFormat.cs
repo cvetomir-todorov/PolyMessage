@@ -10,7 +10,7 @@ namespace PolyMessage.Formats.Binary
     // TODO: add method for creating a dedicated for a specific channel formatter
     // PolyFormatter CreateFormatter(PolyChannel channel);
     // PolyFormatter has the write and read methods
-    // this way we reuse the ChannelStream instead of creating a new one each time
+    // this way we reuse the PolyStream instead of creating a new one each time
     // Stream, which is the base class, is MarshalByRefObject and is heavy
     public class BinaryFormat : PolyFormat
     {
@@ -26,7 +26,7 @@ namespace PolyMessage.Formats.Binary
 
         public override Task Write(object obj, PolyChannel channel, CancellationToken cancelToken)
         {
-            Stream channelStream = new ChannelStream(channel);
+            Stream channelStream = new PolyStream(channel);
             try
             {
                 _formatter.Serialize(channelStream, obj);
@@ -40,7 +40,7 @@ namespace PolyMessage.Formats.Binary
 
         public override Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken)
         {
-            Stream channelStream = new ChannelStream(channel);
+            Stream channelStream = new PolyStream(channel);
             try
             {
                 object obj = _formatter.Deserialize(channelStream);

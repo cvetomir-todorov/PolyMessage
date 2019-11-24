@@ -12,7 +12,7 @@ namespace PolyMessage.Formats.MessagePack
 
         public override Task Write(object obj, PolyChannel channel, CancellationToken cancelToken)
         {
-            using (Stream channelStream = new ChannelStream(channel))
+            using (Stream channelStream = new PolyStream(channel))
             {
                 MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), channelStream, obj, MessagePackSerializer.DefaultResolver);
                 channelStream.Flush();
@@ -22,7 +22,7 @@ namespace PolyMessage.Formats.MessagePack
 
         public override Task<object> Read(Type objType, PolyChannel channel, CancellationToken cancelToken)
         {
-            using (Stream channelStream = new ChannelStream(channel))
+            using (Stream channelStream = new PolyStream(channel))
             {
                 // FEAT: using readStrict is slow, but their API is limited
                 object obj = MessagePackSerializer.NonGeneric.Deserialize(objType, channelStream, MessagePackSerializer.DefaultResolver, readStrict: true);

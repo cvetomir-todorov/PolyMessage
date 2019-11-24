@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 
 namespace PolyMessage.Formats
 {
-    // TODO: make this internal and add visibility to format project or change name to polychannelstream
-    public sealed class ChannelStream : Stream
+    /// <summary>
+    /// Allows using the <see cref="PolyChannel"/> as a <see cref="Stream"/>.
+    /// </summary>
+    public sealed class PolyStream : Stream
     {
         private readonly PolyChannel _channel;
 
-        public ChannelStream(PolyChannel channel)
+        public PolyStream(PolyChannel channel)
         {
             _channel = channel;
         }
