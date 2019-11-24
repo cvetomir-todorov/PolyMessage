@@ -56,9 +56,9 @@ namespace PolyMessage.Proxies
         private async Task<object> CallOperation(object requestMessage)
         {
             _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
-            await _messenger.Send(requestMessage, _format, _channel, _cancelToken).ConfigureAwait(false);
+            await _messenger.Send(_clientID, requestMessage, _format, _channel, _cancelToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage);
-            object responseMessage = await _messenger.Receive(_format, _channel, _cancelToken).ConfigureAwait(false);
+            object responseMessage = await _messenger.Receive(_clientID, _format, _channel, _cancelToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
 
             return responseMessage;
