@@ -5,8 +5,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PolyMessage.Binary
+namespace PolyMessage.Formats.Binary
 {
+    // TODO: add method for creating a dedicated for a specific channel formatter
+    // PolyFormatter CreateFormatter(PolyChannel channel);
+    // PolyFormatter has the write and read methods
+    // this way we reuse the ChannelStream instead of creating a new one each time
+    // Stream, which is the base class, is MarshalByRefObject and is heavy
     public class BinaryFormat : PolyFormat
     {
         private readonly BinaryFormatter _formatter;

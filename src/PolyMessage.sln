@@ -21,6 +21,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.Tests.Integrati
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.Tests.Micro", "PolyMessage.Tests.Micro\PolyMessage.Tests.Micro.csproj", "{ED1813F6-9A36-4819-878C-F8027425764F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Formats", "Formats", "{F4B53D53-BA46-4721-A893-4871CB50AA0D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.Formats.MessagePack", "PolyMessage.Formats.MessagePack\PolyMessage.Formats.MessagePack.csproj", "{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,10 @@ Global
 		{ED1813F6-9A36-4819-878C-F8027425764F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED1813F6-9A36-4819-878C-F8027425764F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED1813F6-9A36-4819-878C-F8027425764F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +60,8 @@ Global
 		{2F4DC343-492A-4D20-A830-906EF7FC2049} = {DC3284CE-7598-4F89-B675-050F4EF81E76}
 		{C8607509-43E8-4302-8784-FE0BC149DA37} = {DC3284CE-7598-4F89-B675-050F4EF81E76}
 		{ED1813F6-9A36-4819-878C-F8027425764F} = {DC3284CE-7598-4F89-B675-050F4EF81E76}
+		{F4B53D53-BA46-4721-A893-4871CB50AA0D} = {407DD2AE-04A5-4CCC-AA57-623E4582B39C}
+		{DD0A1527-A5F0-4B6C-8314-FA1E43D3E66D} = {F4B53D53-BA46-4721-A893-4871CB50AA0D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B437B44B-083E-49F2-AD64-408F4DE47028}

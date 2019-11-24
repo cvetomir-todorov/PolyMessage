@@ -3,9 +3,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PolyMessage
+namespace PolyMessage.Formats
 {
-    internal sealed class ChannelStream : Stream
+    // TODO: make this internal and add visibility to format project or change name to polychannelstream
+    public sealed class ChannelStream : Stream
     {
         private readonly PolyChannel _channel;
 
