@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
@@ -131,7 +132,16 @@ namespace PolyMessage
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
                         _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
+                        RegisterMessageTypes();
                     }
+        }
+
+        private void RegisterMessageTypes()
+        {
+            IEnumerable<Type> requestTypes = _operations.Select(o => o.RequestType);
+            IEnumerable<Type> responseTypes = _operations.Select(o => o.ResponseType);
+            IEnumerable<Type> allTypes = new[] {typeof(PolyHeader)}.Union(requestTypes).Union(responseTypes);
+            _format.RegisterMessageTypes(allTypes);
         }
 
         public TContract Get<TContract>() where TContract : class

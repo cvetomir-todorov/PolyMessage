@@ -1,5 +1,5 @@
 ﻿using System;
-//using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,8 +9,7 @@ namespace PolyMessage
     {
         public abstract string DisplayName { get; }
 
-        // TODO: add support for registering types
-        //public abstract void RegisterTypes(IEnumerable<Type> types);
+        public virtual void RegisterMessageTypes(IEnumerable<Type> messageTypes) {}
 
         public abstract PolyFormatter CreateFormatter(PolyChannel channel);
     }
