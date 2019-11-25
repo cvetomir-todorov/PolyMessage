@@ -1,27 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace PolyMessage.Tests.Integration.Format
 {
     [PolyContract]
-    public interface IContract
+    public interface ITypeContract
     {
-        [PolyRequestResponse]
-        Task<SimpleTypesResponse> SimpleTypes(SimpleTypesRequest request);
-
-        [PolyRequestResponse]
-        Task<ValueTypesResponse> ValueTypes(ValueTypesRequest request);
-
-        [PolyRequestResponse]
-        Task<ClassesResponse> Classes(ClassesRequest request);
+        [PolyRequestResponse] Task<SimpleTypesResponse> SimpleTypes(SimpleTypesRequest request);
+        [PolyRequestResponse] Task<ValueTypesResponse> ValueTypes(ValueTypesRequest request);
+        [PolyRequestResponse] Task<ClassesResponse> Classes(ClassesRequest request);
+        [PolyRequestResponse] Task<CollectionsResponse> Collections(CollectionsRequest request);
     }
 
-    public class Implementor : IContract
+    public class TypeImplementor : ITypeContract
     {
         public SimpleTypesRequest LastSimpleTypesRequest { get; private set; }
         public ValueTypesRequest LastValueTypesRequest { get; private set; }
         public ClassesRequest LastClassesRequest { get; private set; }
+        public CollectionsRequest LastCollectionsRequest { get; private set; }
 
         public Task<SimpleTypesResponse> SimpleTypes(SimpleTypesRequest request)
         {
@@ -40,11 +38,15 @@ namespace PolyMessage.Tests.Integration.Format
             LastClassesRequest = request;
             return Task.FromResult(new ClassesResponse());
         }
+
+        public Task<CollectionsResponse> Collections(CollectionsRequest request)
+        {
+            LastCollectionsRequest = request;
+            return Task.FromResult(new CollectionsResponse());
+        }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class SimpleTypesRequest
     {
         // signed
@@ -66,75 +68,79 @@ namespace PolyMessage.Tests.Integration.Format
         [DataMember(Order = 13)] public char Char { get; set; }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class SimpleTypesResponse
     {}
 
-    [Serializable]
-    [DataContract]
+    [Serializable, DataContract]
     public enum CustomEnum
     {
         Default, Normal, Extreme = int.MaxValue
     }
 
-    [Serializable]
-    [DataContract]
+    [Serializable, DataContract]
     public struct CustomStruct
     {
         [DataMember(Order = 1)] public int ID { get; set; }
         [DataMember(Order = 2)] public string Data { get; set; }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class ValueTypesRequest
     {
         [DataMember(Order = 1)] public CustomEnum Enum { get; set; }
         [DataMember(Order = 2)] public CustomStruct Struct { get; set; }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class ValueTypesResponse
     {}
 
-    [Serializable]
-    [DataContract]
+    [Serializable, DataContract]
     public sealed class CustomClassRoot
     {
         [DataMember(Order = 1)] public CustomClassMiddle Middle1 { get; set; }
         [DataMember(Order = 2)] public CustomClassMiddle Middle2 { get; set; }
     }
 
-    [Serializable]
-    [DataContract]
+    [Serializable, DataContract]
     public sealed class CustomClassMiddle
     {
         [DataMember(Order = 1)] public CustomClassLeaf Leaf { get; set; }
     }
 
-    [Serializable]
-    [DataContract]
+    [Serializable, DataContract]
     public sealed class CustomClassLeaf
     {
         [DataMember(Order = 1)] public int ID { get; set; }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class ClassesRequest
     {
         [DataMember(Order = 1)] public CustomClassRoot Root { get; set; }
     }
 
-    [PolyMessage]
-    [Serializable]
-    [DataContract]
+    [PolyMessage, Serializable, DataContract]
     public sealed class ClassesResponse
+    {}
+
+    [Serializable, DataContract]
+    public sealed class ClassWithID
+    {
+        public ClassWithID() { }
+        public ClassWithID(int id) => ID = id;
+        [DataMember(Order = 1)] public int ID { get; set; }
+    }
+
+    [PolyMessage, Serializable, DataContract]
+    public sealed class CollectionsRequest
+    {
+        [DataMember(Order = 1)] public List<int> List { get; set; } = new List<int>();
+        [DataMember(Order = 2)] public Dictionary<int, ClassWithID> Dictionary { get; set; } = new Dictionary<int, ClassWithID>();
+    }
+
+    [PolyMessage, Serializable, DataContract]
+    public sealed class CollectionsResponse
     {}
 }

@@ -9,18 +9,18 @@ namespace PolyMessage.Tests.Integration.Format
 {
     public abstract class TypeTests : IntegrationFixture
     {
-        private readonly Implementor _implementorInstance;
+        private readonly TypeImplementor _implementorInstance;
 
         protected TypeTests(ITestOutputHelper output) : base(output, services =>
         {
-            services.AddSingleton<IContract, Implementor>();
+            services.AddSingleton<ITypeContract, TypeImplementor>();
         })
         {
-            _implementorInstance = (Implementor) ServiceProvider.GetRequiredService<IContract>();
+            _implementorInstance = (TypeImplementor) ServiceProvider.GetRequiredService<ITypeContract>();
             Client = CreateClient();
 
-            Client.AddContract<IContract>();
-            Host.AddContract<IContract>();
+            Client.AddContract<ITypeContract>();
+            Host.AddContract<ITypeContract>();
         }
 
         [Theory]
@@ -67,7 +67,7 @@ namespace PolyMessage.Tests.Integration.Format
             // act
             await StartHost();
             Client.Connect();
-            await Client.Get<IContract>().SimpleTypes(request);
+            await Client.Get<ITypeContract>().SimpleTypes(request);
 
             // assert
             _implementorInstance.LastSimpleTypesRequest.Should().BeEquivalentTo(request);
@@ -87,7 +87,7 @@ namespace PolyMessage.Tests.Integration.Format
             // act
             await StartHost();
             Client.Connect();
-            await Client.Get<IContract>().ValueTypes(request);
+            await Client.Get<ITypeContract>().ValueTypes(request);
 
             // assert
             _implementorInstance.LastValueTypesRequest.Should().BeEquivalentTo(request);
@@ -107,10 +107,29 @@ namespace PolyMessage.Tests.Integration.Format
             // act
             await StartHost();
             Client.Connect();
-            await Client.Get<IContract>().Classes(request);
+            await Client.Get<ITypeContract>().Classes(request);
 
             // assert
             _implementorInstance.LastClassesRequest.Should().BeEquivalentTo(request);
+        }
+
+        [Fact]
+        public async Task Collections()
+        {
+            // arrange
+            CollectionsRequest request = new CollectionsRequest();
+            request.List.AddRange(new[]{int.MaxValue, 123, int.MinValue});
+            request.Dictionary.Add(5, new ClassWithID(5));
+            request.Dictionary.Add(int.MaxValue, new ClassWithID(int.MaxValue));
+            request.Dictionary.Add(int.MinValue, new ClassWithID(int.MinValue));
+
+            // act
+            await StartHost();
+            Client.Connect();
+            await Client.Get<ITypeContract>().Collections(request);
+
+            // assert
+            _implementorInstance.LastCollectionsRequest.Should().BeEquivalentTo(request);
         }
     }
 }
