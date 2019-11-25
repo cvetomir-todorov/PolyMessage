@@ -1,5 +1,6 @@
 ﻿using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Formats.MessagePack;
+using PolyMessage.Formats.ProtobufNet;
 using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Combinations
@@ -20,6 +21,14 @@ namespace PolyMessage.Tests.Combinations
             {}
             protected override PolyFormat CreateHostFormat() => new MessagePackFormat();
             protected override PolyFormat CreateClientFormat() => new MessagePackFormat();
+        }
+
+        public class Tcp_ProtobufNet : Integration.RequestResponse.RequestResponseTests
+        {
+            public Tcp_ProtobufNet(ITestOutputHelper output) : base(output)
+            {}
+            protected override PolyFormat CreateHostFormat() => new ProtobufNetFormat();
+            protected override PolyFormat CreateClientFormat() => new ProtobufNetFormat();
         }
     }
 }

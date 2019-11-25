@@ -10,7 +10,7 @@ namespace PolyMessage.Messaging
     [DataContract]
     public sealed class PolyHeader
     {
-        [DataMember(Order = 0)]
+        [DataMember(Order = 1)]
         public int MessageID { get; set; }
     }
 }

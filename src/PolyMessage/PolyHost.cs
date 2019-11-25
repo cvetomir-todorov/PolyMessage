@@ -99,6 +99,7 @@ namespace PolyMessage
             messageMetadata.Build(_operations);
             router.BuildRoutingTable(_operations);
             codeGenerator.GenerateCode(_operations);
+            RegisterMessageTypes();
 
             IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new Dispatcher(_serviceProvider, messageMetadata, codeGenerator.GetDispatchRequest());
@@ -108,6 +109,14 @@ namespace PolyMessage
             _logger.LogInformation(
                 "Started host using {0} transport listening at {1} and {2} format with {3} operation(s).",
                 _transport.DisplayName, _transport.Address, _format.DisplayName, _operations.Count);
+        }
+
+        private void RegisterMessageTypes()
+        {
+            IEnumerable<Type> requestTypes = _operations.Select(o => o.RequestType);
+            IEnumerable<Type> responseTypes = _operations.Select(o => o.ResponseType);
+            IEnumerable<Type> allTypes = new[] {typeof(PolyHeader)}.Union(requestTypes).Union(responseTypes);
+            _format.RegisterMessageTypes(allTypes);
         }
 
         public void Stop()
