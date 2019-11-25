@@ -91,19 +91,20 @@ namespace PolyMessage.Server
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
-                PolyChannel client = await _listener.AcceptClient().ConfigureAwait(false);
-                Task _ = Task.Run(() => ProcessClient(format, client, serverComponents, cancelToken), cancelToken);
+                Func<PolyChannel> createClient = await _listener.AcceptClient().ConfigureAwait(false);
+                Task _ = Task.Run(() => ProcessClient(format, createClient, serverComponents, cancelToken), cancelToken);
             }
         }
 
-        private async Task ProcessClient(PolyFormat format, PolyChannel client, ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task ProcessClient(PolyFormat format, Func<PolyChannel> createClient, ServerComponents serverComponents, CancellationToken cancelToken)
         {
             IProcessor processor = null;
             try
             {
+                PolyChannel client = createClient();
                 processor = new Processor(_loggerFactory, format, client);
                 if (!_processors.TryAdd(processor.ID, processor))
-                    _logger.LogCritical("Could not add processor with ID {0}.", processor.ID);
+                    _logger.LogCritical("Could not add processor with ID {0} to list of known processors.", processor.ID);
 
                 client.Open();
                 await processor.Start(serverComponents, cancelToken);
@@ -115,7 +116,7 @@ namespace PolyMessage.Server
                     processor.Stop();
                     bool isRemoved = _processors.TryRemove(processor.ID, out _);
                     if (!isRemoved)
-                        _logger.LogCritical("Failed to remove processor with ID {0}.", processor.ID);
+                        _logger.LogCritical("Failed to remove processor with ID {0} from list of known processors.", processor.ID);
                 }
             }
         }

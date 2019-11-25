@@ -48,20 +48,25 @@ namespace PolyMessage.Transports.Tcp
             _tcpListener.Start();
         }
 
-        public override async Task<PolyChannel> AcceptClient()
+        public override async Task<Func<PolyChannel>> AcceptClient()
         {
             EnsureNotDisposed();
 
             try
             {
                 TcpClient tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
-                tcpClient.ReceiveTimeout = (int) _tcpTransport.Settings.ServerSideClientIdleTimeout.TotalMilliseconds;
-                return new TcpChannel(tcpClient, _tcpTransport);
+                return () => CreateClientChannel(tcpClient);
             }
             catch (ObjectDisposedException objectDisposedException) when (objectDisposedException.ObjectName == typeof(Socket).FullName)
             {
                 throw new PolyListenerStoppedException(_tcpTransport, objectDisposedException);
             }
+        }
+
+        private PolyChannel CreateClientChannel(TcpClient tcpClient)
+        {
+            tcpClient.ReceiveTimeout = (int)_tcpTransport.Settings.ServerSideClientIdleTimeout.TotalMilliseconds;
+            return new TcpChannel(tcpClient, _tcpTransport);
         }
 
         public override void StopAccepting()
