@@ -34,7 +34,7 @@ namespace PolyMessage.Server
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
             _processors = new ConcurrentDictionary<string, IProcessor>();
-            _stoppedEvent = new ManualResetEventSlim(initialState: false);
+            _stoppedEvent = new ManualResetEventSlim(initialState: true);
         }
 
         public void Dispose()
@@ -66,6 +66,7 @@ namespace PolyMessage.Server
 
             try
             {
+                _stoppedEvent.Reset();
                 await DoStart(transport, format, serverComponents, cancelToken).ConfigureAwait(false);
             }
             catch (PolyListenerStoppedException stoppedException)

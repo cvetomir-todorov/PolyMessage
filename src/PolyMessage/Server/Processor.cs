@@ -39,7 +39,7 @@ namespace PolyMessage.Server
             // identity
             _id = "Processor" + Interlocked.Increment(ref _generation);
             // stop/dispose
-            _stoppedEvent = new ManualResetEventSlim(initialState: false);
+            _stoppedEvent = new ManualResetEventSlim(initialState: true);
             _disposeLock = new object();
         }
 
@@ -76,6 +76,7 @@ namespace PolyMessage.Server
 
             try
             {
+                _stoppedEvent.Reset();
                 await DoStart(serverComponents, cancelToken).ConfigureAwait(false);
             }
             catch (PolyFormatException formatException) when (formatException.FormatError == PolyFormatError.EndOfDataStream)
