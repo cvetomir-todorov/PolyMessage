@@ -89,11 +89,11 @@ namespace PolyMessage.CodeGeneration
                 // branch if message ID (arg0) is equal to the respective operation response ID
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldc_I4, operations[i].ResponseID);
-                il.Emit(OpCodes.Beq_S, labels[i]);
+                il.Emit(OpCodes.Beq, labels[i]);
             }
 
             // branch to default case
-            il.Emit(OpCodes.Br_S, defaultCase);
+            il.Emit(OpCodes.Br, defaultCase);
 
             MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericCastToTaskOfResponse));
             if (genericCastMethod == null)
@@ -172,11 +172,11 @@ namespace PolyMessage.CodeGeneration
                 // branch if message ID (arg0) is equal to the respective operation response ID
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldc_I4, operations[i].ResponseID);
-                il.Emit(OpCodes.Beq_S, labels[i]);
+                il.Emit(OpCodes.Beq, labels[i]);
             }
 
             // branch to default case
-            il.Emit(OpCodes.Br_S, defaultCase);
+            il.Emit(OpCodes.Br, defaultCase);
 
             MethodInfo genericCastMethod = GetType().GetMethod(nameof(GenericCastToTaskOfObject));
             if (genericCastMethod == null)
