@@ -18,7 +18,6 @@ namespace PolyMessage.Tests.Integration.Format
         })
         {
             _implementorInstance = (DataImplementor)ServiceProvider.GetRequiredService<IDataContract>();
-            Client = CreateClient();
 
             Client.AddContract<IDataContract>();
             Host.AddContract<IDataContract>();
@@ -40,8 +39,7 @@ namespace PolyMessage.Tests.Integration.Format
             string largeString = builder.ToString();
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<IDataContract>().LargeString(new LargeStringRequest {LargeString = largeString});
 
             // assert
@@ -60,8 +58,7 @@ namespace PolyMessage.Tests.Integration.Format
             }
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<IDataContract>().LargeNumberOfObjects(request);
 
             // assert
@@ -81,8 +78,7 @@ namespace PolyMessage.Tests.Integration.Format
             }
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<IDataContract>().LargeArray(new LargeArrayRequest {LargeArray = largeArray});
 
             // assert

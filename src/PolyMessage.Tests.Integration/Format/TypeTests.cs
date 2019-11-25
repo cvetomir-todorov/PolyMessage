@@ -17,7 +17,6 @@ namespace PolyMessage.Tests.Integration.Format
         })
         {
             _implementorInstance = (TypeImplementor) ServiceProvider.GetRequiredService<ITypeContract>();
-            Client = CreateClient();
 
             Client.AddContract<ITypeContract>();
             Host.AddContract<ITypeContract>();
@@ -65,8 +64,7 @@ namespace PolyMessage.Tests.Integration.Format
             request.Char = @char;
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<ITypeContract>().SimpleTypes(request);
 
             // assert
@@ -85,8 +83,7 @@ namespace PolyMessage.Tests.Integration.Format
             request.Struct = new CustomStruct {ID = structID, Data = structData};
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<ITypeContract>().ValueTypes(request);
 
             // assert
@@ -105,8 +102,7 @@ namespace PolyMessage.Tests.Integration.Format
             request.Root.Middle2.Leaf = new CustomClassLeaf {ID = 123};
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<ITypeContract>().Classes(request);
 
             // assert
@@ -124,8 +120,7 @@ namespace PolyMessage.Tests.Integration.Format
             request.Dictionary.Add(int.MinValue, new ClassWithID(int.MinValue));
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<ITypeContract>().Collections(request);
 
             // assert

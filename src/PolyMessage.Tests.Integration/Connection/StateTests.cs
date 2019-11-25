@@ -15,8 +15,6 @@ namespace PolyMessage.Tests.Integration.Connection
             services.AddScoped<IContract, Implementor>();
         })
         {
-            Client = CreateClient();
-
             Client.AddContract<IContract>();
             Host.AddContract<IContract>();
         }
@@ -50,19 +48,18 @@ namespace PolyMessage.Tests.Integration.Connection
         public async Task ShouldSetServerConnectionState()
         {
             // arrange
-            await StartHost();
 
             // act & assert
+            await StartHostAndConnectClient();
+            await Client.Get<IContract>().Operation(new Request1());
+
             using (new AssertionScope())
             {
-                Client.Connect();
-                await Client.Get<IContract>().Operation(new Request1());
+                PolyChannel serverClients = Host.GetConnectedClients().First();
+                serverClients.Connection.State.Should().Be(PolyConnectionState.Opened);
 
-                PolyChannel remoteClient = Host.GetConnectedClients().First();
-                remoteClient.Connection.State.Should().Be(PolyConnectionState.Opened);
-
-                remoteClient.Close();
-                remoteClient.Connection.State.Should().Be(PolyConnectionState.Closed);
+                serverClients.Close();
+                serverClients.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }
     }

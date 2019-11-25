@@ -17,8 +17,6 @@ namespace PolyMessage.Tests.Integration.Connection
             services.AddScoped<IContract, Implementor>();
         })
         {
-            Client = CreateClient();
-
             Host.AddContract<IContract>();
             Client.AddContract<IContract>();
         }
@@ -45,8 +43,7 @@ namespace PolyMessage.Tests.Integration.Connection
         public async Task ExposeClientAddresses()
         {
             // arrange & act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<IContract>().Operation(new Request1());
             PolyChannel remoteClient = Host.GetConnectedClients().First();
 
@@ -63,8 +60,7 @@ namespace PolyMessage.Tests.Integration.Connection
         public async Task ExposeServerAddresses()
         {
             // arrange & act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             await Client.Get<IContract>().Operation(new Request1());
             PolyChannel remoteClient = Host.GetConnectedClients().First();
 

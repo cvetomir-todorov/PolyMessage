@@ -22,8 +22,6 @@ namespace PolyMessage.Tests.Integration.Tcp
         {
             _timeout = TimeSpan.FromSeconds(1);
             _hostTransport = HostTransport as TcpTransport;
-
-            Host.AddContract<IContract>();
         }
 
         [Theory]
@@ -33,6 +31,7 @@ namespace PolyMessage.Tests.Integration.Tcp
         public async Task RemoveUnneededProcessorsAfterIdleClientTimeout(int clientCount)
         {
             // arrange
+            Host.AddContract<IContract>();
             _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
 
             for (int i = 0; i < clientCount; ++i)
@@ -64,12 +63,11 @@ namespace PolyMessage.Tests.Integration.Tcp
             // arrange
             _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
 
-            Client = CreateClient();
+            Host.AddContract<IContract>();
             Client.AddContract<IContract>();
 
             // act
-            await StartHost();
-            Client.Connect();
+            await StartHostAndConnectClient();
             IContract contract = Client.Get<IContract>();
             await contract.Operation(new Request1());
 

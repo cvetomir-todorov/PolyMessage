@@ -28,14 +28,11 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         public async Task SingleOperationContract(int messagesCount)
         {
             // arrange
-            Client = CreateClient();
+            Host.AddContract<ISingleOperationContract>();
+            Client.AddContract<ISingleOperationContract>();
 
             // act & assert
-            Host.AddContract<ISingleOperationContract>();
-            await StartHost();
-
-            Client.AddContract<ISingleOperationContract>();
-            Client.Connect();
+            await StartHostAndConnectClient();
             ISingleOperationContract proxy = Client.Get<ISingleOperationContract>();
             const string request = "request";
 
@@ -56,14 +53,11 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         public async Task MultipleOperationsContract(int messagesCount)
         {
             // arrange
-            Client = CreateClient();
+            Host.AddContract<IMultipleOperationsContract>();
+            Client.AddContract<IMultipleOperationsContract>();
 
             // act & assert
-            Host.AddContract<IMultipleOperationsContract>();
-            await StartHost();
-
-            Client.AddContract<IMultipleOperationsContract>();
-            Client.Connect();
+            await StartHostAndConnectClient();
             IMultipleOperationsContract proxy = Client.Get<IMultipleOperationsContract>();
             const string request = "request";
 
@@ -94,8 +88,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
             // arrange
             for (int i = 0; i < clientsCount; ++i)
             {
-                PolyClient client = CreateClient();
-                Clients.Add(client);
+                Clients.Add(CreateClient());
             }
 
             // act
