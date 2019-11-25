@@ -20,7 +20,14 @@ namespace PolyMessage.Tests
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _output.WriteLine("{0} | {1} | {2}", logLevel, _category, formatter(state, exception));
+            if (exception != null)
+            {
+                _output.WriteLine("{0} | {1} | {2} {3}", logLevel, _category, formatter(state, exception), exception);
+            }
+            else
+            {
+                _output.WriteLine("{0} | {1} | {2}", logLevel, _category, formatter(state, exception));
+            }
         }
 
         public bool IsEnabled(LogLevel logLevel)
