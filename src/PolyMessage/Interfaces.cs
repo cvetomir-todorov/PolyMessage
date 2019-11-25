@@ -1,4 +1,5 @@
 ﻿using System;
+//using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,6 +8,9 @@ namespace PolyMessage
     public abstract class PolyFormat
     {
         public abstract string DisplayName { get; }
+
+        // TODO: add support for registering types
+        //public abstract void RegisterTypes(IEnumerable<Type> types);
 
         public abstract PolyFormatter CreateFormatter(PolyChannel channel);
     }
@@ -51,6 +55,7 @@ namespace PolyMessage
 
         public abstract void PrepareAccepting();
 
+        // TODO: return a delegate for creating the client on the processor thread so that the listening thread is free for another one
         public abstract Task<PolyChannel> AcceptClient();
 
         public abstract void StopAccepting();

@@ -82,6 +82,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
             }
         }
 
+        // TODO: extract this into a performance test fixture
         [Theory]
         [InlineData(1, 1)]
         [InlineData(1, 100)]

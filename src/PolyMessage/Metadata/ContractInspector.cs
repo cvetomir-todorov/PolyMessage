@@ -10,7 +10,6 @@ namespace PolyMessage.Metadata
         IEnumerable<Operation> InspectContract(Type contractType);
     }
 
-    // TODO: validate contracts, operations, attributes, message ID uniqueness etc.
     internal sealed class ContractInspector : IContractInspector
     {
         private readonly ILogger _logger;

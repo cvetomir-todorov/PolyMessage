@@ -66,6 +66,7 @@ namespace PolyMessage.Tests.Integration
 
         protected abstract PolyFormat CreateHostFormat();
 
+        // TODO: remove usage of this in most clients
         protected PolyClient CreateClient()
         {
             return CreateClient(ServerAddress, ServiceProvider);
