@@ -9,6 +9,7 @@ namespace PolyMessage.Formats.MessagePack
     {
         private readonly MessagePackFormat _format;
         private readonly PolyStream _channelStream;
+        private bool _isDisposed;
         private const string KnownErrorConnectionClosed = "Invalid MessagePack code was detected, code:-1";
 
         public MessagePackFormatter(MessagePackFormat format, PolyChannel channel)
@@ -19,9 +20,13 @@ namespace PolyMessage.Formats.MessagePack
 
         protected override void DoDispose(bool isDisposing)
         {
+            if (_isDisposed)
+                return;
+
             if (isDisposing)
             {
                 _channelStream.Dispose();
+                _isDisposed = true;
             }
         }
 

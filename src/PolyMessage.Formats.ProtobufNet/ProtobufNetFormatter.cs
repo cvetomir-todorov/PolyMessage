@@ -8,19 +8,24 @@ namespace PolyMessage.Formats.ProtobufNet
     public class ProtobufNetFormatter : PolyFormatter
     {
         private readonly ProtobufNetFormat _format;
-        private readonly PolyStream _polyStream;
+        private readonly PolyStream _channelStream;
+        private bool _isDisposed;
 
         public ProtobufNetFormatter(ProtobufNetFormat format, PolyChannel channel)
         {
             _format = format;
-            _polyStream = new PolyStream(channel);
+            _channelStream = new PolyStream(channel);
         }
 
         protected override void DoDispose(bool isDisposing)
         {
+            if (_isDisposed)
+                return;
+
             if (isDisposing)
             {
-                _polyStream.Dispose();
+                _channelStream.Dispose();
+                _isDisposed = true;
             }
         }
 
@@ -29,13 +34,13 @@ namespace PolyMessage.Formats.ProtobufNet
         public override Task Write(object obj, CancellationToken cancelToken)
         {
             int fieldNumber = _format.GetFieldNumber(obj.GetType());
-            Serializer.NonGeneric.SerializeWithLengthPrefix(_polyStream, obj, PrefixStyle.Base128, fieldNumber);
+            Serializer.NonGeneric.SerializeWithLengthPrefix(_channelStream, obj, PrefixStyle.Base128, fieldNumber);
             return Task.CompletedTask;
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
         {
-            Serializer.NonGeneric.TryDeserializeWithLengthPrefix(_polyStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
+            Serializer.NonGeneric.TryDeserializeWithLengthPrefix(_channelStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
             else

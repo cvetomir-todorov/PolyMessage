@@ -9,7 +9,7 @@ namespace PolyMessage.Formats.NewtonsoftJson
     public class NewtonsoftJsonFormatter : PolyFormatter
     {
         private readonly NewtonsoftJsonFormat _format;
-        private readonly PolyStream _stream;
+        private readonly PolyStream _channelStream;
         private readonly JsonWriter _writer;
         private readonly JsonReader _reader;
         private readonly JsonSerializer _serializer;
@@ -18,13 +18,13 @@ namespace PolyMessage.Formats.NewtonsoftJson
         public NewtonsoftJsonFormatter(NewtonsoftJsonFormat format, PolyChannel channel)
         {
             _format = format;
-            _stream = new PolyStream(channel);
+            _channelStream = new PolyStream(channel);
 
-            _writer = new JsonTextWriter(new StreamWriter(_stream));
+            _writer = new JsonTextWriter(new StreamWriter(_channelStream));
             _writer.AutoCompleteOnClose = false;
             _writer.CloseOutput = false;
 
-            _reader = new JsonTextReader(new StreamReader(_stream));
+            _reader = new JsonTextReader(new StreamReader(_channelStream));
             _reader.CloseInput = false;
             _reader.SupportMultipleContent = true;
 
@@ -40,7 +40,7 @@ namespace PolyMessage.Formats.NewtonsoftJson
             {
                 _writer.Close();
                 _reader.Close();
-                _stream.Dispose();
+                _channelStream.Dispose();
                 _isDisposed = true;
             }
         }
