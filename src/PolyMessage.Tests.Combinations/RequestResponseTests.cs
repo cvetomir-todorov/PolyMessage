@@ -1,5 +1,6 @@
 ﻿using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Formats.MessagePack;
+using PolyMessage.Formats.NewtonsoftJson;
 using PolyMessage.Formats.ProtobufNet;
 using Xunit.Abstractions;
 
@@ -29,6 +30,14 @@ namespace PolyMessage.Tests.Combinations
             {}
             protected override PolyFormat CreateHostFormat() => new ProtobufNetFormat();
             protected override PolyFormat CreateClientFormat() => new ProtobufNetFormat();
+        }
+
+        public class Tcp_NewtonsoftJson : Integration.RequestResponse.RequestResponseTests
+        {
+            public Tcp_NewtonsoftJson(ITestOutputHelper output) : base(output)
+            {}
+            protected override PolyFormat CreateHostFormat() => new NewtonsoftJsonFormat();
+            protected override PolyFormat CreateClientFormat() => new NewtonsoftJsonFormat();
         }
     }
 }
