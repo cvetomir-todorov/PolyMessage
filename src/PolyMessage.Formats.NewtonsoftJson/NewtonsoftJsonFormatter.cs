@@ -50,18 +50,17 @@ namespace PolyMessage.Formats.NewtonsoftJson
         public override Task Write(object obj, CancellationToken cancelToken)
         {
             _serializer.Serialize(_writer, obj, obj.GetType());
-            _writer.Flush();
-            return Task.CompletedTask;
+            return _writer.FlushAsync(cancelToken);
         }
 
-        public override Task<object> Read(Type objType, CancellationToken cancelToken)
+        public override async Task<object> Read(Type objType, CancellationToken cancelToken)
         {
-            _reader.Read();
+            await _reader.ReadAsync(cancelToken);
             object obj = _serializer.Deserialize(_reader, objType);
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
             else
-                return Task.FromResult(obj);
+                return obj;
         }
     }
 }
