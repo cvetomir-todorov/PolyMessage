@@ -36,7 +36,10 @@ namespace PolyMessage.Formats.ProtobufNet
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
         {
             Serializer.NonGeneric.TryDeserializeWithLengthPrefix(_polyStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
-            return Task.FromResult(obj);
+            if (obj == null)
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
+            else
+                return Task.FromResult(obj);
         }
     }
 }
