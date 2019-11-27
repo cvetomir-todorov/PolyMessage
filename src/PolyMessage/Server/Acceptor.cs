@@ -104,10 +104,14 @@ namespace PolyMessage.Server
                 PolyChannel client = createClient();
                 processor = new Processor(_loggerFactory, format, client);
                 if (!_processors.TryAdd(processor.ID, processor))
-                    _logger.LogCritical("Could not add processor with ID {0} to list of known processors.", processor.ID);
+                    _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 
                 client.Open();
                 await processor.Start(serverComponents, cancelToken);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogCritical(exception, "Failed to start processor.");
             }
             finally
             {
@@ -116,7 +120,7 @@ namespace PolyMessage.Server
                     processor.Stop();
                     bool isRemoved = _processors.TryRemove(processor.ID, out _);
                     if (!isRemoved)
-                        _logger.LogCritical("Failed to remove processor with ID {0} from list of known processors.", processor.ID);
+                        _logger.LogCritical("Failed to remove processor with ID {0} from list of tracked processors.", processor.ID);
                 }
             }
         }
