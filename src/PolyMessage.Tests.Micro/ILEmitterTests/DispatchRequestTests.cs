@@ -29,12 +29,12 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests
             {
                 new Operation
                 {
-                    ResponseID = 456, ResponseType = typeof(ResponseAlpha), RequestID = 567, RequestType = typeof(RequestAlpha),
+                    ResponseTypeID = 456, ResponseType = typeof(ResponseAlpha), RequestTypeID = 567, RequestType = typeof(RequestAlpha),
                     ContractType = contractAlpha, Method = methodAlpha
                 },
                 new Operation
                 {
-                    ResponseID = 123, ResponseType = typeof(ResponseBeta), RequestID = 234, RequestType = typeof(RequestBeta),
+                    ResponseTypeID = 123, ResponseType = typeof(ResponseBeta), RequestTypeID = 234, RequestType = typeof(RequestBeta),
                     ContractType = contractBeta, Method = methodBeta
                 }
             });
@@ -71,13 +71,13 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests
         public void ShouldThrowWhenMessageIsUnknown()
         {
             // arrange
-            int unknownResponseID = -1;
+            int unknownResponseTypeID = -1;
 
             // act
-            Action act = () => _dispatchRequest(unknownResponseID, new RequestAlpha(), new ImplementorAlpha()).Wait();
+            Action act = () => _dispatchRequest(unknownResponseTypeID, new RequestAlpha(), new ImplementorAlpha()).Wait();
 
             // assert
-            act.Should().Throw<InvalidOperationException>().WithMessage($"*{unknownResponseID}*");
+            act.Should().Throw<InvalidOperationException>().WithMessage($"*{unknownResponseTypeID}*");
         }
 
         public interface IContractAlpha

@@ -34,9 +34,9 @@ namespace PolyMessage.Metadata
 
                 Operation operation = new Operation();
 
-                operation.RequestID = GetMessageID(requestType);
+                operation.RequestTypeID = GetMessageTypeID(requestType);
                 operation.RequestType = requestType;
-                operation.ResponseID = GetMessageID(responseType);
+                operation.ResponseTypeID = GetMessageTypeID(responseType);
                 operation.ResponseType = responseType;
                 operation.Method = method;
                 operation.ContractType = contractType;
@@ -46,7 +46,7 @@ namespace PolyMessage.Metadata
             }
         }
 
-        private static int GetMessageID(Type messageType)
+        private static int GetMessageTypeID(Type messageType)
         {
             PolyMessageAttribute messageAttribute = messageType.GetCustomAttribute<PolyMessageAttribute>();
             if (messageAttribute == null)
@@ -54,13 +54,13 @@ namespace PolyMessage.Metadata
                 throw new InvalidOperationException($"Message {messageType.Name} should have {typeof(PolyMessageAttribute).Name}.");
             }
 
-            int messageID = messageAttribute.ID;
-            if (messageID == 0)
+            int messageTypeID = messageAttribute.ID;
+            if (messageTypeID == 0)
             {
-                messageID = messageType.GetHashCode();
+                messageTypeID = messageType.GetHashCode();
             }
 
-            return messageID;
+            return messageTypeID;
         }
     }
 }

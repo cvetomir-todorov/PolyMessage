@@ -56,8 +56,8 @@ namespace PolyMessage.Proxies
             // the Task<> is not covariant so we cannot cast Task<object> reference to Task<Response>
             // so we do it manually but with generated code in order to avoid reflection at runtime
             Type responseType = invocation.Method.ReturnType.GenericTypeArguments[0];
-            int responseID = _messageMetadata.GetMessageID(responseType);
-            Task responseTask = _castDelegate(responseID, responseMessage);
+            int responseTypeID = _messageMetadata.GetMessageTypeID(responseType);
+            Task responseTask = _castDelegate(responseTypeID, responseMessage);
             invocation.ReturnValue = responseTask;
         }
 

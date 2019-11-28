@@ -33,10 +33,10 @@ namespace PolyMessage.Server
             {
                 object implementor = scope.ServiceProvider.GetRequiredService(operation.ContractType);
                 Type responseType = operation.Method.ReturnType.GenericTypeArguments[0];
-                int responseID = _messageMetadata.GetMessageID(responseType);
+                int responseTypeID = _messageMetadata.GetMessageTypeID(responseType);
 
                 // code generation is used to avoid using reflection at runtime
-                Task<object> operationTask = _dispatchRequest(responseID, message, implementor);
+                Task<object> operationTask = _dispatchRequest(responseTypeID, message, implementor);
                 return operationTask;
             }
         }

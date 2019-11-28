@@ -27,27 +27,27 @@ namespace PolyMessage.Messaging
         public async Task Send(string origin, object message, PolyFormatter formatter, CancellationToken cancelToken)
         {
             PolyHeader header = new PolyHeader();
-            header.MessageID = _messageMetadata.GetMessageID(message.GetType());
+            header.MessageTypeID = _messageMetadata.GetMessageTypeID(message.GetType());
 
-            _logger.LogTrace("[{0}] Sending header for message with ID {1}...", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Sending header for message with type ID {1}...", origin, header.MessageTypeID);
             await formatter.Write(header, cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Sent header for message with ID {1}.", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Sent header for message with type ID {1}.", origin, header.MessageTypeID);
 
-            _logger.LogTrace("[{0}] Sending message with ID {1}...", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Sending message with type ID {1}...", origin, header.MessageTypeID);
             await formatter.Write(message, cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Sent message with ID {1}.", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Sent message with type ID {1}.", origin, header.MessageTypeID);
         }
 
         public async Task<object> Receive(string origin, PolyFormatter formatter, CancellationToken cancelToken)
         {
             _logger.LogTrace("[{0}] Receiving header...", origin);
             PolyHeader header = (PolyHeader) await formatter.Read(typeof(PolyHeader), cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Received header for message with ID {1}.", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Received header for message with type ID {1}.", origin, header.MessageTypeID);
 
-            Type messageType = _messageMetadata.GetMessageType(header.MessageID);
-            _logger.LogTrace("[{0}] Receiving message with ID {1}...", origin, header.MessageID);
+            Type messageType = _messageMetadata.GetMessageType(header.MessageTypeID);
+            _logger.LogTrace("[{0}] Receiving message with type ID {1}...", origin, header.MessageTypeID);
             object message = await formatter.Read(messageType, cancelToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Received message with ID {1}.", origin, header.MessageID);
+            _logger.LogTrace("[{0}] Received message with type ID {1}.", origin, header.MessageTypeID);
             // FEAT: validate actual type etc.
 
             return message;

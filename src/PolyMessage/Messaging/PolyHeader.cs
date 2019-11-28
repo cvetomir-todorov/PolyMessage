@@ -11,6 +11,6 @@ namespace PolyMessage.Messaging
     public sealed class PolyHeader
     {
         [DataMember(Order = 1)]
-        public int MessageID { get; set; }
+        public int MessageTypeID { get; set; }
     }
 }

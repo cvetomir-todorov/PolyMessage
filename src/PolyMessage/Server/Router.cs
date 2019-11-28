@@ -29,7 +29,7 @@ namespace PolyMessage.Server
 
             foreach (Operation operation in operations)
             {
-                _routingTable.Add(operation.RequestID, operation);
+                _routingTable.Add(operation.RequestTypeID, operation);
             }
 
             if (_routingTable.Count <= 0)
@@ -38,8 +38,8 @@ namespace PolyMessage.Server
 
         public Operation ChooseOperation(object message, IMessageMetadata messageMetadata)
         {
-            int messageID = messageMetadata.GetMessageID(message.GetType());
-            return _routingTable[messageID];
+            int messageTypeID = messageMetadata.GetMessageTypeID(message.GetType());
+            return _routingTable[messageTypeID];
         }
     }
 }

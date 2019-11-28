@@ -7,9 +7,9 @@ namespace PolyMessage.Metadata
     {
         void Build(IEnumerable<Operation> operations);
 
-        Type GetMessageType(int messageID);
+        Type GetMessageType(int messageTypeID);
 
-        int GetMessageID(Type messageType);
+        int GetMessageTypeID(Type messageType);
     }
 
     internal class MessageMetadata : IMessageMetadata
@@ -32,18 +32,18 @@ namespace PolyMessage.Metadata
 
             foreach (Operation operation in operations)
             {
-                AddMetadata(operation.RequestID, operation.RequestType);
-                AddMetadata(operation.ResponseID, operation.ResponseType);
+                AddMetadata(operation.RequestTypeID, operation.RequestType);
+                AddMetadata(operation.ResponseTypeID, operation.ResponseType);
             }
 
             if (_idTypeMap.Count <= 0 || _typeIDMap.Count <= 0)
                 throw new ArgumentException("No operations were provided.", nameof(operations));
         }
 
-        private void AddMetadata(int messageID, Type messageType)
+        private void AddMetadata(int messageTypeID, Type messageType)
         {
-            _idTypeMap.Add(messageID, messageType);
-            _typeIDMap.Add(messageType, messageID);
+            _idTypeMap.Add(messageTypeID, messageType);
+            _typeIDMap.Add(messageType, messageTypeID);
         }
 
         private void EnsureBuilt()
@@ -52,26 +52,26 @@ namespace PolyMessage.Metadata
                 throw new InvalidOperationException("Metadata has not been built.");
         }
 
-        public Type GetMessageType(int messageID)
+        public Type GetMessageType(int messageTypeID)
         {
             EnsureBuilt();
-            if (!_idTypeMap.TryGetValue(messageID, out Type messageType))
+            if (!_idTypeMap.TryGetValue(messageTypeID, out Type messageType))
             {
-                throw new InvalidOperationException($"Missing metadata for message with ID {messageID}.");
+                throw new InvalidOperationException($"Missing metadata for message with type ID {messageTypeID}.");
             }
 
             return messageType;
         }
 
-        public int GetMessageID(Type messageType)
+        public int GetMessageTypeID(Type messageType)
         {
             EnsureBuilt();
-            if (!_typeIDMap.TryGetValue(messageType, out int messageID))
+            if (!_typeIDMap.TryGetValue(messageType, out int messageTypeID))
             {
                 throw new InvalidOperationException($"Missing metadata for message type {messageType.Name}.");
             }
 
-            return messageID;
+            return messageTypeID;
         }
     }
 }

@@ -7,9 +7,9 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests.IL
 
     public static class StaticType
     {
-        public static Task CastToTaskOfResponse(int responseID, Task<object> taskOfObject)
+        public static Task CastToTaskOfResponse(int responseTypeID, Task<object> taskOfObject)
         {
-            switch (responseID)
+            switch (responseTypeID)
             {
                 case 123:
                     return CastPlaceHolder.GenericCast<Response1>(taskOfObject);
@@ -26,13 +26,13 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests.IL
                 case 789:
                     return CastPlaceHolder.GenericCast<Response7>(taskOfObject);
                 default:
-                    throw new InvalidOperationException($"Unknown response ID {responseID}.");
+                    throw new InvalidOperationException($"Unknown response type ID {responseTypeID}.");
             }
         }
 
-        public static Task<object> Dispatch(int responseID, object request, object implementor)
+        public static Task<object> Dispatch(int responseTypeID, object request, object implementor)
         {
-            switch (responseID)
+            switch (responseTypeID)
             {
                 case 123:
                     Task<Response1> responseTask1 = ((IContract1)implementor).Operation1((Request1)request);
@@ -41,7 +41,7 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests.IL
                     Task<Response5> responseTask5 = ((IContract2)implementor).Operation5((Request5)request);
                     return CastPlaceHolder.GenericCast(responseTask5);
                 default:
-                    throw new InvalidOperationException($"Unknown response ID {responseID}.");
+                    throw new InvalidOperationException($"Unknown response type ID {responseTypeID}.");
             }
         }
     }

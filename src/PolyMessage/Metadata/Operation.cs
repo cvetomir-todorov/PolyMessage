@@ -5,11 +5,11 @@ namespace PolyMessage.Metadata
 {
     internal sealed class Operation
     {
-        public int RequestID { get; set; }
+        public int RequestTypeID { get; set; }
 
         public Type RequestType { get; set; }
 
-        public int ResponseID { get; set; }
+        public int ResponseTypeID { get; set; }
 
         public Type ResponseType { get; set; }
 
@@ -19,7 +19,7 @@ namespace PolyMessage.Metadata
 
         public override string ToString()
         {
-            return $"{ContractType.Name} Operation={Method.Name} Request={RequestType.Name}(ID={RequestID}) Response={ResponseType.Name}(ID={ResponseID})";
+            return $"{ContractType.Name} Operation={Method.Name} Request={RequestType.Name}({RequestTypeID}) Response={ResponseType.Name}({ResponseTypeID})";
         }
     }
 }
