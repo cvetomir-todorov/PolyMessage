@@ -71,7 +71,7 @@ namespace PolyMessage
 
         public abstract PolyConnection Connection { get; }
 
-        public abstract void Open();
+        public abstract Task OpenAsync();
 
         public abstract void Close();
 

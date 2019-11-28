@@ -34,7 +34,7 @@ namespace PolyMessage.Tests.Integration.Connection
 
                 if (hasConnectedToServer)
                 {
-                    Client.Connect();
+                    await Client.ConnectAsync();
                     await Client.Get<IContract>().Operation(new Request1());
                     Client.Connection.State.Should().Be(PolyConnectionState.Opened);
                 }

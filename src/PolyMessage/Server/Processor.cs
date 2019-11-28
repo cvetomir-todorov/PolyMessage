@@ -100,6 +100,8 @@ namespace PolyMessage.Server
 
         private async Task DoStart(ServerComponents serverComponents, CancellationToken cancelToken)
         {
+            await _connectedClient.OpenAsync();
+
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 _logger.LogTrace("[{0}] Receiving request...", _id);

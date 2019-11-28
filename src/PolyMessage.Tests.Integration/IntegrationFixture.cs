@@ -90,7 +90,7 @@ namespace PolyMessage.Tests.Integration
         protected async Task StartHostAndConnectClient()
         {
             await StartHost();
-            Client.Connect();
+            await Client.ConnectAsync();
         }
     }
 }

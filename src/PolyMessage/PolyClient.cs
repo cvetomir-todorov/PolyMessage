@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,7 +27,7 @@ namespace PolyMessage
         private readonly IContractInspector _contractInspector;
         private IMessageMetadata _messageMetadata;
         // messaging
-        private readonly object _setupMessagingLock;
+        private readonly SemaphoreSlim _setupMessagingLock;
         private volatile IMessenger _messenger;
         private PolyChannel _channel;
         private PolyConnection _connection;
@@ -66,7 +67,7 @@ namespace PolyMessage
             _operations = new List<Operation>();
             _contractInspector = new ContractInspector(loggerFactory);
             // messaging
-            _setupMessagingLock = new object();
+            _setupMessagingLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
             _connection = new PolyConnection();
             // proxies
             _proxyGenerator = new ProxyGenerator();
@@ -93,6 +94,7 @@ namespace PolyMessage
             {
                 _channel.Close();
             }
+            _setupMessagingLock.Dispose();
             _operationInterceptor?.Dispose();
             _logger.LogInformation("[{0}] Stopped", _id);
 
@@ -117,16 +119,19 @@ namespace PolyMessage
             _contracts.Add(contractType);
         }
 
-        public void Connect()
+        public async Task ConnectAsync()
         {
             EnsureState(PolyConnectionState.Created, "connect to the server");
 
             if (_messenger == null)
-                lock (_setupMessagingLock)
+            {
+                try
+                {
+                    await _setupMessagingLock.WaitAsync();
                     if (_messenger == null)
                     {
                         _channel = _transport.CreateClient();
-                        _channel.Open();
+                        await _channel.OpenAsync();
                         _connection = _channel.Connection;
                         _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
@@ -134,6 +139,12 @@ namespace PolyMessage
                         _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
                         RegisterMessageTypes();
                     }
+                }
+                finally
+                {
+                    _setupMessagingLock.Release();
+                }
+            }
         }
 
         private void RegisterMessageTypes()

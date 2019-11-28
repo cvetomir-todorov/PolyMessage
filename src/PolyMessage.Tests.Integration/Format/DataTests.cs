@@ -26,7 +26,6 @@ namespace PolyMessage.Tests.Integration.Format
         [Theory] // size = encoding bytes per char x
         [InlineData(1024)] // 1KB
         [InlineData(1048576)] // 1MB
-        [InlineData(8388608)] // 8MB
         public async Task LargeString(int stringLength)
         {
             // arrange

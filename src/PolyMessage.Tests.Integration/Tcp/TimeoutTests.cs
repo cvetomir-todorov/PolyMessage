@@ -44,7 +44,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             await StartHost();
             for (int i = 0; i < clientCount; ++i)
             {
-                Clients[i].Connect();
+                await Clients[i].ConnectAsync();
                 await Clients[i].Get<IContract>().Operation(new Request1());
             }
 

@@ -23,9 +23,9 @@ namespace PolyMessage.Tests.Integration.Performance
         [Theory]
         [InlineData(1, 1)]
         [InlineData(1, 100)]
-        [InlineData(2, 1)]
-        [InlineData(2, 100)]
-        [InlineData(10, 100)]
+        [InlineData(4, 1)]
+        [InlineData(4, 100)]
+        [InlineData(8, 100)]
         public async Task SendMessagesFast(int clientsCount, int messagesCount)
         {
             // arrange
@@ -72,7 +72,7 @@ namespace PolyMessage.Tests.Integration.Performance
         private async Task<TimeSpan> MakeRequests(PolyClient client, int messagesCount)
         {
             client.AddContract<IPerformanceContract>();
-            client.Connect();
+            await client.ConnectAsync();
             IPerformanceContract proxy = client.Get<IPerformanceContract>();
 
             // warmup

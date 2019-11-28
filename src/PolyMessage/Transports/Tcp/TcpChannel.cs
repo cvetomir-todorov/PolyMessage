@@ -55,15 +55,21 @@ namespace PolyMessage.Transports.Tcp
                 throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is already disposed.");
         }
 
-        // TODO: add async version
         private void EnsureConnected()
         {
-            if (_stream != null)
-                return;
+            if (_stream == null)
+                throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is not opened.");
+        }
+
+        public override PolyConnection Connection => _connection;
+
+        public override async Task OpenAsync()
+        {
+            EnsureNotDisposed();
 
             try
             {
-                OpenConnection();
+                await OpenConnection();
             }
             catch (Win32Exception win32Exception) // also catches SocketException
             {
@@ -79,17 +85,17 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        private void OpenConnection()
+        private async Task OpenConnection()
         {
             if (!_tcpClient.Connected)
             {
-                _tcpClient.Connect(_tcpTransport.Address.Host, _tcpTransport.Address.Port);
+                await _tcpClient.ConnectAsync(_tcpTransport.Address.Host, _tcpTransport.Address.Port);
             }
 
             _stream = _tcpClient.GetStream();
             if (_tcpTransport.Settings.TlsProtocol != SslProtocols.None)
             {
-                InitTls();
+                await InitTls();
             }
 
             _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
@@ -98,23 +104,23 @@ namespace PolyMessage.Transports.Tcp
             _connection.SetOpened(localAddress, remoteAddress);
         }
 
-        private void InitTls()
+        private async Task InitTls()
         {
             TcpSettings settings = _tcpTransport.Settings;
             SslStream secureStream;
             if (_isServer)
             {
-                secureStream = InitServerTls(settings);
+                secureStream = await InitServerTls(settings);
             }
             else
             {
-                secureStream = InitClientTls(settings);
+                secureStream = await InitClientTls(settings);
             }
 
             _stream = secureStream;
         }
 
-        private SslStream InitServerTls(TcpSettings settings)
+        private async Task<SslStream> InitServerTls(TcpSettings settings)
         {
             if (settings.TlsServerCertificate == null)
                 throw new InvalidOperationException("TLS Server certificate needs to be set.");
@@ -122,30 +128,22 @@ namespace PolyMessage.Transports.Tcp
             _logger.LogTrace("Initializing {0} on the server using certificate {1} ...",
                 settings.TlsProtocol, settings.TlsServerCertificate.Subject);
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false);
-            secureStream.AuthenticateAsServer(settings.TlsServerCertificate, false, settings.TlsProtocol, true);
+            await secureStream.AuthenticateAsServerAsync(settings.TlsServerCertificate, false, settings.TlsProtocol, true);
             _logger.LogTrace("Initialized {0} on the server with cipher {1}, hash {2}, key exchange {3}.",
                 secureStream.SslProtocol, secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
 
             return secureStream;
         }
 
-        private SslStream InitClientTls(TcpSettings settings)
+        private async Task<SslStream> InitClientTls(TcpSettings settings)
         {
             _logger.LogTrace("Initializing {0} on the client ...", settings.TlsProtocol);
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false, settings.TlsClientRemoteCertificateValidationCallback);
-            secureStream.AuthenticateAsClient(_tcpTransport.Address.Host, null, settings.TlsProtocol, true);
+            await secureStream.AuthenticateAsClientAsync(_tcpTransport.Address.Host, null, settings.TlsProtocol, true);
             _logger.LogTrace("Initialized {0} on the client with cipher {1}, hash {2}, key exchange {3}.",
                 secureStream.SslProtocol, secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
 
             return secureStream;
-        }
-
-        public override PolyConnection Connection => _connection;
-
-        public override void Open()
-        {
-            EnsureNotDisposed();
-            EnsureConnected();
         }
 
         public override void Close()
