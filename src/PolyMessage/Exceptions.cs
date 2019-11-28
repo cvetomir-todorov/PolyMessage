@@ -14,7 +14,7 @@ namespace PolyMessage
 
     public enum PolyConnectionCloseReason
     {
-        RemoteTimedOut, RemoteAbortedConnection
+        RemoteTimedOut, RemoteAbortedConnection, ConnectionReset
     }
 
     [Serializable]
@@ -28,6 +28,18 @@ namespace PolyMessage
         }
 
         public PolyConnectionCloseReason CloseReason { get; }
+        public PolyTransport Transport { get; }
+    }
+
+    [Serializable]
+    public class PolyOpenConnectionException : PolyException
+    {
+        public PolyOpenConnectionException(PolyTransport transport, Exception inner)
+            : base($"Transport {transport.DisplayName} connection failed to open. See inner exception for details.", inner)
+        {
+            Transport = transport;
+        }
+
         public PolyTransport Transport { get; }
     }
 

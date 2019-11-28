@@ -2,20 +2,23 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
 namespace PolyMessage.Transports.Tcp
 {
     internal sealed class TcpListener : PolyListener
     {
+        private readonly ILogger _logger;
         // TCP
         private readonly TcpTransport _tcpTransport;
         private DotNetTcpListener _tcpListener;
         // stop/dispose
         private bool _isDisposed;
 
-        public TcpListener(TcpTransport tcpTransport)
+        public TcpListener(TcpTransport tcpTransport, ILogger logger)
         {
+            _logger = logger;
             _tcpTransport = tcpTransport;
         }
 
@@ -66,7 +69,7 @@ namespace PolyMessage.Transports.Tcp
         private PolyChannel CreateClientChannel(TcpClient tcpClient)
         {
             tcpClient.ReceiveTimeout = (int)_tcpTransport.Settings.ServerSideClientIdleTimeout.TotalMilliseconds;
-            return new TcpChannel(tcpClient, _tcpTransport);
+            return new TcpChannel(tcpClient, _tcpTransport, isServer: true, _logger);
         }
 
         public override void StopAccepting()

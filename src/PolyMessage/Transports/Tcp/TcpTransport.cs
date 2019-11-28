@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
 
 namespace PolyMessage.Transports.Tcp
 {
@@ -7,16 +8,20 @@ namespace PolyMessage.Transports.Tcp
     {
         private readonly Uri _address;
         private readonly TcpSettings _settings;
+        private readonly ILogger _logger;
 
-        public TcpTransport(Uri address)
+        public TcpTransport(Uri address, ILoggerFactory loggerFactory)
         {
             if (address == null)
                 throw new ArgumentNullException(nameof(address));
             if (!string.Equals(address.Scheme, "tcp", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Uri scheme should be TCP.");
+            if (loggerFactory == null)
+                throw new ArgumentNullException(nameof(loggerFactory));
 
             _address = address;
             _settings = new TcpSettings();
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         public TcpSettings Settings => _settings;
@@ -27,13 +32,13 @@ namespace PolyMessage.Transports.Tcp
 
         public override PolyListener CreateListener()
         {
-            return new TcpListener(this);
+            return new TcpListener(this, _logger);
         }
 
         public override PolyChannel CreateClient()
         {
             TcpClient tcpClient = new TcpClient();
-            return new TcpChannel(tcpClient, this);
+            return new TcpChannel(tcpClient, this, isServer: false, _logger);
         }
     }
 }

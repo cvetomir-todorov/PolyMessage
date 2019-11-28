@@ -15,4 +15,9 @@
     <ProjectReference Include="..\PolyMessage.Tests\PolyMessage.Tests.csproj" />
     <ProjectReference Include="..\PolyMessage\PolyMessage.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Certificates\PolyMessage.Tests.Server.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

@@ -58,7 +58,7 @@ namespace PolyMessage.Tests.Integration
 
         private PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            HostTransport = new TcpTransport(serverAddress);
+            HostTransport = new TcpTransport(serverAddress, LoggerFactory);
             PolyFormat hostFormat = CreateHostFormat();
             PolyHost host = new PolyHost(HostTransport, hostFormat, serviceProvider);
             return host;
@@ -73,7 +73,7 @@ namespace PolyMessage.Tests.Integration
 
         protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            ClientTransport = new TcpTransport(serverAddress);
+            ClientTransport = new TcpTransport(serverAddress, LoggerFactory);
             PolyFormat clientFormat = CreateClientFormat();
             PolyClient client = new PolyClient(ClientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;

@@ -8,7 +8,7 @@ namespace PolyMessage.Tests.Integration.Tcp
     {
         public Task<Response1> Operation(Request1 request)
         {
-            return Task.FromResult(new Response1());
+            return Task.FromResult(new Response1 {Data = "response"});
         }
     }
 
@@ -19,15 +19,15 @@ namespace PolyMessage.Tests.Integration.Tcp
         Task<Response1> Operation(Request1 request);
     }
 
-    [Serializable]
-    [DataContract]
-    [PolyMessage]
+    [PolyMessage, Serializable, DataContract]
     public sealed class Request1
-    {}
+    {
+        [DataMember(Order = 1)] public string Data { get; set; }
+    }
 
-    [Serializable]
-    [DataContract]
-    [PolyMessage]
+    [PolyMessage, Serializable, DataContract]
     public sealed class Response1
-    {}
+    {
+        [DataMember(Order = 1)] public string Data { get; set; }
+    }
 }

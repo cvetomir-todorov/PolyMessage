@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
@@ -8,6 +10,7 @@ namespace PolyMessage.Tests
     public abstract class BaseFixture : IDisposable
     {
         protected IServiceProvider ServiceProvider { get; }
+        protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
         protected BaseFixture(ITestOutputHelper output) : this(output, collection => {})
@@ -16,7 +19,8 @@ namespace PolyMessage.Tests
         protected BaseFixture(ITestOutputHelper output, Action<IServiceCollection> addServices)
         {
             ServiceProvider = CreateServiceProvider(output, addServices);
-            Logger = ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(GetType());
+            LoggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
+            Logger = LoggerFactory.CreateLogger(GetType());
         }
 
         public void Dispose()
@@ -38,6 +42,12 @@ namespace PolyMessage.Tests
                 });
             addServices(services);
             return services.BuildServiceProvider();
+        }
+
+        protected string GetTestDirectory()
+        {
+            string assemblyPath = Assembly.GetExecutingAssembly().Location;
+            return Path.GetDirectoryName(assemblyPath);
         }
     }
 }

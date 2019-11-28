@@ -1,11 +1,11 @@
 ﻿using PolyMessage.Formats.DotNetBinary;
 using Xunit.Abstractions;
 
-namespace PolyMessage.Tests.Combinations
+namespace PolyMessage.Tests.Combinations.Tcp
 {
-    namespace TimeoutTests
+    namespace SecurityTests
     {
-        public class Tcp : Integration.Tcp.TimeoutTests
+        public class Tcp : Integration.Tcp.SecurityTests
         {
             public Tcp(ITestOutputHelper output) : base(output)
             {}

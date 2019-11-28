@@ -21,14 +21,14 @@ namespace PolyMessage.Tests.Integration.Tcp
         })
         {
             _timeout = TimeSpan.FromSeconds(1);
-            _hostTransport = HostTransport as TcpTransport;
+            _hostTransport = (TcpTransport) HostTransport;
         }
 
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(4)]
-        public async Task RemoveUnneededProcessorsAfterIdleClientTimeout(int clientCount)
+        public async Task UnneededProcessorsAreRemovedAfterIdleClientTimeout(int clientCount)
         {
             // arrange
             Host.AddContract<IContract>();
@@ -58,7 +58,7 @@ namespace PolyMessage.Tests.Integration.Tcp
         }
 
         [Fact]
-        public async Task ClientShouldThrowWhenBeingIdleMoreThanServerSideTimeout()
+        public async Task ClientIsDisconnectedWhenBeingIdleMoreThanServerSideTimeout()
         {
             // arrange
             _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;

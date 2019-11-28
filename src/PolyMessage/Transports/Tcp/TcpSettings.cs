@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 namespace PolyMessage.Transports.Tcp
@@ -17,6 +20,7 @@ namespace PolyMessage.Transports.Tcp
         {
             NoDelay = true;
             ServerSideClientIdleTimeout = InfiniteTimeout;
+            TlsProtocol = SslProtocols.None;
         }
 
         /// <summary>
@@ -29,5 +33,20 @@ namespace PolyMessage.Transports.Tcp
         /// The default value is <see cref="InfiniteTimeout"/>.
         /// </summary>
         public TimeSpan ServerSideClientIdleTimeout { get; set; }
+
+        /// <summary>
+        /// The certificate used in TLS over TCP.
+        /// </summary>
+        public X509Certificate2 TlsServerCertificate { get; set; }
+
+        /// <summary>
+        /// The validation callback used by the client when validating the server certificate.
+        /// </summary>
+        public RemoteCertificateValidationCallback TlsClientRemoteCertificateValidationCallback { get; set; }
+
+        /// <summary>
+        /// The TLS protocol used in the communication.
+        /// </summary>
+        public SslProtocols TlsProtocol { get; set; }
     }
 }
