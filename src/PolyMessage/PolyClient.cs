@@ -111,9 +111,16 @@ namespace PolyMessage
 
         public void AddContract<TContract>() where TContract : class
         {
+            AddContract(typeof(TContract));
+        }
+
+        public void AddContract(Type contractType)
+        {
+            if (contractType == null)
+                throw new ArgumentNullException(nameof(contractType));
+
             EnsureState(PolyConnectionState.Created, "add contract");
 
-            Type contractType = typeof(TContract);
             IEnumerable<Operation> operations = _contractInspector.InspectContract(contractType);
             _operations.AddRange(operations);
             _contracts.Add(contractType);
@@ -122,6 +129,8 @@ namespace PolyMessage
         public async Task ConnectAsync()
         {
             EnsureState(PolyConnectionState.Created, "connect to the server");
+            if (_operations.Count <= 0)
+                throw new InvalidOperationException("No contracts added.");
 
             if (_messenger == null)
             {

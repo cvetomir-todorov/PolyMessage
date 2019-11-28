@@ -79,9 +79,16 @@ namespace PolyMessage
 
         public void AddContract<TContract>() where TContract : class
         {
-            EnsureNotDisposed();
+            AddContract(typeof(TContract));
+        }
 
-            IEnumerable<Operation> operations = _contractInspector.InspectContract(typeof(TContract));
+        public void AddContract(Type contractType)
+        {
+            if (contractType == null)
+                throw new ArgumentNullException(nameof(contractType));
+
+            EnsureNotDisposed();
+            IEnumerable<Operation> operations = _contractInspector.InspectContract(contractType);
             _operations.AddRange(operations);
         }
 
@@ -89,7 +96,7 @@ namespace PolyMessage
         {
             EnsureNotDisposed();
             if (_operations.Count <= 0)
-                throw new InvalidOperationException("No contracts added or none of them have operations.");
+                throw new InvalidOperationException("No contracts added.");
 
             _acceptor = new Acceptor(_loggerFactory);
             IMessageMetadata messageMetadata = new MessageMetadata();
