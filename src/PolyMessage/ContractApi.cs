@@ -2,7 +2,6 @@
 
 namespace PolyMessage
 {
-    // TODO: allow attribute to be omitted when the interface is specified
     public interface IPolyContract
     {
         PolyConnection Connection { get; set; }

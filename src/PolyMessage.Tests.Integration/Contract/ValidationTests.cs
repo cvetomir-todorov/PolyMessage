@@ -18,7 +18,7 @@ namespace PolyMessage.Tests.Integration.Contract
         protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
 
         [Theory]
-        [InlineData("010", typeof(IContractWithoutAttribute), 1)]
+        [InlineData("010", typeof(IContractWithoutAttributeAndInterface), 1)]
         [InlineData("020", typeof(IContractWithoutOperations), 1)]
         [InlineData("030", typeof(IOperationWithoutAttribute), 1)]
         [InlineData("040", typeof(IOperationNotReturningTaskOfResponse), 1)]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -26,9 +27,10 @@ namespace PolyMessage.Metadata
             List<PolyContractValidationError> errors = null;
 
             PolyContractAttribute contractAttribute = contractType.GetCustomAttribute<PolyContractAttribute>();
-            if (contractAttribute == null)
+            bool inheritsContractInterface = contractType.GetInterfaces().Any(@interface => @interface == typeof(IPolyContract));
+            if (contractAttribute == null && !inheritsContractInterface)
             {
-                AddError(ref errors, contractType, $"{contractType.Name} is missing {typeof(PolyContractAttribute).Name}.");
+                AddError(ref errors, contractType, $"{contractType.Name} is missing {typeof(PolyContractAttribute).Name} and does not inherit {typeof(IPolyContract).Name}.");
             }
 
             MethodInfo[] methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public);

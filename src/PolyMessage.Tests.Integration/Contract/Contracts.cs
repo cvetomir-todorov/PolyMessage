@@ -28,17 +28,16 @@ namespace PolyMessage.Tests.Integration.Contract
     [PolyMessage(ID = 1), Serializable, DataContract]
     public sealed class ResponseWithSameID {}
 
-    public interface IContractWithoutAttribute
+    public interface IContractWithoutAttributeAndInterface
     {
         [PolyRequestResponse] Task<ValidResponse> Operation(ValidRequest request);
     }
 
-    [PolyContract]
-    public interface IContractWithoutOperations
+    public interface IContractWithoutOperations : IPolyContract
     {}
 
     [PolyContract]
-    public interface IOperationWithoutAttribute
+    public interface IOperationWithoutAttribute : IPolyContract
     {
         Task<ValidResponse> Operation(ValidRequest request);
     }
