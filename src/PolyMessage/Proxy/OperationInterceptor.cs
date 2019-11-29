@@ -7,7 +7,7 @@ using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 
-namespace PolyMessage.Proxies
+namespace PolyMessage.Proxy
 {
     internal sealed class OperationInterceptor : IInterceptor, IDisposable
     {
@@ -50,6 +50,14 @@ namespace PolyMessage.Proxies
 
         public void Intercept(IInvocation invocation)
         {
+            if (invocation.Method.IsSpecialName ||
+                invocation.Arguments.Length != 1 ||
+                invocation.Method.ReturnType.BaseType != typeof(Task))
+            {
+                invocation.Proceed();
+                return;
+            }
+
             object requestMessage = invocation.Arguments[0];
             Task<object> responseMessage = CallOperation(requestMessage);
 

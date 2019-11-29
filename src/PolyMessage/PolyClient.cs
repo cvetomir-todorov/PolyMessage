@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
-using PolyMessage.Proxies;
+using PolyMessage.Proxy;
 
 namespace PolyMessage
 {
@@ -192,7 +192,10 @@ namespace PolyMessage
 
             _operationInterceptor = new OperationInterceptor(
                 _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
-            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(contractType, new Type[0], _operationInterceptor);
+            ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
+
+            object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(
+                contractType, new Type[0], _operationInterceptor, connectionPropertyInterceptor);
             return proxy;
         }
 

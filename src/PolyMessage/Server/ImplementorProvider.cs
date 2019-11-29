@@ -5,6 +5,8 @@ namespace PolyMessage.Server
 {
     internal interface IImplementorProvider : IDisposable
     {
+        void SessionStarted(PolyChannel channel);
+
         void OperationStarted();
 
         object ResolveImplementor(Type contractType);
@@ -15,6 +17,7 @@ namespace PolyMessage.Server
     internal sealed class ImplementorProvider : IImplementorProvider
     {
         private readonly IServiceProvider _serviceProvider;
+        private PolyChannel _channel;
         private IServiceScope _currentScope;
 
         public ImplementorProvider(IServiceProvider serviceProvider)
@@ -25,6 +28,11 @@ namespace PolyMessage.Server
         public void Dispose()
         {
             _currentScope?.Dispose();
+        }
+
+        public void SessionStarted(PolyChannel channel)
+        {
+            _channel = channel;
         }
 
         public void OperationStarted()
@@ -40,6 +48,11 @@ namespace PolyMessage.Server
                 throw new InvalidOperationException("Missing scope.");
 
             object implementor = _currentScope.ServiceProvider.GetRequiredService(contractType);
+            if (implementor is IPolyContract baseContract)
+            {
+                baseContract.Connection = _channel.Connection;
+            }
+
             return implementor;
         }
 

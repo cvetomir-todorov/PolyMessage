@@ -104,6 +104,7 @@ namespace PolyMessage.Server
         private async Task DoStart(ServerComponents serverComponents, CancellationToken cancelToken)
         {
             await _connectedClient.OpenAsync();
+            _implementorProvider.SessionStarted(_connectedClient);
 
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
