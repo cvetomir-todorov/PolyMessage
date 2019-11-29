@@ -6,12 +6,21 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.DependencyInjection;
+using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Transports.Tcp;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.Tcp
 {
+    public class Security_Tcp : SecurityTests
+    {
+        public Security_Tcp(ITestOutputHelper output) : base(output)
+        {}
+        protected override PolyFormat CreateHostFormat() => new DotNetBinaryFormat();
+        protected override PolyFormat CreateClientFormat() => new DotNetBinaryFormat();
+    }
+
     public abstract class SecurityTests : IntegrationFixture
     {
         private readonly TcpTransport _hostTransport;
