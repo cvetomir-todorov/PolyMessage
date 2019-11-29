@@ -48,7 +48,6 @@ namespace PolyMessage.Messaging
             _logger.LogTrace("[{0}] Receiving message with type ID {1}...", origin, header.MessageTypeID);
             object message = await formatter.Read(messageType, cancelToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received message with type ID {1}.", origin, header.MessageTypeID);
-            // FEAT: validate actual type etc.
 
             return message;
         }

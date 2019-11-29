@@ -44,8 +44,6 @@ namespace PolyMessage
             }
         }
 
-        // FEAT: support connection state change events
-
         internal void SetOpened(Uri localAddress, Uri remoteAddress)
         {
             _state = PolyConnectionState.Opened;

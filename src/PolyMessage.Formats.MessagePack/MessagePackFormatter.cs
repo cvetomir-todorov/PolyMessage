@@ -50,7 +50,6 @@ namespace PolyMessage.Formats.MessagePack
         {
             try
             {
-                // FEAT: using readStrict is slow, but their API is limited
                 object obj = MessagePackSerializer.NonGeneric.Deserialize(objType, _channelStream, MessagePackSerializer.DefaultResolver,
                     readStrict: true);
                 return Task.FromResult(obj);
