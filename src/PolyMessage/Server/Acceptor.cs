@@ -21,7 +21,8 @@ namespace PolyMessage.Server
     {
         private PolyListener _listener;
         private readonly ConcurrentDictionary<string, IProcessor> _processors;
-        // logging
+        // .net core integration
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         // stop/dispose
@@ -29,8 +30,9 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Acceptor(ILoggerFactory loggerFactory)
+        public Acceptor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
+            _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
             _processors = new ConcurrentDictionary<string, IProcessor>();
@@ -102,7 +104,7 @@ namespace PolyMessage.Server
             try
             {
                 PolyChannel client = createClient();
-                processor = new Processor(_loggerFactory, format, client);
+                processor = new Processor(_serviceProvider, _loggerFactory, format, client);
                 if (!_processors.TryAdd(processor.ID, processor))
                     _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 

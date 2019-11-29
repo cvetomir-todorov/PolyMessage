@@ -22,6 +22,7 @@ namespace PolyMessage.Server
         private readonly ILogger _logger;
         private readonly PolyFormatter _formatter;
         private readonly PolyChannel _connectedClient;
+        private readonly IImplementorProvider _implementorProvider;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -31,11 +32,12 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Processor(ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
+        public Processor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _formatter = format.CreateFormatter(connectedClient);
             _connectedClient = connectedClient;
+            _implementorProvider = new ImplementorProvider(serviceProvider);
             // identity
             _id = "Processor" + Interlocked.Increment(ref _generation);
             // stop/dispose
@@ -51,6 +53,7 @@ namespace PolyMessage.Server
                     if (!_isDisposed)
                     {
                         _isStopRequested = true;
+                        _implementorProvider.Dispose();
                         _connectedClient.Close();
                         _formatter.Dispose();
                         _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
@@ -108,12 +111,27 @@ namespace PolyMessage.Server
                 object requestMessage = await serverComponents.Messenger.Receive(_id, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
-                Operation operation = serverComponents.Router.ChooseOperation(requestMessage, serverComponents.MessageMetadata);
-                object responseMessage = await serverComponents.Dispatcher.Dispatch(requestMessage, operation).ConfigureAwait(false);
+                object responseMessage = await DispatchMessage(serverComponents, requestMessage);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
                 await serverComponents.Messenger.Send(_id, responseMessage, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
+            }
+        }
+
+        private async Task<object> DispatchMessage(ServerComponents serverComponents, object requestMessage)
+        {
+            Operation operation = serverComponents.Router.ChooseOperation(requestMessage, serverComponents.MessageMetadata);
+            try
+            {
+                _implementorProvider.OperationStarted();
+                object implementor = _implementorProvider.ResolveImplementor(operation.ContractType);
+                object responseMessage = await serverComponents.Dispatcher.Dispatch(implementor, requestMessage, operation).ConfigureAwait(false);
+                return responseMessage;
+            }
+            finally
+            {
+                _implementorProvider.OperationFinished();
             }
         }
 
