@@ -13,10 +13,9 @@ namespace PolyMessage.Tests.Integration.Tcp
 {
     public class Timeout_Tcp : TimeoutTests
     {
-        public Timeout_Tcp(ITestOutputHelper output) : base(output)
-        {}
-        protected override PolyFormat CreateHostFormat() => new DotNetBinaryFormat();
-        protected override PolyFormat CreateClientFormat() => new DotNetBinaryFormat();
+        public Timeout_Tcp(ITestOutputHelper output) : base(output) {}
+        protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
+        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
     }
 
     public abstract class TimeoutTests : IntegrationFixture

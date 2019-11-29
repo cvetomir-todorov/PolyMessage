@@ -3,6 +3,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Formats.DotNetBinary;
+using PolyMessage.Transports.Tcp;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,8 +14,8 @@ namespace PolyMessage.Tests.Integration.Contract
         public ValidationTests(ITestOutputHelper output) : base(output)
         {}
 
-        protected override PolyFormat CreateHostFormat() => new DotNetBinaryFormat();
-        protected override PolyFormat CreateClientFormat() => new DotNetBinaryFormat();
+        protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
+        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
 
         [Theory]
         [InlineData("010", typeof(IContractWithoutAttribute), 1)]

@@ -1,9 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.DependencyInjection;
 using PolyMessage.Formats.DotNetBinary;
+using PolyMessage.Transports.Tcp;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -11,10 +13,9 @@ namespace PolyMessage.Tests.Integration.Connection
 {
     public class State_Tcp : StateTests
     {
-        public State_Tcp(ITestOutputHelper output) : base(output)
-        {}
-        protected override PolyFormat CreateHostFormat() => new DotNetBinaryFormat();
-        protected override PolyFormat CreateClientFormat() => new DotNetBinaryFormat();
+        public State_Tcp(ITestOutputHelper output) : base(output) {}
+        protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
+        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
     }
 
     public abstract class StateTests : IntegrationFixture

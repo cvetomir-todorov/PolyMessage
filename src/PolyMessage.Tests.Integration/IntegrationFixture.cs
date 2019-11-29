@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Transports.Tcp;
 using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
@@ -46,6 +45,14 @@ namespace PolyMessage.Tests.Integration
             base.Dispose(disposingInsteadOfFinalizing);
         }
 
+        protected abstract PolyFormat CreateFormat();
+        private PolyFormat CreateHostFormat() => CreateFormat();
+        private PolyFormat CreateClientFormat() => CreateFormat();
+
+        protected abstract PolyTransport CreateTransport(Uri serverAddress);
+        private PolyTransport CreateHostTransport(Uri serverAddress) => CreateTransport(serverAddress);
+        private PolyTransport CreateClientTransport(Uri serverAddress) => CreateTransport(serverAddress);
+
         private static Uri GetServerAddress()
         {
             string hostName = Dns.GetHostName();
@@ -58,13 +65,11 @@ namespace PolyMessage.Tests.Integration
 
         private PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            HostTransport = new TcpTransport(serverAddress, LoggerFactory);
+            HostTransport = CreateHostTransport(serverAddress);
             PolyFormat hostFormat = CreateHostFormat();
             PolyHost host = new PolyHost(HostTransport, hostFormat, serviceProvider);
             return host;
         }
-
-        protected abstract PolyFormat CreateHostFormat();
 
         protected PolyClient CreateClient()
         {
@@ -73,13 +78,11 @@ namespace PolyMessage.Tests.Integration
 
         protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
         {
-            ClientTransport = new TcpTransport(serverAddress, LoggerFactory);
+            ClientTransport = CreateClientTransport(serverAddress);
             PolyFormat clientFormat = CreateClientFormat();
             PolyClient client = new PolyClient(ClientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;
         }
-
-        protected abstract PolyFormat CreateClientFormat();
 
         protected async Task StartHost()
         {
