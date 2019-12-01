@@ -162,7 +162,7 @@ namespace PolyMessage.Metadata
             int messageTypeID = messageAttribute.ID;
             if (messageTypeID == 0)
             {
-                messageTypeID = messageType.GetHashCode();
+                messageTypeID = messageType.FullName.GetHashCode();
             }
 
             // check message is used more than once
