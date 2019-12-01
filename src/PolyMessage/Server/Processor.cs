@@ -84,11 +84,11 @@ namespace PolyMessage.Server
             }
             catch (PolyFormatException formatException) when (formatException.FormatError == PolyFormatError.EndOfDataStream)
             {
-                _logger.LogInformation("[{0}] Connection has been closed. Format error is {1}.", _id, formatException.FormatError);
+                _logger.LogDebug("[{0}] Connection has been closed. Format error is {1}.", _id, formatException.FormatError);
             }
             catch (PolyConnectionClosedException connectionClosedException) when (connectionClosedException.CloseReason == PolyConnectionCloseReason.RemoteTimedOut)
             {
-                _logger.LogInformation("[{0}] Connection has been closed. Reason is {1}.", _id, connectionClosedException.CloseReason);
+                _logger.LogDebug("[{0}] Connection has been closed. Reason is {1}.", _id, connectionClosedException.CloseReason);
             }
             catch (Exception exception)
             {

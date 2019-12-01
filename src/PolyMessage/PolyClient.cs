@@ -96,7 +96,7 @@ namespace PolyMessage
             }
             _setupMessagingLock.Dispose();
             _operationInterceptor?.Dispose();
-            _logger.LogInformation("[{0}] Stopped", _id);
+            _logger.LogDebug("[{0}] Stopped", _id);
 
             _isDisposed = true;
         }
@@ -142,7 +142,7 @@ namespace PolyMessage
                         _channel = _transport.CreateClient();
                         await _channel.OpenAsync();
                         _connection = _channel.Connection;
-                        _logger.LogInformation("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
+                        _logger.LogDebug("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
                         _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
