@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PolyMessage.Formats.MessagePack\PolyMessage.Formats.MessagePack.csproj" />
+    <ProjectReference Include="..\..\src\PolyMessage.Formats.NewtonsoftJson\PolyMessage.Formats.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\src\PolyMessage.Formats.ProtobufNet\PolyMessage.Formats.ProtobufNet.csproj" />
+    <ProjectReference Include="..\..\src\PolyMessage\PolyMessage.csproj" />
+    <ProjectReference Include="..\PolyMessage.LoadTesting.Contracts\PolyMessage.LoadTesting.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.6.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Certificates\PolyMessage.Tests.Server.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
