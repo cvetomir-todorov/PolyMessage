@@ -34,16 +34,9 @@ namespace PolyMessage.Formats.MessagePack
 
         public override Task Write(object obj, CancellationToken cancelToken)
         {
-            try
-            {
-                MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _channelStream, obj, MessagePackSerializer.DefaultResolver);
-                _channelStream.Flush();
-                return Task.CompletedTask;
-            }
-            catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorConnectionClosed))
-            {
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
-            }
+            MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _channelStream, obj, MessagePackSerializer.DefaultResolver);
+            _channelStream.Flush();
+            return Task.CompletedTask;
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
@@ -56,7 +49,7 @@ namespace PolyMessage.Formats.MessagePack
             }
             catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorConnectionClosed))
             {
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
             }
         }
     }

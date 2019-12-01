@@ -12,6 +12,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PolyMessage.Formats.ProtobufNet\PolyMessage.Formats.ProtobufNet.csproj" />
     <ProjectReference Include="..\PolyMessage.Tests\PolyMessage.Tests.csproj" />
     <ProjectReference Include="..\PolyMessage\PolyMessage.csproj" />
   </ItemGroup>

@@ -42,7 +42,7 @@ namespace PolyMessage.Formats.ProtobufNet
         {
             Serializer.NonGeneric.TryDeserializeWithLengthPrefix(_channelStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
             if (obj == null)
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
             else
                 return Task.FromResult(obj);
         }

@@ -32,15 +32,8 @@ namespace PolyMessage.Formats.DotNetBinary
 
         public override Task Write(object obj, CancellationToken cancelToken)
         {
-            try
-            {
-                _formatter.Serialize(_channelStream, obj);
-                return Task.CompletedTask;
-            }
-            catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorConnectionClosed))
-            {
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
-            }
+            _formatter.Serialize(_channelStream, obj);
+            return Task.CompletedTask;
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
@@ -52,7 +45,7 @@ namespace PolyMessage.Formats.DotNetBinary
             }
             catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorConnectionClosed))
             {
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, _format);
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
             }
         }
     }

@@ -94,20 +94,22 @@ namespace PolyMessage
 
     public enum PolyFormatError
     {
-        EndOfDataStream
+        EndOfDataStream, TypeRegistration
     }
 
     [Serializable]
     public class PolyFormatException : PolyException
     {
-        public PolyFormatException(PolyFormatError formatError, PolyFormat format)
-            : base($"Format {format.DisplayName} IO operation resulted in an error {formatError}.")
+        public PolyFormatException(PolyFormatError formatError, string errorDetail, PolyFormat format)
+            : base($"Format {format.DisplayName} reported an error {formatError}. {errorDetail}")
         {
             FormatError = formatError;
+            ErrorDetail = errorDetail;
             Format = format;
         }
 
         public PolyFormatError FormatError { get; }
+        public string ErrorDetail { get; }
         public PolyFormat Format { get; }
     }
 }
