@@ -162,7 +162,9 @@ namespace PolyMessage.Metadata
             int messageTypeID = messageAttribute.ID;
             if (messageTypeID == 0)
             {
-                messageTypeID = messageType.FullName.GetHashCode();
+                // we want a stable ID because lib could be used on different machines and runtimes
+                // we want the ID to be >= 0
+                messageTypeID = Math.Abs(GetStableHashCode(messageType.FullName));
             }
 
             // check message is used more than once
@@ -189,6 +191,30 @@ namespace PolyMessage.Metadata
             }
 
             return messageTypeID;
+        }
+
+        /// <summary>
+        /// A hash code that is stable (does not use randomization), well distributed
+        /// and returns the same value on different .NET runtimes (as long as the behavior of int ^ char does not change).
+        /// https://referencesource.microsoft.com/#mscorlib/system/string.cs,827
+        /// </summary>
+        private static int GetStableHashCode(string @string)
+        {
+            unchecked
+            {
+                int hash1 = 5381;
+                int hash2 = hash1;
+
+                for (int i = 0; i < @string.Length && @string[i] != '\0'; i += 2)
+                {
+                    hash1 = ((hash1 << 5) + hash1) ^ @string[i];
+                    if (i == @string.Length - 1 || @string[i + 1] == '\0')
+                        break;
+                    hash2 = ((hash2 << 5) + hash2) ^ @string[i + 1];
+                }
+
+                return hash1 + (hash2 * 1566083941);
+            }
         }
 
         private static void AddError(ref List<PolyContractValidationError> errors, Type contractType, string error)
