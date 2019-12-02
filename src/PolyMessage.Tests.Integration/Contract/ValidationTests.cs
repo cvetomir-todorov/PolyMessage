@@ -29,7 +29,8 @@ namespace PolyMessage.Tests.Integration.Contract
         [InlineData("090", typeof(IOperationsWithSameRequests), 1)]
         [InlineData("100", typeof(IOperationsWithSameResponses), 1)]
         [InlineData("110", typeof(IOperationsWithSameMessagesAsRequestAndResponse), 1)]
-        [InlineData("120", typeof(IMultipleErrors), 4)]
+        [InlineData("120", typeof(IMessagesWithInvalidIDs), 2)]
+        [InlineData("130", typeof(IMultipleErrors), 4)]
         #pragma warning disable xUnit1026 //Theory methods should use all of their parameters
         public void ValidateContracts(string testOrder, Type contractType, int expectedValidationErrors)
         #pragma warning restore xUnit1026 //Theory methods should use all of their parameters

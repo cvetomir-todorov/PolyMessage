@@ -22,11 +22,17 @@ namespace PolyMessage.Tests.Integration.Contract
     [Serializable, DataContract]
     public sealed class InvalidResponse {}
 
-    [PolyMessage(ID = 1), Serializable, DataContract]
+    [PolyMessage(ID = 2), Serializable, DataContract]
     public sealed class RequestWithSameID {}
 
-    [PolyMessage(ID = 1), Serializable, DataContract]
+    [PolyMessage(ID = 2), Serializable, DataContract]
     public sealed class ResponseWithSameID {}
+
+    [PolyMessage(ID = -1), Serializable, DataContract]
+    public sealed class MessageWithNonPositiveID {}
+
+    [PolyMessage(ID = 1)]
+    public sealed class MessageWithReservedID {}
 
     public interface IContractWithoutAttributeAndInterface
     {
@@ -105,6 +111,13 @@ namespace PolyMessage.Tests.Integration.Contract
 
         [PolyRequestResponse]
         Task<AnotherValidResponse> Operation2(ValidResponse request);
+    }
+
+    [PolyContract]
+    public interface IMessagesWithInvalidIDs
+    {
+        [PolyRequestResponse]
+        Task<MessageWithNonPositiveID> Operation(MessageWithReservedID request);
     }
 
     public interface IMultipleErrors

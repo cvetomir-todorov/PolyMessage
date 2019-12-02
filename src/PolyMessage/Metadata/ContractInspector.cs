@@ -167,6 +167,11 @@ namespace PolyMessage.Metadata
                 messageTypeID = Math.Abs(GetStableHashCode(messageType.FullName));
             }
 
+            if (messageTypeID <= 1)
+            {
+                AddError(ref errors, contractType, $"{contractType.Name}.{method.Name} {messageType.Name} has invalid ID of {messageTypeID}. Message IDs need to be in range [2, int.MaxValue].");
+            }
+
             // check message is used more than once
             if (messageTypes.TryGetValue(messageType, out Operation existingOperation))
             {
