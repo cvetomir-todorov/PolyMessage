@@ -33,7 +33,7 @@ namespace PolyMessage.Formats.DotNetBinary
         public override Task Write(object obj, CancellationToken cancelToken)
         {
             _formatter.Serialize(_channelStream, obj);
-            return Task.CompletedTask;
+            return _channelStream.FlushAsync(cancelToken);
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)

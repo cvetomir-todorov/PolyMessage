@@ -35,16 +35,20 @@ namespace PolyMessage.Formats.ProtobufNet
         {
             int fieldNumber = _format.GetFieldNumber(obj.GetType());
             Serializer.NonGeneric.SerializeWithLengthPrefix(_channelStream, obj, PrefixStyle.Base128, fieldNumber);
-            return Task.CompletedTask;
+            return _channelStream.FlushAsync(cancelToken);
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
         {
-            Serializer.NonGeneric.TryDeserializeWithLengthPrefix(_channelStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
+            bool deserializeSuccess = Serializer.NonGeneric.TryDeserializeWithLengthPrefix(
+                _channelStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
+            if (!deserializeSuccess)
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
+
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
-            else
-                return Task.FromResult(obj);
+
+            return Task.FromResult(obj);
         }
     }
 }

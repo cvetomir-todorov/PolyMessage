@@ -55,12 +55,15 @@ namespace PolyMessage.Formats.NewtonsoftJson
 
         public override async Task<object> Read(Type objType, CancellationToken cancelToken)
         {
-            await _reader.ReadAsync(cancelToken);
+            bool readSuccess = await _reader.ReadAsync(cancelToken);
+            if (!readSuccess)
+                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
+
             object obj = _serializer.Deserialize(_reader, objType);
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
-            else
-                return obj;
+
+            return obj;
         }
     }
 }

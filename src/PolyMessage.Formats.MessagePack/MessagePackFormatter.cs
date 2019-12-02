@@ -35,8 +35,7 @@ namespace PolyMessage.Formats.MessagePack
         public override Task Write(object obj, CancellationToken cancelToken)
         {
             MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _channelStream, obj, MessagePackSerializer.DefaultResolver);
-            _channelStream.Flush();
-            return Task.CompletedTask;
+            return _channelStream.FlushAsync(cancelToken);
         }
 
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
