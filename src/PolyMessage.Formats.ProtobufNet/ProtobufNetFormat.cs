@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using ProtoBuf;
 
 namespace PolyMessage.Formats.ProtobufNet
@@ -10,7 +9,6 @@ namespace PolyMessage.Formats.ProtobufNet
     {
         private readonly ConcurrentDictionary<int, Type> _fieldNumberTypeMap;
         private readonly ConcurrentDictionary<Type, int> _typeFieldNumberMap;
-        private int _fieldNumber;
 
         public ProtobufNetFormat()
         {
@@ -20,14 +18,13 @@ namespace PolyMessage.Formats.ProtobufNet
 
         public override string DisplayName => "ProtobufNet";
 
-        public override void RegisterMessageTypes(IEnumerable<Type> messageTypes)
+        public override void RegisterMessageTypes(IEnumerable<MessageInfo> messageTypes)
         {
-            foreach (Type messageType in messageTypes)
+            foreach (MessageInfo messageInfo in messageTypes)
             {
-                Serializer.NonGeneric.PrepareSerializer(messageType);
-                int fieldNumber = Interlocked.Increment(ref _fieldNumber);
-                _fieldNumberTypeMap.TryAdd(fieldNumber, messageType);
-                _typeFieldNumberMap.TryAdd(messageType, fieldNumber);
+                Serializer.NonGeneric.PrepareSerializer(messageInfo.Type);
+                _fieldNumberTypeMap.TryAdd(messageInfo.TypeID, messageInfo.Type);
+                _typeFieldNumberMap.TryAdd(messageInfo.Type, messageInfo.TypeID);
             }
         }
 
@@ -48,8 +45,6 @@ namespace PolyMessage.Formats.ProtobufNet
             }
             return messageType;
         }
-
-        internal Serializer.TypeResolver TypeResolver => GetMessageType;
 
         public override PolyFormatter CreateFormatter(PolyChannel channel)
         {

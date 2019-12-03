@@ -41,7 +41,7 @@ namespace PolyMessage.Formats.ProtobufNet
         public override Task<object> Read(Type objType, CancellationToken cancelToken)
         {
             bool deserializeSuccess = Serializer.NonGeneric.TryDeserializeWithLengthPrefix(
-                _channelStream, PrefixStyle.Base128, _format.TypeResolver, out object obj);
+                _channelStream, PrefixStyle.Base128, _format.GetMessageType, out object obj);
             if (!deserializeSuccess)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
 

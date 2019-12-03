@@ -9,7 +9,7 @@ namespace PolyMessage
     {
         public abstract string DisplayName { get; }
 
-        public virtual void RegisterMessageTypes(IEnumerable<Type> messageTypes) { }
+        public virtual void RegisterMessageTypes(IEnumerable<MessageInfo> messageTypes) { }
 
         public abstract PolyFormatter CreateFormatter(PolyChannel channel);
 
@@ -17,6 +17,20 @@ namespace PolyMessage
         {
             return DisplayName;
         }
+    }
+
+    public struct MessageInfo
+    {
+        public MessageInfo(Type type, int typeID)
+        {
+            Type = type;
+            TypeID = typeID;
+        }
+
+        public Type Type { get; }
+        public int TypeID { get; }
+
+        public override string ToString() => $"{Type.Name}({TypeID})";
     }
 
     public abstract class PolyFormatter : IDisposable
