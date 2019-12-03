@@ -60,7 +60,7 @@ namespace PolyMessage.CodeGeneration
         /// The emitted method should look just like the one below.
         /// It should switch the responseTypeID and choose a specific cast.
         /// </summary>
-        // public static Task CastToTaskOfResponse(int responseTypeID, Task<object> taskOfObject)
+        // public static Task CastToTaskOfResponse(short responseTypeID, Task<object> taskOfObject)
         // {
         //     switch (responseTypeID)
         //     {
@@ -74,7 +74,7 @@ namespace PolyMessage.CodeGeneration
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
                 "CastToTaskOfResponse", MethodAttributes.Public | MethodAttributes.Static,
                 // the method returns Task (which is actually Task<Response>) and accepts a response type ID and the Task<object> to be cast
-                typeof(Task), new Type[] {typeof(int), typeof(Task<object>)});
+                typeof(Task), new Type[] {typeof(short), typeof(Task<object>)});
             ILGenerator il = methodBuilder.GetILGenerator();
 
             Label defaultCase = il.DefineLabel();
@@ -88,7 +88,7 @@ namespace PolyMessage.CodeGeneration
             {
                 // branch if response type ID (arg0) is equal to the respective operation response type ID
                 il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldc_I4, operations[i].ResponseTypeID);
+                il.Emit(OpCodes.Ldc_I4, (int) operations[i].ResponseTypeID);
                 il.Emit(OpCodes.Beq, labels[i]);
             }
 
@@ -110,7 +110,7 @@ namespace PolyMessage.CodeGeneration
                 il.Emit(OpCodes.Ret);
             }
 
-            MethodInfo stringFormat = typeof(string).GetMethod(nameof(string.Format), new Type[] {typeof(string), typeof(int)});
+            MethodInfo stringFormat = typeof(string).GetMethod(nameof(string.Format), new Type[] {typeof(string), typeof(short)});
             Type exceptionType = typeof(InvalidOperationException);
             ConstructorInfo exceptionConstructor = exceptionType.GetConstructor(new Type[] {typeof(string)});
 
@@ -118,7 +118,7 @@ namespace PolyMessage.CodeGeneration
             // format the exception message
             il.Emit(OpCodes.Ldstr, "Unknown response type ID {0}.");
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Box, typeof(int));
+            il.Emit(OpCodes.Box, typeof(short));
             il.EmitCall(OpCodes.Call, stringFormat, null);
             // throw an exception
             il.Emit(OpCodes.Newobj, exceptionConstructor);
@@ -139,7 +139,7 @@ namespace PolyMessage.CodeGeneration
         /// The emitted method should look just like the one below.
         /// It should switch the responseTypeID and choose a specific cast.
         /// </summary>
-        // public static Task<object> DispatchRequest(int responseTypeID, object request, object implementor)
+        // public static Task<object> DispatchRequest(short responseTypeID, object request, object implementor)
         // {
         //     switch (responseTypeID)
         //     {
@@ -157,7 +157,7 @@ namespace PolyMessage.CodeGeneration
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(
                 "DispatchRequest", MethodAttributes.Public | MethodAttributes.Static,
                 // the method returns Task<object> and accepts response type ID, request and contract implementor
-                typeof(Task<object>), new Type[] {typeof(int), typeof(object), typeof(object)});
+                typeof(Task<object>), new Type[] {typeof(short), typeof(object), typeof(object)});
             ILGenerator il = methodBuilder.GetILGenerator();
 
             Label defaultCase = il.DefineLabel();
@@ -171,7 +171,7 @@ namespace PolyMessage.CodeGeneration
             {
                 // branch if response type ID (arg0) is equal to the respective operation response type ID
                 il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldc_I4, operations[i].ResponseTypeID);
+                il.Emit(OpCodes.Ldc_I4, (int) operations[i].ResponseTypeID);
                 il.Emit(OpCodes.Beq, labels[i]);
             }
 
@@ -199,7 +199,7 @@ namespace PolyMessage.CodeGeneration
                 il.Emit(OpCodes.Ret);
             }
 
-            MethodInfo stringFormat = typeof(string).GetMethod(nameof(string.Format), new Type[] { typeof(string), typeof(int) });
+            MethodInfo stringFormat = typeof(string).GetMethod(nameof(string.Format), new Type[] {typeof(string), typeof(short)});
             Type exceptionType = typeof(InvalidOperationException);
             ConstructorInfo exceptionConstructor = exceptionType.GetConstructor(new Type[] { typeof(string) });
 
@@ -207,7 +207,7 @@ namespace PolyMessage.CodeGeneration
             // format the exception message
             il.Emit(OpCodes.Ldstr, "Unknown response type ID {0}.");
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Box, typeof(int));
+            il.Emit(OpCodes.Box, typeof(short));
             il.EmitCall(OpCodes.Call, stringFormat, null);
             // throw an exception
             il.Emit(OpCodes.Newobj, exceptionConstructor);

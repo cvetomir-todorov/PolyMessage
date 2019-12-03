@@ -13,11 +13,11 @@ namespace PolyMessage.Server
 
     internal sealed class Router : IRouter
     {
-        private readonly Dictionary<int, Operation> _routingTable;
+        private readonly Dictionary<short, Operation> _routingTable;
 
         public Router()
         {
-            _routingTable = new Dictionary<int, Operation>();
+            _routingTable = new Dictionary<short, Operation>();
         }
 
         public void BuildRoutingTable(IEnumerable<Operation> operations)
@@ -38,7 +38,7 @@ namespace PolyMessage.Server
 
         public Operation ChooseOperation(object message, IMessageMetadata messageMetadata)
         {
-            int messageTypeID = messageMetadata.GetMessageTypeID(message.GetType());
+            short messageTypeID = messageMetadata.GetMessageTypeID(message.GetType());
             return _routingTable[messageTypeID];
         }
     }

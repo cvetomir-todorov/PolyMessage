@@ -18,6 +18,6 @@ namespace PolyMessage
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class PolyMessageAttribute : Attribute
     {
-        public int ID { get; set; }
+        public short ID { get; set; }
     }
 }

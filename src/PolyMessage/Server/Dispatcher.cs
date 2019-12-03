@@ -26,7 +26,7 @@ namespace PolyMessage.Server
         public Task<object> Dispatch(object implementor, object message, Operation operation)
         {
             Type responseType = operation.Method.ReturnType.GenericTypeArguments[0];
-            int responseTypeID = _messageMetadata.GetMessageTypeID(responseType);
+            short responseTypeID = _messageMetadata.GetMessageTypeID(responseType);
 
             // code generation is used to avoid using reflection at runtime
             Task<object> operationTask = _dispatchRequest(responseTypeID, message, implementor);

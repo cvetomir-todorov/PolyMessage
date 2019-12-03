@@ -7,7 +7,7 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests.IL
 
     public static class StaticType
     {
-        public static Task CastToTaskOfResponse(int responseTypeID, Task<object> taskOfObject)
+        public static Task CastToTaskOfResponse(short responseTypeID, Task<object> taskOfObject)
         {
             switch (responseTypeID)
             {
@@ -30,7 +30,7 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests.IL
             }
         }
 
-        public static Task<object> Dispatch(int responseTypeID, object request, object implementor)
+        public static Task<object> Dispatch(short responseTypeID, object request, object implementor)
         {
             switch (responseTypeID)
             {

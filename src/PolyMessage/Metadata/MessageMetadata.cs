@@ -7,20 +7,20 @@ namespace PolyMessage.Metadata
     {
         void Build(IEnumerable<Operation> operations);
 
-        Type GetMessageType(int messageTypeID);
+        Type GetMessageType(short messageTypeID);
 
-        int GetMessageTypeID(Type messageType);
+        short GetMessageTypeID(Type messageType);
     }
 
     internal class MessageMetadata : IMessageMetadata
     {
-        private readonly Dictionary<int, Type> _idTypeMap;
-        private readonly Dictionary<Type, int> _typeIDMap;
+        private readonly Dictionary<short, Type> _idTypeMap;
+        private readonly Dictionary<Type, short> _typeIDMap;
 
         public MessageMetadata()
         {
-            _idTypeMap = new Dictionary<int, Type>();
-            _typeIDMap = new Dictionary<Type, int>();
+            _idTypeMap = new Dictionary<short, Type>();
+            _typeIDMap = new Dictionary<Type, short>();
         }
 
         public void Build(IEnumerable<Operation> operations)
@@ -40,7 +40,7 @@ namespace PolyMessage.Metadata
                 throw new ArgumentException("No operations were provided.", nameof(operations));
         }
 
-        private void AddMetadata(int messageTypeID, Type messageType)
+        private void AddMetadata(short messageTypeID, Type messageType)
         {
             _idTypeMap.Add(messageTypeID, messageType);
             _typeIDMap.Add(messageType, messageTypeID);
@@ -52,7 +52,7 @@ namespace PolyMessage.Metadata
                 throw new InvalidOperationException("Metadata has not been built.");
         }
 
-        public Type GetMessageType(int messageTypeID)
+        public Type GetMessageType(short messageTypeID)
         {
             EnsureBuilt();
             if (!_idTypeMap.TryGetValue(messageTypeID, out Type messageType))
@@ -63,10 +63,10 @@ namespace PolyMessage.Metadata
             return messageType;
         }
 
-        public int GetMessageTypeID(Type messageType)
+        public short GetMessageTypeID(Type messageType)
         {
             EnsureBuilt();
-            if (!_typeIDMap.TryGetValue(messageType, out int messageTypeID))
+            if (!_typeIDMap.TryGetValue(messageType, out short messageTypeID))
             {
                 throw new InvalidOperationException($"Missing metadata for message type {messageType.Name}.");
             }

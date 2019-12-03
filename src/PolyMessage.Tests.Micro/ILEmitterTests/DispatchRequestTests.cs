@@ -71,7 +71,7 @@ namespace PolyMessage.Tests.Micro.ILEmitterTests
         public void ShouldThrowWhenMessageIsUnknown()
         {
             // arrange
-            int unknownResponseTypeID = -1;
+            short unknownResponseTypeID = -1;
 
             // act
             Action act = () => _dispatchRequest(unknownResponseTypeID, new RequestAlpha(), new ImplementorAlpha()).Wait();

@@ -5,11 +5,11 @@ namespace PolyMessage.Metadata
 {
     internal sealed class Operation
     {
-        public int RequestTypeID { get; set; }
+        public short RequestTypeID { get; set; }
 
         public Type RequestType { get; set; }
 
-        public int ResponseTypeID { get; set; }
+        public short ResponseTypeID { get; set; }
 
         public Type ResponseType { get; set; }
 

@@ -149,7 +149,7 @@ namespace PolyMessage.Metadata
             }
         }
 
-        private static int InspectMessageType(
+        private static short InspectMessageType(
             Type contractType,
             MethodInfo method,
             Type messageType,
@@ -159,12 +159,12 @@ namespace PolyMessage.Metadata
             Dictionary<Type, Operation> messageTypes,
             ref List<PolyContractValidationError> errors)
         {
-            int messageTypeID = messageAttribute.ID;
+            short messageTypeID = messageAttribute.ID;
             if (messageTypeID == 0)
             {
                 // we want a stable ID because lib could be used on different machines and runtimes
-                // we want the ID to be >= 0
-                messageTypeID = Math.Abs(GetStableHashCode(messageType.FullName));
+                // we want the ID to be > 0 and <= short.MaxValue
+                messageTypeID = (short) (Math.Abs(GetStableHashCode(messageType.FullName)) % short.MaxValue + 1);
             }
 
             if (messageTypeID <= 1)

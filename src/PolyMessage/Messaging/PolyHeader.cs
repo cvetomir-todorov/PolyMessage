@@ -11,9 +11,9 @@ namespace PolyMessage.Messaging
     [DataContract]
     public sealed class PolyHeader
     {
-        public const int TypeID = 1;
+        public const short TypeID = 1;
 
         [DataMember(Order = 1)]
-        public int MessageTypeID { get; set; }
+        public short MessageTypeID { get; set; }
     }
 }

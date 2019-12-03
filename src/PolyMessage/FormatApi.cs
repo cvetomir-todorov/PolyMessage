@@ -21,14 +21,14 @@ namespace PolyMessage
 
     public struct MessageInfo
     {
-        public MessageInfo(Type type, int typeID)
+        public MessageInfo(Type type, short typeID)
         {
             Type = type;
             TypeID = typeID;
         }
 
         public Type Type { get; }
-        public int TypeID { get; }
+        public short TypeID { get; }
 
         public override string ToString() => $"{Type.Name}({TypeID})";
     }
