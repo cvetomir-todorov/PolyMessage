@@ -13,10 +13,7 @@ namespace PolyMessage
 
         public abstract PolyFormatter CreateFormatter(PolyChannel channel);
 
-        public override string ToString()
-        {
-            return DisplayName;
-        }
+        public override string ToString() => DisplayName;
     }
 
     public struct MessageInfo
@@ -49,9 +46,6 @@ namespace PolyMessage
 
         public abstract Task<object> Read(Type objType, CancellationToken cancelToken);
 
-        public override string ToString()
-        {
-            return $"Formatter for {Format.DisplayName}";
-        }
+        public override string ToString() => $"Formatter[{Format.DisplayName}]";
     }
 }

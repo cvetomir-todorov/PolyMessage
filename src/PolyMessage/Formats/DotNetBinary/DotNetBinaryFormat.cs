@@ -2,7 +2,7 @@
 {
     public class DotNetBinaryFormat : PolyFormat
     {
-        public override string DisplayName => "Binary";
+        public override string DisplayName => "DotNetBinary";
 
         public override PolyFormatter CreateFormatter(PolyChannel channel)
         {

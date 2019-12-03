@@ -14,10 +14,7 @@ namespace PolyMessage
 
         public abstract PolyChannel CreateClient();
 
-        public override string ToString()
-        {
-            return DisplayName;
-        }
+        public override string ToString() => DisplayName;
     }
 
     public abstract class PolyListener : IDisposable
