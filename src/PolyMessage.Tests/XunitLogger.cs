@@ -22,11 +22,15 @@ namespace PolyMessage.Tests
         {
             if (exception != null)
             {
-                _output.WriteLine("{0} | {1} | {2} {3}", logLevel, _category, formatter(state, exception), exception);
+                _output.WriteLine(
+                    "{0:HH:mm:ss.fff} | {1} | {2} | {3} {4}",
+                    DateTime.Now, logLevel, _category, formatter(state, exception), exception);
             }
             else
             {
-                _output.WriteLine("{0} | {1} | {2}", logLevel, _category, formatter(state, exception));
+                _output.WriteLine(
+                    "{0:HH:mm:ss.fff} | {1} | {2} | {3}",
+                    DateTime.Now, logLevel, _category, formatter(state, exception));
             }
         }
 
