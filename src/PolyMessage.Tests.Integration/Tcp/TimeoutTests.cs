@@ -21,7 +21,6 @@ namespace PolyMessage.Tests.Integration.Tcp
     public abstract class TimeoutTests : IntegrationFixture
     {
         private readonly TimeSpan _timeout;
-        private readonly TcpTransport _hostTransport;
 
         protected TimeoutTests(ITestOutputHelper output) : base(output, services =>
         {
@@ -29,18 +28,17 @@ namespace PolyMessage.Tests.Integration.Tcp
         })
         {
             _timeout = TimeSpan.FromSeconds(1);
-            _hostTransport = (TcpTransport) HostTransport;
         }
 
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(4)]
-        public async Task UnneededProcessorsAreRemovedAfterIdleClientTimeout(int clientCount)
+        public async Task UnneededProcessorsAreRemovedAfterClientReceiveTimeout(int clientCount)
         {
             // arrange
             Host.AddContract<IContract>();
-            _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
+            HostTransport.HostTimeouts.ClientReceive = _timeout;
 
             for (int i = 0; i < clientCount; ++i)
             {
@@ -59,17 +57,17 @@ namespace PolyMessage.Tests.Integration.Tcp
             using (new AssertionScope())
             {
                 Host.GetConnectedClients().Count().Should().Be(clientCount);
-                // make clients idle for > allowed idle timeout
-                await Task.Delay(_hostTransport.Settings.ServerSideClientIdleTimeout * 2);
+                // make clients idle for > allowed timeout
+                await Task.Delay(HostTransport.HostTimeouts.ClientReceive * 2);
                 Host.GetConnectedClients().Count().Should().Be(0);
             }
         }
 
         [Fact]
-        public async Task ClientIsDisconnectedWhenBeingIdleMoreThanServerSideTimeout()
+        public async Task ClientIsDisconnectedWhenBeingIdleMoreThanServerClientReceiveTimeout()
         {
             // arrange
-            _hostTransport.Settings.ServerSideClientIdleTimeout = _timeout;
+            HostTransport.HostTimeouts.ClientReceive = _timeout;
 
             Host.AddContract<IContract>();
             Client.AddContract<IContract>();

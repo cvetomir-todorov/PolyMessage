@@ -6,15 +6,36 @@ namespace PolyMessage
 {
     public abstract class PolyTransport
     {
+        /// <summary>
+        /// The infinite timeout as defined in <see cref="Timeout.InfiniteTimeSpan"/> field.
+        /// </summary>
+        public static readonly TimeSpan InfiniteTimeout = Timeout.InfiniteTimeSpan;
+
         public abstract string DisplayName { get; }
 
         public abstract Uri Address { get; }
+
+        public PolyHostTimeouts HostTimeouts { get; } = new PolyHostTimeouts();
+
+        public PolyClientTimeouts ClientTimeouts { get; protected set; } = new PolyClientTimeouts();
 
         public abstract PolyListener CreateListener();
 
         public abstract PolyChannel CreateClient();
 
         public override string ToString() => DisplayName;
+    }
+
+    public class PolyHostTimeouts
+    {
+        public TimeSpan ClientReceive { get; set; } = PolyTransport.InfiniteTimeout;
+
+        public TimeSpan ClientSend { get; set; } = PolyTransport.InfiniteTimeout;
+    }
+
+    public class PolyClientTimeouts
+    {
+        public TimeSpan SendAndReceive { get; set; } = PolyTransport.InfiniteTimeout;
     }
 
     public abstract class PolyListener : IDisposable

@@ -6,8 +6,6 @@ namespace PolyMessage.Transports.Tcp
 {
     public class TcpTransport : PolyTransport
     {
-        private readonly Uri _address;
-        private readonly TcpSettings _settings;
         private readonly ILogger _logger;
 
         public TcpTransport(Uri address, ILoggerFactory loggerFactory)
@@ -19,16 +17,16 @@ namespace PolyMessage.Transports.Tcp
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
 
-            _address = address;
-            _settings = new TcpSettings();
+            Address = address;
+            Settings = new TcpSettings();
             _logger = loggerFactory.CreateLogger(GetType());
         }
 
-        public TcpSettings Settings => _settings;
-
         public override string DisplayName => "TCP";
 
-        public override Uri Address => _address;
+        public override Uri Address { get; }
+
+        public TcpSettings Settings { get; }
 
         public override PolyListener CreateListener()
         {
