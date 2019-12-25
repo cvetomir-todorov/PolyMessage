@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace PolyMessage.LoadTesting.Contracts
 {
-    [PolyMessage(ID = 1), DataContract]
+    [PolyMessage(ID = 1024), DataContract]
     public sealed class EmptyRequest
     {}
 
-    [PolyMessage(ID = 2), DataContract]
+    [PolyMessage(ID = 1025), DataContract]
     public sealed class EmptyResponse
     {}
 
