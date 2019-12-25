@@ -52,18 +52,18 @@ namespace PolyMessage.LoadTesting.Client
             {
                 return new List<Example>
                 {
-                    // TODO: generate examples
-                    //new Example("Start a TCP server using NewtonsoftJson format",
-                    //    new ServerOptions
-                    //    {
-                    //        ListenAddress = "tcp://192.168.0.101:10678", Format = Format.NewtonsoftJson, Transport = Transport.Tcp
-                    //    }),
-                    //new Example("Start a TLS over TCP server using MessagePack format",
-                    //    new ServerOptions
-                    //    {
-                    //        ListenAddress = "tcp://192.168.0.101:10678", Format = Format.MessagePack, Transport = Transport.Tcp,
-                    //        TcpTlsProtocol = SslProtocols.Tls12
-                    //    })
+                    new Example("Start a TCP server using NewtonsoftJson format",
+                        new ClientOptions
+                        {
+                            Transport = Transport.Tcp, ServerAddress = "tcp://192.168.0.101:10678",
+                            Format = Format.NewtonsoftJson
+                        }),
+                    new Example("Start a TLS over TCP server using MessagePack format",
+                        new ClientOptions
+                        {
+                            Transport = Transport.Tcp, TcpTlsProtocol = SslProtocols.Tls12, ServerAddress = "tcp://192.168.0.101:10678",
+                            Format = Format.MessagePack
+                        })
                 };
             }
         }

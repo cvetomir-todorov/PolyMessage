@@ -49,13 +49,15 @@ namespace PolyMessage.LoadTesting.Server
                     new Example("Start a TCP server using NewtonsoftJson format",
                         new ServerOptions
                         {
-                            ListenAddress = "tcp://192.168.0.101:10678", Format = Format.NewtonsoftJson, Transport = Transport.Tcp
+                            Transport = Transport.Tcp, ListenAddress = "tcp://192.168.0.101:10678",
+                            Format = Format.NewtonsoftJson
                         }),
                     new Example("Start a TLS over TCP server using MessagePack format",
                         new ServerOptions
                         {
-                            ListenAddress = "tcp://192.168.0.101:10678", Format = Format.MessagePack, Transport = Transport.Tcp,
-                            TcpTlsProtocol = SslProtocols.Tls12
+                            Transport = Transport.Tcp, TcpTlsProtocol = SslProtocols.Tls12, ListenAddress = "tcp://192.168.0.101:10678",
+                            Format = Format.MessagePack
+                            
                         })
                 };
             }
