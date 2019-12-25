@@ -19,9 +19,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.Formats.Protobu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.LoadTesting.Contracts", "PolyMessage.LoadTesting.Contracts\PolyMessage.LoadTesting.Contracts.csproj", "{B2D1E1E2-3705-4242-99CF-E912B21B1B2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyMessage.LoadTesting.Client", "PolyMessage.LoadTesting.Client\PolyMessage.LoadTesting.Client.csproj", "{255B0CC6-A13A-4093-8EA8-347864E21F48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.LoadTesting.Client", "PolyMessage.LoadTesting.Client\PolyMessage.LoadTesting.Client.csproj", "{255B0CC6-A13A-4093-8EA8-347864E21F48}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LoadTesting", "LoadTesting", "{012BB725-1817-44E7-A78C-0C2E9612A459}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{4FEEBB1F-66CB-438B-AEDC-6B547595680C}"
+	ProjectSection(SolutionItems) = preProject
+		publish.ps1 = publish.ps1
+		run-clients.ps1 = run-clients.ps1
+		start-server.ps1 = start-server.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
