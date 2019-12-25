@@ -35,7 +35,8 @@ namespace PolyMessage.LoadTesting.Client
                 PolyClient client = new PolyClient(transport, format, loggerFactory);
                 client.AddContract<ILoadTestingContract>();
 
-                Task clientTask = RunClient($"LoadTester{i}", client, options);
+                string clientID = $"LoadTester{i}";
+                Task clientTask = Task.Run(() => RunClient(clientID, client, options));
                 clientTasks[i] = clientTask;
             }
 
@@ -66,16 +67,16 @@ namespace PolyMessage.LoadTesting.Client
             }
             totalTimeStopwatch.Stop();
 
-            ClientRunResult result = CreateSingleClientResult(options.Transactions, totalTimeStopwatch, latencies);
+            ClientRunResult result = CreateSingleClientResult(options.Transactions, totalTimeStopwatch.Elapsed, latencies);
             _logger.LogDebug(
                 "[{0}] Completed {1} transactions for {2:###0.00} seconds. {3:###0.00} transactions per second. {4:###0.00} ms latency (P99).",
                 clientID, options.Transactions, totalTimeStopwatch.Elapsed.TotalSeconds, result.TransactionsPerSecond, result.LatencyP99);
             return result;
         }
 
-        private ClientRunResult CreateSingleClientResult(int transactionCount, Stopwatch totalTimeStopwatch, List<TimeSpan> latencies)
+        private ClientRunResult CreateSingleClientResult(int transactionCount, TimeSpan totalTime, List<TimeSpan> latencies)
         {
-            double transactionsPerSecond = transactionCount / totalTimeStopwatch.Elapsed.TotalSeconds;
+            double transactionsPerSecond = transactionCount / totalTime.TotalSeconds;
             double latencyP99 = latencies
                 .Select(latency => latency.TotalMilliseconds)
                 .OrderByDescending(latencyMs => latencyMs)

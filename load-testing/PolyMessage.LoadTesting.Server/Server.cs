@@ -29,7 +29,7 @@ namespace PolyMessage.LoadTesting.Server
             host.Start();
 
             logger.LogInformation("Press ENTER to exit.");
-            Console.ReadKey();
+            Console.ReadLine();
             logger.LogInformation("Bye!");
         }
 
