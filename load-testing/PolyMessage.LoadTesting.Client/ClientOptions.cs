@@ -16,6 +16,11 @@ namespace PolyMessage.LoadTesting.Client
         Unknown, Tcp
     }
 
+    public enum Messaging
+    {
+        Unknown, Empty, String, Objects
+    }
+
     public interface ITcpOptions
     {
         [Option('s', "tls", SetName = "tcp", Required = false, Default = SslProtocols.None)]
@@ -44,6 +49,16 @@ namespace PolyMessage.LoadTesting.Client
 
         [Option('n', "transactions", Required = true)]
         public int Transactions { get; set; }
+
+        // Messaging options
+        [Option("messaging", Default = Messaging.Empty)]
+        public Messaging Messaging { get; set; }
+
+        [Option("messagingStringLength", Default = 128)]
+        public int MessagingStringLength { get; set; }
+
+        [Option("messagingObjectsCount", Default = 64)]
+        public int MessagingObjectsCount { get; set; }
 
         [Usage]
         public static IEnumerable<Example> Examples

@@ -13,5 +13,15 @@ namespace PolyMessage.LoadTesting.Server
         {
             return Task.FromResult(_response);
         }
+
+        public Task<StringResponse> StringOperation(StringRequest request)
+        {
+            return Task.FromResult(new StringResponse {Data = request.Data});
+        }
+
+        public Task<ObjectsResponse> ObjectsOperation(ObjectsRequest request)
+        {
+            return Task.FromResult(new ObjectsResponse {Objects = request.Objects});
+        }
     }
 }

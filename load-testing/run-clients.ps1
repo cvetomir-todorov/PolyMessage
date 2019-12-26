@@ -6,6 +6,9 @@ param(
     [string] $format = 'MessagePack',
     [int] $clients = 1,
     [int] $transactions = 100,
+    [string] $messaging = 'Empty',
+    [int] $messagingStringLength = 128,
+    [int] $messagingObjectsCount = 64,
     [string] $logLevel = 'Information'
 )
 
@@ -13,4 +16,9 @@ write-host
 write-host "Working in: " $path
 write-host
 
-dotnet $path\publish\client\PolyMessage.LoadTesting.Client.dll --transport $transport --tls $tls --serverAddress $serverAddress --format $format --clients $clients --transactions $transactions --logLevel $logLevel
+dotnet $path\publish\client\PolyMessage.LoadTesting.Client.dll `
+    --transport $transport --tls $tls --serverAddress $serverAddress `
+    --format $format `
+    --clients $clients --transactions $transactions `
+    --messaging $messaging --messagingStringLength $messagingStringLength --messagingObjectsCount $messagingObjectsCount `
+    --logLevel $logLevel

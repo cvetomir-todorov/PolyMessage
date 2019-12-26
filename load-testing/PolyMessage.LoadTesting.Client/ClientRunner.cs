@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,8 @@ namespace PolyMessage.LoadTesting.Client
     {
         private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
+        private string _stringData;
+        private List<Dto> _objectsData;
 
         public ClientRunner(ILogger logger, IServiceProvider serviceProvider)
         {
@@ -27,21 +31,67 @@ namespace PolyMessage.LoadTesting.Client
             PolyFormat format = factory.CreateFormat();
             ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
 
+            PolyClient[] clients = new PolyClient[options.Clients];
             Task[] clientTasks = new Task[options.Clients];
 
-            _logger.LogInformation("Start {0} clients with {1} transactions each.", options.Clients, options.Transactions);
+            SetupMessaging(options);
+
+            _logger.LogInformation("Prepare {0} clients.", options.Clients);
             for (int i = 0; i < options.Clients; ++i)
             {
                 PolyClient client = new PolyClient(transport, format, loggerFactory);
                 client.AddContract<ILoadTestingContract>();
+                clients[i] = client;
+            }
 
+            _logger.LogInformation("Start {0} clients with {1} transactions each.", options.Clients, options.Transactions);
+
+            for (int i = 0; i < options.Clients; ++i)
+            {
+                int local = i;
                 string clientID = $"LoadTester{i}";
-                Task clientTask = Task.Run(() => RunClient(clientID, client, options));
+                Task clientTask = Task.Run(() => RunClient(clientID, clients[local], options));
                 clientTasks[i] = clientTask;
             }
 
             Task.WaitAll(clientTasks);
             ShowAllClientResults(clientTasks, options);
+        }
+
+        private void SetupMessaging(ClientOptions options)
+        {
+            switch (options.Messaging)
+            {
+                case Messaging.Empty:
+                    _logger.LogInformation("Messaging is {0}.", Messaging.Empty);
+                    break;
+                case Messaging.String:
+                    _logger.LogInformation("Messaging is {0} with {1} length.", Messaging.String, options.MessagingStringLength);
+                    break;
+                case Messaging.Objects:
+                    _logger.LogInformation("Messaging is {0} with {1} objects.", Messaging.Objects, options.MessagingObjectsCount);
+                    break;
+            }
+
+            _stringData = GenerateString(options.MessagingStringLength);
+            _objectsData = Enumerable.Repeat(new Dto(), options.MessagingObjectsCount).ToList();
+        }
+
+        private static string GenerateString(int length)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            while (builder.Length < length)
+            {
+                builder.Append(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (builder.Length > length)
+            {
+                builder.Remove(length, builder.Length - length);
+            }
+
+            return builder.ToString();
         }
 
         private async Task<ClientRunResult> RunClient(
@@ -52,16 +102,33 @@ namespace PolyMessage.LoadTesting.Client
             await client.ConnectAsync();
             ILoadTestingContract contract = client.Get<ILoadTestingContract>();
 
-            EmptyRequest request = new EmptyRequest();
-            List<TimeSpan> latencies = new List<TimeSpan>(capacity: options.Transactions);
+            EmptyRequest emptyRequest = new EmptyRequest();
+            StringRequest stringRequest = new StringRequest {Data = _stringData};
+            ObjectsRequest objectsRequest = new ObjectsRequest {Objects = _objectsData};
+
             _logger.LogDebug("[{0}] Start {1} transactions.", clientID, options.Transactions);
 
-            Stopwatch totalTimeStopwatch = Stopwatch.StartNew();
+            List<TimeSpan> latencies = new List<TimeSpan>(capacity: options.Transactions);
             Stopwatch latencyStopwatch = new Stopwatch();
+            Stopwatch totalTimeStopwatch = Stopwatch.StartNew();
+
             for (int i = 0; i < options.Transactions; ++i)
             {
                 latencyStopwatch.Restart();
-                await contract.EmptyOperation(request);
+
+                switch (options.Messaging)
+                {
+                    case Messaging.Empty:
+                        await contract.EmptyOperation(emptyRequest).ConfigureAwait(false);
+                        break;
+                    case Messaging.String:
+                        await contract.StringOperation(stringRequest).ConfigureAwait(false);
+                        break;
+                    case Messaging.Objects:
+                        await contract.ObjectsOperation(objectsRequest).ConfigureAwait(false);
+                        break;
+                }
+
                 latencyStopwatch.Stop();
                 latencies.Add(latencyStopwatch.Elapsed);
             }
