@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.IO;
 using MessagePack;
 
 namespace PolyMessage.Formats.MessagePack
@@ -8,43 +7,28 @@ namespace PolyMessage.Formats.MessagePack
     public class MessagePackFormatter : PolyFormatter
     {
         private readonly MessagePackFormat _format;
-        private readonly PolyStream _channelStream;
-        private bool _isDisposed;
-        private const string KnownErrorConnectionClosed = "Invalid MessagePack code was detected, code:-1";
+        private readonly Stream _stream;
+        private const string KnownErrorConnectionClosed = "Invalid MessagePack code was detected";
 
-        public MessagePackFormatter(MessagePackFormat format, PolyChannel channel)
+        public MessagePackFormatter(MessagePackFormat format, Stream stream)
         {
             _format = format;
-            _channelStream = new PolyStream(channel);
-        }
-
-        protected override void DoDispose(bool isDisposing)
-        {
-            if (_isDisposed)
-                return;
-
-            if (isDisposing)
-            {
-                _channelStream.Dispose();
-                _isDisposed = true;
-            }
+            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override Task Write(object obj, CancellationToken cancelToken)
+        public override void Serialize(object obj)
         {
-            MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _channelStream, obj, MessagePackSerializer.DefaultResolver);
-            return _channelStream.FlushAsync(cancelToken);
+            MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _stream, obj);
+            _stream.Flush();
         }
 
-        public override Task<object> Read(Type objType, CancellationToken cancelToken)
+        public override object Deserialize(Type objType)
         {
             try
             {
-                object obj = MessagePackSerializer.NonGeneric.Deserialize(objType, _channelStream, MessagePackSerializer.DefaultResolver,
-                    readStrict: true);
-                return Task.FromResult(obj);
+                return MessagePackSerializer.NonGeneric.Deserialize(objType, _stream);
             }
             catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorConnectionClosed))
             {

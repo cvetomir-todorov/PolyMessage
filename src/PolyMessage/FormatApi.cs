@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace PolyMessage
 {
@@ -9,9 +8,9 @@ namespace PolyMessage
     {
         public abstract string DisplayName { get; }
 
-        public virtual void RegisterMessageTypes(IEnumerable<MessageInfo> messageTypes) { }
+        public virtual void RegisterMessageTypes(IEnumerable<MessageInfo> messageTypes) {}
 
-        public abstract PolyFormatter CreateFormatter(PolyChannel channel);
+        public abstract PolyFormatter CreateFormatter(Stream stream);
 
         public override string ToString() => DisplayName;
     }
@@ -42,9 +41,9 @@ namespace PolyMessage
 
         public abstract PolyFormat Format { get; }
 
-        public abstract Task Write(object obj, CancellationToken cancelToken);
+        public abstract void Serialize(object obj);
 
-        public abstract Task<object> Read(Type objType, CancellationToken cancelToken);
+        public abstract object Deserialize(Type objType);
 
         public override string ToString() => $"Formatter[{Format.DisplayName}]";
     }

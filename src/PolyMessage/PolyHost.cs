@@ -108,7 +108,7 @@ namespace PolyMessage
             codeGenerator.GenerateCode(_operations);
             RegisterMessageTypes();
 
-            IMessenger messenger = new ProtocolMessenger(_loggerFactory, messageMetadata);
+            IMessenger messenger = new Messenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 
