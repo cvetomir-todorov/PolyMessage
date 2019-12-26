@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
@@ -14,6 +15,7 @@ namespace PolyMessage.Proxy
         private readonly ILogger _logger;
         private readonly string _clientID;
         private readonly IMessenger _messenger;
+        private readonly MessagingStream _messagingStream;
         private readonly PolyFormatter _formatter;
         private readonly CancellationToken _cancelToken;
         private readonly IMessageMetadata _messageMetadata;
@@ -21,7 +23,7 @@ namespace PolyMessage.Proxy
         private bool _isDisposed;
 
         public OperationInterceptor(
-            ILogger logger,
+            ILoggerFactory loggerFactory,
             string clientID,
             IMessenger messenger,
             PolyFormat format,
@@ -30,10 +32,12 @@ namespace PolyMessage.Proxy
             IMessageMetadata messageMetadata,
             CastToTaskOfResponse castDelegate)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger(GetType());
             _clientID = clientID;
             _messenger = messenger;
-            _formatter = format.CreateFormatter(channel);
+            // TODO: set array pool and capacity
+            _messagingStream = new MessagingStream(channel, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            _formatter = format.CreateFormatter(_messagingStream);
             _cancelToken = cancelToken;
             _messageMetadata = messageMetadata;
             _castDelegate = castDelegate;
@@ -72,9 +76,9 @@ namespace PolyMessage.Proxy
         private async Task<object> CallOperation(object requestMessage)
         {
             _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
-            await _messenger.Send(_clientID, requestMessage, _formatter, _cancelToken).ConfigureAwait(false);
+            await _messenger.Send(_clientID, requestMessage, _messagingStream, _formatter, _cancelToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage);
-            object responseMessage = await _messenger.Receive(_clientID, _formatter, _cancelToken).ConfigureAwait(false);
+            object responseMessage = await _messenger.Receive(_clientID, _messagingStream, _formatter, _cancelToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
 
             return responseMessage;

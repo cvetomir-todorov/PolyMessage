@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace PolyMessage.Formats.NewtonsoftJson
@@ -9,22 +7,20 @@ namespace PolyMessage.Formats.NewtonsoftJson
     public class NewtonsoftJsonFormatter : PolyFormatter
     {
         private readonly NewtonsoftJsonFormat _format;
-        private readonly PolyStream _channelStream;
         private readonly JsonWriter _writer;
         private readonly JsonReader _reader;
         private readonly JsonSerializer _serializer;
         private bool _isDisposed;
 
-        public NewtonsoftJsonFormatter(NewtonsoftJsonFormat format, PolyChannel channel)
+        public NewtonsoftJsonFormatter(NewtonsoftJsonFormat format, Stream stream)
         {
             _format = format;
-            _channelStream = new PolyStream(channel);
 
-            _writer = new JsonTextWriter(new StreamWriter(_channelStream));
+            _writer = new JsonTextWriter(new StreamWriter(stream));
             _writer.AutoCompleteOnClose = false;
             _writer.CloseOutput = false;
 
-            _reader = new JsonTextReader(new StreamReader(_channelStream));
+            _reader = new JsonTextReader(new StreamReader(stream));
             _reader.CloseInput = false;
             _reader.SupportMultipleContent = true;
 
@@ -40,22 +36,21 @@ namespace PolyMessage.Formats.NewtonsoftJson
             {
                 _writer.Close();
                 _reader.Close();
-                _channelStream.Dispose();
                 _isDisposed = true;
             }
         }
 
         public override PolyFormat Format => _format;
 
-        public override Task Write(object obj, CancellationToken cancelToken)
+        public override void Serialize(object obj)
         {
             _serializer.Serialize(_writer, obj, obj.GetType());
-            return _writer.FlushAsync(cancelToken);
+            _writer.Flush();
         }
 
-        public override async Task<object> Read(Type objType, CancellationToken cancelToken)
+        public override object Deserialize(Type objType)
         {
-            bool readSuccess = await _reader.ReadAsync(cancelToken);
+            bool readSuccess = _reader.Read();
             if (!readSuccess)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
 

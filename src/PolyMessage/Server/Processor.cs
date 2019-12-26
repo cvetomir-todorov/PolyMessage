@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 
 namespace PolyMessage.Server
@@ -22,6 +24,7 @@ namespace PolyMessage.Server
         private readonly ILogger _logger;
         private readonly PolyFormatter _formatter;
         private readonly PolyChannel _connectedClient;
+        private readonly MessagingStream _messagingStream;
         private readonly IImplementorProvider _implementorProvider;
         // identity
         private static int _generation;
@@ -35,7 +38,9 @@ namespace PolyMessage.Server
         public Processor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
         {
             _logger = loggerFactory.CreateLogger(GetType());
-            _formatter = format.CreateFormatter(connectedClient);
+            // TODO: get array pool and capacity
+            _messagingStream = new MessagingStream(connectedClient, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            _formatter = format.CreateFormatter(_messagingStream);
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);
             // identity
@@ -55,6 +60,7 @@ namespace PolyMessage.Server
                         _isStopRequested = true;
                         _implementorProvider.Dispose();
                         _connectedClient.Close();
+                        _messagingStream.Close();
                         _formatter.Dispose();
                         _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
                         _stoppedEvent.Wait();
@@ -109,13 +115,13 @@ namespace PolyMessage.Server
             while (!cancelToken.IsCancellationRequested && !_isStopRequested)
             {
                 _logger.LogTrace("[{0}] Receiving request...", _id);
-                object requestMessage = await serverComponents.Messenger.Receive(_id, _formatter, cancelToken).ConfigureAwait(false);
+                object requestMessage = await serverComponents.Messenger.Receive(_id, _messagingStream, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
                 object responseMessage = await DispatchMessage(serverComponents, requestMessage);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
-                await serverComponents.Messenger.Send(_id, responseMessage, _formatter, cancelToken).ConfigureAwait(false);
+                await serverComponents.Messenger.Send(_id, responseMessage, _messagingStream, _formatter, cancelToken).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
             }
         }

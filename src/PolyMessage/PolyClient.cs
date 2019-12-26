@@ -145,7 +145,7 @@ namespace PolyMessage
                         _logger.LogDebug("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
-                        _messenger = new ProtocolMessenger(_loggerFactory, _messageMetadata);
+                        _messenger = new Messenger(_loggerFactory, _messageMetadata);
                         RegisterMessageTypes();
                     }
                 }
@@ -192,7 +192,7 @@ namespace PolyMessage
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             _operationInterceptor = new OperationInterceptor(
-                _logger, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
+                _loggerFactory, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
             ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(

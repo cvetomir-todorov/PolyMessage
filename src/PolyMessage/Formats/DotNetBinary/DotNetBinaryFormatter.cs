@@ -1,8 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PolyMessage.Formats.DotNetBinary
 {
@@ -10,38 +9,29 @@ namespace PolyMessage.Formats.DotNetBinary
     {
         private readonly DotNetBinaryFormat _format;
         private readonly BinaryFormatter _formatter;
-        private readonly PolyStream _channelStream;
+        private readonly Stream _stream;
         private const string KnownErrorConnectionClosed = "End of Stream encountered before parsing was completed.";
 
-        public DotNetBinaryFormatter(DotNetBinaryFormat format, PolyChannel channel)
+        public DotNetBinaryFormatter(DotNetBinaryFormat format, Stream stream)
         {
             _format = format;
             _formatter = new BinaryFormatter();
-            _channelStream = new PolyStream(channel);
-        }
-
-        protected override void DoDispose(bool isDisposing)
-        {
-            if (isDisposing)
-            {
-                _channelStream.Dispose();
-            }
+            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override Task Write(object obj, CancellationToken cancelToken)
+        public override void Serialize(object obj)
         {
-            _formatter.Serialize(_channelStream, obj);
-            return _channelStream.FlushAsync(cancelToken);
+            _formatter.Serialize(_stream, obj);
+            _stream.Flush();
         }
 
-        public override Task<object> Read(Type objType, CancellationToken cancelToken)
+        public override object Deserialize(Type objType)
         {
             try
             {
-                object obj = _formatter.Deserialize(_channelStream);
-                return Task.FromResult(obj);
+                return _formatter.Deserialize(_stream);
             }
             catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorConnectionClosed))
             {

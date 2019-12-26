@@ -151,23 +151,6 @@ namespace PolyMessage.Transports.Tcp
             Dispose();
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            EnsureNotDisposed();
-            EnsureConnected();
-            try
-            {
-                return _stream.Read(buffer, offset, count);
-            }
-            catch (IOException ioException)
-            {
-                PolyException polyException = TryHandleIOException(ioException);
-                if (polyException != null)
-                    throw polyException;
-                throw;
-            }
-        }
-
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
         {
             EnsureNotDisposed();
@@ -185,23 +168,6 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            EnsureNotDisposed();
-            EnsureConnected();
-            try
-            {
-                _stream.Write(buffer, offset, count);
-            }
-            catch (IOException ioException)
-            {
-                PolyException polyException = TryHandleIOException(ioException);
-                if (polyException != null)
-                    throw polyException;
-                throw;
-            }
-        }
-
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
         {
             EnsureNotDisposed();
@@ -209,23 +175,6 @@ namespace PolyMessage.Transports.Tcp
             try
             {
                 return _stream.WriteAsync(buffer, offset, count, cancelToken);
-            }
-            catch (IOException ioException)
-            {
-                PolyException polyException = TryHandleIOException(ioException);
-                if (polyException != null)
-                    throw polyException;
-                throw;
-            }
-        }
-
-        public override void Flush()
-        {
-            EnsureNotDisposed();
-            EnsureConnected();
-            try
-            {
-                _stream.Flush();
             }
             catch (IOException ioException)
             {

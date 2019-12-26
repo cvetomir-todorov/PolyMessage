@@ -8,6 +8,7 @@ namespace PolyMessage.Tests.Integration.Format
     [PolyContract]
     public interface IDataContract
     {
+        [PolyRequestResponse] Task<EmptyResponse> Empty(EmptyRequest request);
         [PolyRequestResponse] Task<LargeStringResponse> LargeString(LargeStringRequest request);
         [PolyRequestResponse] Task<LargeNumberOfObjectsResponse> LargeNumberOfObjects(LargeNumberOfObjectsRequest request);
         [PolyRequestResponse] Task<LargeArrayResponse> LargeArray(LargeArrayRequest request);
@@ -18,6 +19,11 @@ namespace PolyMessage.Tests.Integration.Format
         public LargeStringRequest LastLargeStringRequest { get; private set; }
         public LargeNumberOfObjectsRequest LastLargeNumberOfObjectsRequest { get; private set; }
         public LargeArrayRequest LastLargeArrayRequest { get; private set; }
+
+        public Task<EmptyResponse> Empty(EmptyRequest request)
+        {
+            return Task.FromResult(new EmptyResponse());
+        }
 
         public Task<LargeStringResponse> LargeString(LargeStringRequest request)
         {
@@ -37,6 +43,12 @@ namespace PolyMessage.Tests.Integration.Format
             return Task.FromResult(new LargeArrayResponse());
         }
     }
+
+    [PolyMessage, Serializable, DataContract]
+    public sealed class EmptyRequest {}
+
+    [PolyMessage, Serializable, DataContract]
+    public sealed class EmptyResponse {}
 
     [PolyMessage, Serializable, DataContract]
     public sealed class LargeStringRequest

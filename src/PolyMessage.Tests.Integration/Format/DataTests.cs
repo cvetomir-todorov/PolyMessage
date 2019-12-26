@@ -23,6 +23,19 @@ namespace PolyMessage.Tests.Integration.Format
             Host.AddContract<IDataContract>();
         }
 
+        [Fact]
+        public async Task Empty()
+        {
+            // arrange
+
+            // act
+            await StartHostAndConnectClient();
+            EmptyResponse response = await Client.Get<IDataContract>().Empty(new EmptyRequest());
+
+            // assert
+            response.Should().NotBeNull();
+        }
+
         [Theory] // size = encoding bytes per char x
         [InlineData(1024)] // 1KB
         [InlineData(1048576)] // 1MB
