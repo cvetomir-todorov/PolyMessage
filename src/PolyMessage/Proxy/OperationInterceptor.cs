@@ -17,7 +17,7 @@ namespace PolyMessage.Proxy
         private readonly IMessenger _messenger;
         private readonly MessagingStream _messagingStream;
         private readonly PolyFormatter _formatter;
-        private readonly CancellationToken _cancelToken;
+        private readonly CancellationToken _cancellationToken;
         private readonly IMessageMetadata _messageMetadata;
         private readonly CastToTaskOfResponse _castDelegate;
         private bool _isDisposed;
@@ -28,7 +28,7 @@ namespace PolyMessage.Proxy
             IMessenger messenger,
             PolyFormat format,
             PolyChannel channel,
-            CancellationToken cancelToken,
+            CancellationToken cancellationToken,
             IMessageMetadata messageMetadata,
             CastToTaskOfResponse castDelegate)
         {
@@ -38,7 +38,7 @@ namespace PolyMessage.Proxy
             // TODO: set array pool and capacity
             _messagingStream = new MessagingStream(channel, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
             _formatter = format.CreateFormatter(_messagingStream);
-            _cancelToken = cancelToken;
+            _cancellationToken = cancellationToken;
             _messageMetadata = messageMetadata;
             _castDelegate = castDelegate;
         }
@@ -76,9 +76,9 @@ namespace PolyMessage.Proxy
         private async Task<object> CallOperation(object requestMessage)
         {
             _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
-            await _messenger.Send(_clientID, requestMessage, _messagingStream, _formatter, _cancelToken).ConfigureAwait(false);
+            await _messenger.Send(_clientID, requestMessage, _messagingStream, _formatter, _cancellationToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage);
-            object responseMessage = await _messenger.Receive(_clientID, _messagingStream, _formatter, _cancelToken).ConfigureAwait(false);
+            object responseMessage = await _messenger.Receive(_clientID, _messagingStream, _formatter, _cancellationToken).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
 
             return responseMessage;

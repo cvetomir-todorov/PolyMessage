@@ -12,7 +12,7 @@ namespace PolyMessage.Server
     {
         string ID { get; }
 
-        Task Start(ServerComponents serverComponents, CancellationToken cancelToken);
+        Task Start(ServerComponents serverComponents, CancellationToken ct);
 
         void Stop();
 
@@ -79,14 +79,14 @@ namespace PolyMessage.Server
 
         public string ID => _id;
 
-        public async Task Start(ServerComponents serverComponents, CancellationToken cancelToken)
+        public async Task Start(ServerComponents serverComponents, CancellationToken ct)
         {
             EnsureNotDisposed();
 
             try
             {
                 _stoppedEvent.Reset();
-                await DoStart(serverComponents, cancelToken).ConfigureAwait(false);
+                await DoStart(serverComponents, ct).ConfigureAwait(false);
             }
             catch (PolyFormatException formatException) when (formatException.FormatError == PolyFormatError.EndOfDataStream)
             {
@@ -107,21 +107,21 @@ namespace PolyMessage.Server
             }
         }
 
-        private async Task DoStart(ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task DoStart(ServerComponents serverComponents, CancellationToken ct)
         {
             await _connectedClient.OpenAsync();
             _implementorProvider.SessionStarted(_connectedClient);
 
-            while (!cancelToken.IsCancellationRequested && !_isStopRequested)
+            while (!ct.IsCancellationRequested && !_isStopRequested)
             {
                 _logger.LogTrace("[{0}] Receiving request...", _id);
-                object requestMessage = await serverComponents.Messenger.Receive(_id, _messagingStream, _formatter, cancelToken).ConfigureAwait(false);
+                object requestMessage = await serverComponents.Messenger.Receive(_id, _messagingStream, _formatter, ct).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
                 object responseMessage = await DispatchMessage(serverComponents, requestMessage);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
-                await serverComponents.Messenger.Send(_id, responseMessage, _messagingStream, _formatter, cancelToken).ConfigureAwait(false);
+                await serverComponents.Messenger.Send(_id, responseMessage, _messagingStream, _formatter, ct).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
             }
         }

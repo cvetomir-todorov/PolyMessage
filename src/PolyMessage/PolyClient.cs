@@ -40,7 +40,7 @@ namespace PolyMessage
         private static int _generation;
         private readonly string _id;
         // stop/dispose
-        private readonly CancellationTokenSource _cancelTokenSource;
+        private readonly CancellationTokenSource _disconnectTokenSource;
         private bool _isDisposed;
 
         public PolyClient(PolyTransport transport, PolyFormat format)
@@ -76,7 +76,7 @@ namespace PolyMessage
             // identity
             _id = "Client" + Interlocked.Increment(ref _generation);
             // stop/dispose
-            _cancelTokenSource = new CancellationTokenSource();
+            _disconnectTokenSource = new CancellationTokenSource();
         }
 
         public void Dispose()
@@ -84,8 +84,8 @@ namespace PolyMessage
             if (_isDisposed)
                 return;
 
-            _cancelTokenSource.Cancel();
-            _cancelTokenSource.Dispose();
+            _disconnectTokenSource.Cancel();
+            _disconnectTokenSource.Dispose();
             if (_channel == null)
             {
                 _connection.SetClosed();
@@ -205,7 +205,7 @@ namespace PolyMessage
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             _operationInterceptor = new OperationInterceptor(
-                _loggerFactory, _id, _messenger, _format, _channel, _cancelTokenSource.Token, _messageMetadata, castDelegate);
+                _loggerFactory, _id, _messenger, _format, _channel, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
             ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(

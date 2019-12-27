@@ -10,7 +10,7 @@ namespace PolyMessage.Server
 {
     internal interface IAcceptor : IDisposable
     {
-        Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken);
+        Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken ct);
 
         void Stop();
 
@@ -61,7 +61,7 @@ namespace PolyMessage.Server
             _logger.LogTrace("Stopped.");
         }
 
-        public async Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
+        public async Task Start(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken ct)
         {
             if (_isDisposed)
                 throw new InvalidOperationException("Acceptor is already stopped.");
@@ -69,7 +69,7 @@ namespace PolyMessage.Server
             try
             {
                 _stoppedEvent.Reset();
-                await DoStart(transport, format, serverComponents, cancelToken).ConfigureAwait(false);
+                await DoStart(transport, format, serverComponents, ct).ConfigureAwait(false);
             }
             catch (PolyListenerStoppedException stoppedException)
             {
@@ -86,19 +86,19 @@ namespace PolyMessage.Server
             }
         }
 
-        private async Task DoStart(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task DoStart(PolyTransport transport, PolyFormat format, ServerComponents serverComponents, CancellationToken ct)
         {
             _listener = transport.CreateListener();
             _listener.PrepareAccepting();
 
-            while (!cancelToken.IsCancellationRequested && !_isStopRequested)
+            while (!ct.IsCancellationRequested && !_isStopRequested)
             {
                 Func<PolyChannel> createClient = await _listener.AcceptClient().ConfigureAwait(false);
-                Task _ = Task.Run(() => ProcessClient(format, createClient, serverComponents, cancelToken), cancelToken);
+                Task _ = Task.Run(() => ProcessClient(format, createClient, serverComponents, ct), ct);
             }
         }
 
-        private async Task ProcessClient(PolyFormat format, Func<PolyChannel> createClient, ServerComponents serverComponents, CancellationToken cancelToken)
+        private async Task ProcessClient(PolyFormat format, Func<PolyChannel> createClient, ServerComponents serverComponents, CancellationToken ct)
         {
             IProcessor processor = null;
             try
@@ -108,7 +108,7 @@ namespace PolyMessage.Server
                 if (!_processors.TryAdd(processor.ID, processor))
                     _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 
-                await processor.Start(serverComponents, cancelToken);
+                await processor.Start(serverComponents, ct);
             }
             catch (Exception exception)
             {

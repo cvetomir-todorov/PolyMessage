@@ -88,7 +88,7 @@ namespace PolyMessage.Messaging
 
         public override void Flush() {}
 
-        public override Task FlushAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public override Task FlushAsync(CancellationToken ct) => Task.CompletedTask;
 
         public void Reset()
         {
@@ -96,20 +96,20 @@ namespace PolyMessage.Messaging
             _length = 0;
         }
 
-        public async Task WriteMessageToTransport(string origin, CancellationToken cancellationToken)
+        public async Task WriteMessageToTransport(string origin, CancellationToken ct)
         {
             EncodeInt32(_length, _lengthPrefixBuffer, offset: 0);
 
-            await _channel.WriteAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, cancellationToken).ConfigureAwait(false);
-            await _channel.WriteAsync(_dataBuffer, 0, _length, cancellationToken).ConfigureAwait(false);
-            await _channel.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await _channel.WriteAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
+            await _channel.WriteAsync(_dataBuffer, 0, _length, ct).ConfigureAwait(false);
+            await _channel.FlushAsync(ct).ConfigureAwait(false);
 
             _logger.LogTrace("[{0}] Sent value {1} for length prefix and {2} bytes for message.", origin, _position, _length);
         }
 
-        public async Task ReadMessageFromTransport(string origin, CancellationToken cancellationToken)
+        public async Task ReadMessageFromTransport(string origin, CancellationToken ct)
         {
-            int bytesRead = await _channel.ReadAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, cancellationToken).ConfigureAwait(false);
+            int bytesRead = await _channel.ReadAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
             if (bytesRead != LengthPrefixSize)
                 ThrowUnexpectedBytesRead(bytesRead, LengthPrefixSize, "length prefix");
 
@@ -124,7 +124,7 @@ namespace PolyMessage.Messaging
             }
             else
             {
-                bytesRead = await _channel.ReadAsync(_dataBuffer, 0, lengthPrefix, cancellationToken).ConfigureAwait(false);
+                bytesRead = await _channel.ReadAsync(_dataBuffer, 0, lengthPrefix, ct).ConfigureAwait(false);
                 if (bytesRead != lengthPrefix)
                     ThrowUnexpectedBytesRead(bytesRead, lengthPrefix, "message");
             }

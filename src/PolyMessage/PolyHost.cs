@@ -30,7 +30,7 @@ namespace PolyMessage
         // server
         private IAcceptor _acceptor;
         // stop/dispose
-        private readonly CancellationTokenSource _cancelTokenSource;
+        private readonly CancellationTokenSource _stopTokenSource;
         private bool _isDisposed;
 
         public PolyHost(PolyTransport transport, PolyFormat format, IServiceProvider serviceProvider)
@@ -53,7 +53,7 @@ namespace PolyMessage
             _operations = new List<Operation>();
             _contractInspector = new ContractInspector(_loggerFactory);
             // stop/dispose
-            _cancelTokenSource = new CancellationTokenSource();
+            _stopTokenSource = new CancellationTokenSource();
         }
 
         public void Dispose()
@@ -61,10 +61,10 @@ namespace PolyMessage
             if (_isDisposed)
                 return;
 
-            _cancelTokenSource.Cancel();
+            _stopTokenSource.Cancel();
             _acceptor?.Stop();
 
-            _cancelTokenSource.Dispose();
+            _stopTokenSource.Dispose();
             _acceptor?.Dispose();
 
             _isDisposed = true;
@@ -112,7 +112,7 @@ namespace PolyMessage
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 
-            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _cancelTokenSource.Token));
+            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _stopTokenSource.Token));
             LogConnectionInfo();
         }
 

@@ -73,10 +73,10 @@ namespace PolyMessage
 
         public abstract void Close();
 
-        public abstract Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken);
+        public abstract Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct);
 
-        public abstract Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken);
+        public abstract Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct);
 
-        public abstract Task FlushAsync(CancellationToken cancelToken);
+        public abstract Task FlushAsync(CancellationToken ct);
     }
 }

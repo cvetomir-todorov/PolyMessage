@@ -157,13 +157,13 @@ namespace PolyMessage.Transports.Tcp
             Dispose();
         }
 
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.ReadAsync(buffer, offset, count, cancelToken);
+                return _stream.ReadAsync(buffer, offset, count, ct);
             }
             catch (IOException ioException)
             {
@@ -174,13 +174,13 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancelToken)
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.WriteAsync(buffer, offset, count, cancelToken);
+                return _stream.WriteAsync(buffer, offset, count, ct);
             }
             catch (IOException ioException)
             {
@@ -191,13 +191,13 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override Task FlushAsync(CancellationToken cancelToken)
+        public override Task FlushAsync(CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.FlushAsync(cancelToken);
+                return _stream.FlushAsync(ct);
             }
             catch (IOException ioException)
             {
