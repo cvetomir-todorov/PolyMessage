@@ -141,8 +141,10 @@ namespace PolyMessage
                     {
                         _channel = _transport.CreateClient();
                         await _channel.OpenAsync();
+
+                        LogConnectionInfo();
+
                         _connection = _channel.Connection;
-                        _logger.LogDebug("[{0}] connected via {1} transport to {2}.", _id, _transport.DisplayName, _transport.Address);
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
                         _messenger = new Messenger(_loggerFactory, _messageMetadata);
@@ -154,6 +156,17 @@ namespace PolyMessage
                     _setupMessagingLock.Release();
                 }
             }
+        }
+
+        private void LogConnectionInfo()
+        {
+            _logger.LogDebug(
+                "[{0}] Connected via {1} transport to {2} using {3} format with {4} operation(s).",
+                _id, _transport.DisplayName, _transport.Address, _format.DisplayName, _operations.Count);
+
+            string transportSettings = _transport.GetSettingsInfo();
+            if (!string.IsNullOrWhiteSpace(transportSettings))
+                _logger.LogDebug("[{0}] Transport {1} settings: {2}.", _id, _transport.DisplayName, transportSettings);
         }
 
         private void RegisterMessageTypes()

@@ -125,23 +125,29 @@ namespace PolyMessage.Transports.Tcp
             if (settings.TlsServerCertificate == null)
                 throw new InvalidOperationException("TLS Server certificate needs to be set.");
 
-            _logger.LogTrace("Initializing {0} on the server using certificate {1} ...",
+            _logger.LogDebug("Initializing {0} server-side using certificate {1}...",
                 settings.TlsProtocol, settings.TlsServerCertificate.Subject);
+
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false);
             await secureStream.AuthenticateAsServerAsync(settings.TlsServerCertificate, false, settings.TlsProtocol, true);
-            _logger.LogTrace("Initialized {0} on the server with cipher {1}, hash {2}, key exchange {3}.",
-                secureStream.SslProtocol, secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
+
+            _logger.LogDebug("Initialized {0} server-side using certificate {1}, cipher {2}, hash {3} and key exchange {4}.",
+                secureStream.SslProtocol, secureStream.LocalCertificate.Subject,
+                secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
 
             return secureStream;
         }
 
         private async Task<SslStream> InitClientTls(TcpSettings settings)
         {
-            _logger.LogTrace("Initializing {0} on the client ...", settings.TlsProtocol);
+            _logger.LogDebug("Initializing {0} client-side...", settings.TlsProtocol);
+
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false, settings.TlsClientRemoteCertificateValidationCallback);
             await secureStream.AuthenticateAsClientAsync(_tcpTransport.Address.Host, null, settings.TlsProtocol, true);
-            _logger.LogTrace("Initialized {0} on the client with cipher {1}, hash {2}, key exchange {3}.",
-                secureStream.SslProtocol, secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
+
+            _logger.LogDebug("Initialized {0} client-side using remote certificate {1}, cipher {2}, hash {3} and key exchange {4}.",
+                secureStream.SslProtocol, secureStream.RemoteCertificate.Subject,
+                secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
 
             return secureStream;
         }

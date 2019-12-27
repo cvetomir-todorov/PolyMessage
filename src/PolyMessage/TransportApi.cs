@@ -15,13 +15,15 @@ namespace PolyMessage
 
         public abstract Uri Address { get; }
 
-        public PolyHostTimeouts HostTimeouts { get; } = new PolyHostTimeouts();
+        public PolyHostTimeouts HostTimeouts { get; protected set; } = new PolyHostTimeouts();
 
         public PolyClientTimeouts ClientTimeouts { get; protected set; } = new PolyClientTimeouts();
 
         public abstract PolyListener CreateListener();
 
         public abstract PolyChannel CreateClient();
+
+        public virtual string GetSettingsInfo() => string.Empty;
 
         public override string ToString() => DisplayName;
     }

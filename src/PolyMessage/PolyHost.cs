@@ -113,9 +113,7 @@ namespace PolyMessage
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
 
             Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _cancelTokenSource.Token));
-            _logger.LogInformation(
-                "Started host using {0} transport listening at {1} and {2} format with {3} operation(s).",
-                _transport.DisplayName, _transport.Address, _format.DisplayName, _operations.Count);
+            LogConnectionInfo();
         }
 
         private void RegisterMessageTypes()
@@ -125,6 +123,17 @@ namespace PolyMessage
             IEnumerable<MessageInfo> systemTypes = new[] { new MessageInfo(typeof(PolyHeader), PolyHeader.TypeID) };
             IEnumerable<MessageInfo> allTypes = systemTypes.Union(requestTypes).Union(responseTypes);
             _format.RegisterMessageTypes(allTypes);
+        }
+
+        private void LogConnectionInfo()
+        {
+            _logger.LogInformation(
+                "Started host using {0} transport listening at {1} and {2} format with {3} operation(s).",
+                _transport.DisplayName, _transport.Address, _format.DisplayName, _operations.Count);
+
+            string transportSettings = _transport.GetSettingsInfo();
+            if (!string.IsNullOrWhiteSpace(transportSettings))
+                _logger.LogInformation("Transport {0} settings: {1}.", _transport.DisplayName, transportSettings);
         }
 
         public void Stop()
