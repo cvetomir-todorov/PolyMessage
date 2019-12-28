@@ -36,7 +36,7 @@ namespace PolyMessage.Proxy
             _clientID = clientID;
             _messenger = messenger;
             // TODO: set array pool and capacity
-            _messagingStream = new MessagingStream(channel, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            _messagingStream = new MessagingStream(_clientID, channel, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
             _formatter = format.CreateFormatter(_messagingStream);
             _cancellationToken = cancellationToken;
             _messageMetadata = messageMetadata;

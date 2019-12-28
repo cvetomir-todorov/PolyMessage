@@ -37,8 +37,8 @@ namespace PolyMessage.Tests.Integration.Format
         }
 
         [Theory] // size = encoding bytes per char x
-        [InlineData(1024)] // 1KB
-        [InlineData(1048576)] // 1MB
+        [InlineData(1024)] // 8KB in UTF8
+        [InlineData(1048576)] // 8MB in UTF8
         public async Task LargeString(int stringLength)
         {
             // arrange
@@ -60,6 +60,7 @@ namespace PolyMessage.Tests.Integration.Format
 
         [Theory]
         [InlineData(1024)]
+        [InlineData(65536)]
         public async Task LargeNumberOfObjects(int objectsCount)
         {
             // arrange
@@ -79,6 +80,7 @@ namespace PolyMessage.Tests.Integration.Format
 
         [Theory]
         [InlineData(1024)] // 1KB
+        [InlineData(65536)] // 64KB
         public async Task LargeArrays(int arrayLength)
         {
             // arrange

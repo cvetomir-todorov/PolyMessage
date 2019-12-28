@@ -37,14 +37,15 @@ namespace PolyMessage.Server
 
         public Processor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
         {
+            // identity
+            _id = "Processor" + Interlocked.Increment(ref _generation);
+
             _logger = loggerFactory.CreateLogger(GetType());
             // TODO: get array pool and capacity
-            _messagingStream = new MessagingStream(connectedClient, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            _messagingStream = new MessagingStream(_id, connectedClient, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
             _formatter = format.CreateFormatter(_messagingStream);
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);
-            // identity
-            _id = "Processor" + Interlocked.Increment(ref _generation);
             // stop/dispose
             _stoppedEvent = new ManualResetEventSlim(initialState: true);
             _disposeLock = new object();

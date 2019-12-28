@@ -9,24 +9,24 @@ namespace PolyMessage.Messaging
 {
     internal sealed class MessagingStream : Stream
     {
+        private readonly string _origin;
         private readonly ILogger _logger;
         private readonly PolyChannel _channel;
         private readonly ArrayPool<byte> _pool;
-        private readonly int _capacity;
         private readonly byte[] _lengthPrefixBuffer;
-        private readonly byte[] _dataBuffer;
+        private byte[] _dataBuffer;
         private int _position;
         private int _length;
         private const int LengthPrefixSize = 4;
 
-        public MessagingStream(PolyChannel channel, ArrayPool<byte> bufferPool, int capacity, ILoggerFactory loggerFactory)
+        public MessagingStream(string origin, PolyChannel channel, ArrayPool<byte> bufferPool, int capacity, ILoggerFactory loggerFactory)
         {
+            _origin = origin;
             _logger = loggerFactory.CreateLogger(GetType());
             _channel = channel;
             _pool = bufferPool;
-            _capacity = capacity;
             _lengthPrefixBuffer = _pool.Rent(LengthPrefixSize);
-            _dataBuffer = _pool.Rent(_capacity);
+            _dataBuffer = _pool.Rent(capacity);
         }
 
         protected override void Dispose(bool disposing)
@@ -37,6 +37,7 @@ namespace PolyMessage.Messaging
                 _pool.Return(_dataBuffer);
             }
         }
+
         public override bool CanRead => true;
 
         public override int ReadByte()
@@ -68,7 +69,9 @@ namespace PolyMessage.Messaging
         public override void WriteByte(byte value)
         {
             if (_position >= _dataBuffer.Length)
-                ThrowMessageTooBig();
+            {
+                ExpandBuffer(copyExistingContent: true, targetCapacity: _position + 1);
+            }
 
             _dataBuffer[_position] = value;
             _position++;
@@ -79,7 +82,9 @@ namespace PolyMessage.Messaging
         {
             long bytesRemaining = _dataBuffer.Length - _position;
             if (bytesRemaining < count)
-                ThrowMessageTooBig();
+            {
+                ExpandBuffer(copyExistingContent: true, targetCapacity: _position + count);
+            }
 
             Array.Copy(sourceArray: buffer, sourceIndex: offset, destinationArray: _dataBuffer, destinationIndex: _position, count);
             _position += count;
@@ -96,27 +101,32 @@ namespace PolyMessage.Messaging
             _length = 0;
         }
 
-        public async Task WriteMessageToTransport(string origin, CancellationToken ct)
+        public async Task WriteMessageToTransport(CancellationToken ct)
         {
             EncodeInt32(_length, _lengthPrefixBuffer, offset: 0);
 
+            // TODO: reserve 4 bytes from the data buffer instead of using a separate buffer
             await _channel.WriteAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
             await _channel.WriteAsync(_dataBuffer, 0, _length, ct).ConfigureAwait(false);
             await _channel.FlushAsync(ct).ConfigureAwait(false);
 
-            _logger.LogTrace("[{0}] Sent value {1} for length prefix and {2} bytes for message.", origin, _position, _length);
+            _logger.LogTrace("[{0}] Sent value {1} for length prefix and {2} bytes for message.", _origin, _position, _length);
         }
 
-        public async Task ReadMessageFromTransport(string origin, CancellationToken ct)
+        public async Task ReadMessageFromTransport(CancellationToken ct)
         {
             int bytesRead = await _channel.ReadAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
             if (bytesRead != LengthPrefixSize)
-                ThrowUnexpectedBytesRead(bytesRead, LengthPrefixSize, "length prefix");
+            {
+                throw CreateUnexpectedBytesReadException(bytesRead, LengthPrefixSize, "length prefix");
+            }
 
             int lengthPrefix = DecodeInt32(_lengthPrefixBuffer, offset: 0);
-            _logger.LogTrace("[{0}] Received {1} bytes length prefix.", origin, lengthPrefix);
-            if (lengthPrefix > _capacity)
-                ThrowMessageTooBig();
+            _logger.LogTrace("[{0}] Received {1} bytes length prefix.", _origin, lengthPrefix);
+            if (lengthPrefix > _dataBuffer.Length)
+            {
+                ExpandBuffer(copyExistingContent: false, targetCapacity: lengthPrefix);
+            }
 
             if (lengthPrefix == 0)
             {
@@ -124,24 +134,68 @@ namespace PolyMessage.Messaging
             }
             else
             {
-                bytesRead = await _channel.ReadAsync(_dataBuffer, 0, lengthPrefix, ct).ConfigureAwait(false);
+                bytesRead = await ReadUntilMessageBufferIsFull(lengthPrefix, ct).ConfigureAwait(false);
                 if (bytesRead != lengthPrefix)
-                    ThrowUnexpectedBytesRead(bytesRead, lengthPrefix, "message");
+                {
+                    throw CreateUnexpectedBytesReadException(bytesRead, lengthPrefix, "message");
+                }
             }
 
-            _logger.LogTrace("[{0}] Received {1} bytes for message.", origin, bytesRead);
+            _logger.LogTrace("[{0}] Received {1} bytes for message.", _origin, bytesRead);
             _length = lengthPrefix;
             _position = 0;
         }
 
-        private void ThrowMessageTooBig()
+        private async Task<int> ReadUntilMessageBufferIsFull(int lengthPrefix, CancellationToken ct)
         {
-            throw new InvalidOperationException($"Message is too big. Maximum size is {_capacity} bytes.");
+            int totalBytesRead = 0;
+            int bytesRemaining = lengthPrefix;
+
+            while (totalBytesRead < lengthPrefix)
+            {
+                int bytesRead = await _channel.ReadAsync(_dataBuffer, totalBytesRead, bytesRemaining, ct).ConfigureAwait(false);
+                totalBytesRead += bytesRead;
+                bytesRemaining -= bytesRead;
+            }
+
+            return totalBytesRead;
         }
 
-        private void ThrowUnexpectedBytesRead(int bytesRead, int bytesExpected, string representation)
+        private Exception CreateUnexpectedBytesReadException(int bytesRead, int bytesExpected, string representation)
         {
-            throw new InvalidOperationException($"Received {bytesRead} bytes for {representation} instead of the expected {bytesExpected} bytes.");
+            return new InvalidOperationException($"Received {bytesRead} bytes for {representation} instead of the expected {bytesExpected} bytes.");
+        }
+
+        private void ExpandBuffer(bool copyExistingContent, int targetCapacity)
+        {
+            int newCapacity = _dataBuffer.Length;
+            while (newCapacity < targetCapacity)
+            {
+                newCapacity *= 2;
+            }
+
+            byte[] previousDataBuffer = _dataBuffer;
+            bool isNewDataBufferRented = false;
+
+            try
+            {
+                _dataBuffer = _pool.Rent(newCapacity);
+                isNewDataBufferRented = true;
+                _logger.LogTrace("[{0}] Expanded buffer to {1}.", _origin, newCapacity);
+
+                if (copyExistingContent)
+                {
+                    Array.Copy(previousDataBuffer, 0, _dataBuffer, 0, _length);
+                    _logger.LogTrace("[{0}] Copied {1} bytes into expanded buffer.", _origin, _length);
+                }
+            }
+            finally
+            {
+                if (isNewDataBufferRented)
+                {
+                    _pool.Return(previousDataBuffer);
+                }
+            }
         }
 
         private static void EncodeInt32(int value, byte[] destination, int offset)

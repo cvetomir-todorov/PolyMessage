@@ -30,38 +30,38 @@ namespace PolyMessage.Messaging
             header.MessageTypeID = _messageMetadata.GetMessageTypeID(message.GetType());
 
             _logger.LogTrace("[{0}] Sending header for message with type ID {1}...", origin, header.MessageTypeID);
-            await SendObject(origin, header, stream, formatter, ct).ConfigureAwait(false);
+            await SendObject(header, stream, formatter, ct).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent header for message with type ID {1}.", origin, header.MessageTypeID);
 
             _logger.LogTrace("[{0}] Sending message with type ID {1}...", origin, header.MessageTypeID);
-            await SendObject(origin, message, stream, formatter, ct).ConfigureAwait(false);
+            await SendObject(message, stream, formatter, ct).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent message with type ID {1}.", origin, header.MessageTypeID);
         }
 
-        private async Task SendObject(string origin, object message, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
+        private async Task SendObject(object message, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
         {
             stream.Reset();
             formatter.Serialize(message);
-            await stream.WriteMessageToTransport(origin, ct).ConfigureAwait(false);
+            await stream.WriteMessageToTransport(ct).ConfigureAwait(false);
         }
 
         public async Task<object> Receive(string origin, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
         {
             _logger.LogTrace("[{0}] Receiving header...", origin);
-            PolyHeader header = (PolyHeader) await ReceiveObject(origin, typeof(PolyHeader), stream, formatter, ct).ConfigureAwait(false);
+            PolyHeader header = (PolyHeader) await ReceiveObject(typeof(PolyHeader), stream, formatter, ct).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received header for message with type ID {1}.", origin, header.MessageTypeID);
 
             Type messageType = _messageMetadata.GetMessageType(header.MessageTypeID);
             _logger.LogTrace("[{0}] Receiving message with type ID {1}...", origin, header.MessageTypeID);
-            object message = await ReceiveObject(origin, messageType, stream, formatter, ct).ConfigureAwait(false);
+            object message = await ReceiveObject(messageType, stream, formatter, ct).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Received message with type ID {1}.", origin, header.MessageTypeID);
 
             return message;
         }
 
-        private async Task<object> ReceiveObject(string origin, Type objType, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
+        private async Task<object> ReceiveObject(Type objType, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
         {
-            await stream.ReadMessageFromTransport(origin, ct).ConfigureAwait(false);
+            await stream.ReadMessageFromTransport(ct).ConfigureAwait(false);
             return formatter.Deserialize(objType);
         }
     }
