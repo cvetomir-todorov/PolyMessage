@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace PolyMessage.Messaging
 {
-    internal sealed class MessagingStream : Stream
+    internal sealed class MessageStream : Stream
     {
         private readonly string _origin;
         private readonly ILogger _logger;
@@ -18,7 +18,7 @@ namespace PolyMessage.Messaging
         private int _length;
         private const int LengthPrefixSize = 4;
 
-        public MessagingStream(string origin, PolyChannel channel, ArrayPool<byte> bufferPool, int capacity, ILoggerFactory loggerFactory)
+        public MessageStream(string origin, PolyChannel channel, ArrayPool<byte> bufferPool, int capacity, ILoggerFactory loggerFactory)
         {
             _origin = origin;
             _logger = loggerFactory.CreateLogger(GetType());
