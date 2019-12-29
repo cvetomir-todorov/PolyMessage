@@ -40,7 +40,7 @@ namespace PolyMessage.Messaging
 
         private async Task SendObject(object message, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
         {
-            stream.Reset();
+            stream.PrepareForMessageWrite();
             formatter.Serialize(message);
             await stream.WriteMessageToTransport(ct).ConfigureAwait(false);
         }
@@ -61,7 +61,8 @@ namespace PolyMessage.Messaging
 
         private async Task<object> ReceiveObject(Type objType, MessagingStream stream, PolyFormatter formatter, CancellationToken ct)
         {
-            await stream.ReadMessageFromTransport(ct).ConfigureAwait(false);
+            int messageLength = await stream.ReadMessageFromTransport(ct).ConfigureAwait(false);
+            stream.PrepareForMessageRead(messageLength);
             return formatter.Deserialize(objType);
         }
     }

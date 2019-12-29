@@ -13,8 +13,7 @@ namespace PolyMessage.Messaging
         private readonly ILogger _logger;
         private readonly PolyChannel _channel;
         private readonly ArrayPool<byte> _pool;
-        private readonly byte[] _lengthPrefixBuffer;
-        private byte[] _dataBuffer;
+        private byte[] _messageBuffer;
         private int _position;
         private int _length;
         private const int LengthPrefixSize = 4;
@@ -25,16 +24,14 @@ namespace PolyMessage.Messaging
             _logger = loggerFactory.CreateLogger(GetType());
             _channel = channel;
             _pool = bufferPool;
-            _lengthPrefixBuffer = _pool.Rent(LengthPrefixSize);
-            _dataBuffer = _pool.Rent(capacity);
+            _messageBuffer = _pool.Rent(capacity);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                _pool.Return(_lengthPrefixBuffer);
-                _pool.Return(_dataBuffer);
+                _pool.Return(_messageBuffer);
             }
         }
 
@@ -47,19 +44,21 @@ namespace PolyMessage.Messaging
                 return 0;
             }
 
-            byte data = _dataBuffer[_position];
+            byte data = _messageBuffer[_position];
             _position++;
             return data;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int remainingBytes = _length - _position;
-            if (remainingBytes <= 0)
+            int bytesRemaining = _length - _position;
+            if (bytesRemaining <= 0)
+            {
                 return 0;
+            }
 
-            int bytesToCopy = remainingBytes < count ? remainingBytes : count;
-            Array.Copy(sourceArray: _dataBuffer, sourceIndex: _position, destinationArray: buffer, destinationIndex: offset, bytesToCopy);
+            int bytesToCopy = bytesRemaining < count ? bytesRemaining : count;
+            Array.Copy(sourceArray: _messageBuffer, sourceIndex: _position, destinationArray: buffer, destinationIndex: offset, bytesToCopy);
             _position += bytesToCopy;
             return bytesToCopy;
         }
@@ -68,25 +67,25 @@ namespace PolyMessage.Messaging
 
         public override void WriteByte(byte value)
         {
-            if (_position >= _dataBuffer.Length)
+            if (_position >= _messageBuffer.Length)
             {
                 ExpandBuffer(copyExistingContent: true, targetCapacity: _position + 1);
             }
 
-            _dataBuffer[_position] = value;
+            _messageBuffer[_position] = value;
             _position++;
             _length++;// position cannot be changed so it is correct
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            long bytesRemaining = _dataBuffer.Length - _position;
-            if (bytesRemaining < count)
+            long bytesFree = _messageBuffer.Length - _position;
+            if (bytesFree < count)
             {
                 ExpandBuffer(copyExistingContent: true, targetCapacity: _position + count);
             }
 
-            Array.Copy(sourceArray: buffer, sourceIndex: offset, destinationArray: _dataBuffer, destinationIndex: _position, count);
+            Array.Copy(sourceArray: buffer, sourceIndex: offset, destinationArray: _messageBuffer, destinationIndex: _position, count);
             _position += count;
             _length += count;// position cannot be changed so it is correct
         }
@@ -95,37 +94,36 @@ namespace PolyMessage.Messaging
 
         public override Task FlushAsync(CancellationToken ct) => Task.CompletedTask;
 
-        public void Reset()
+        public void PrepareForMessageWrite()
         {
-            _position = 0;
-            _length = 0;
+            _position = LengthPrefixSize;
+            _length = LengthPrefixSize;
         }
 
         public async Task WriteMessageToTransport(CancellationToken ct)
         {
-            EncodeInt32(_length, _lengthPrefixBuffer, offset: 0);
+            int lengthPrefix = _length - LengthPrefixSize;
+            EncodeInt32(lengthPrefix, _messageBuffer, offset: 0);
 
-            // TODO: reserve 4 bytes from the data buffer instead of using a separate buffer
-            await _channel.WriteAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
-            await _channel.WriteAsync(_dataBuffer, 0, _length, ct).ConfigureAwait(false);
+            await _channel.WriteAsync(_messageBuffer, 0, _length, ct).ConfigureAwait(false);
             await _channel.FlushAsync(ct).ConfigureAwait(false);
 
-            _logger.LogTrace("[{0}] Sent value {1} for length prefix and {2} bytes for message.", _origin, _position, _length);
+            _logger.LogTrace("[{0}] Sent {1} for length prefix value and {2} bytes for message.", _origin, lengthPrefix, lengthPrefix);
         }
 
-        public async Task ReadMessageFromTransport(CancellationToken ct)
+        public async Task<int> ReadMessageFromTransport(CancellationToken ct)
         {
-            int bytesRead = await _channel.ReadAsync(_lengthPrefixBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
+            int bytesRead = await ReadBytes(_messageBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
             if (bytesRead != LengthPrefixSize)
             {
                 throw CreateUnexpectedBytesReadException(bytesRead, LengthPrefixSize, "length prefix");
             }
 
-            int lengthPrefix = DecodeInt32(_lengthPrefixBuffer, offset: 0);
-            _logger.LogTrace("[{0}] Received {1} bytes length prefix.", _origin, lengthPrefix);
-            if (lengthPrefix > _dataBuffer.Length)
+            int lengthPrefix = DecodeInt32(_messageBuffer, offset: 0);
+            _logger.LogTrace("[{0}] Received {1} for length prefix value.", _origin, lengthPrefix);
+            if (lengthPrefix + LengthPrefixSize > _messageBuffer.Length)
             {
-                ExpandBuffer(copyExistingContent: false, targetCapacity: lengthPrefix);
+                ExpandBuffer(copyExistingContent: false, targetCapacity: lengthPrefix + LengthPrefixSize);
             }
 
             if (lengthPrefix == 0)
@@ -134,7 +132,7 @@ namespace PolyMessage.Messaging
             }
             else
             {
-                bytesRead = await ReadUntilMessageBufferIsFull(lengthPrefix, ct).ConfigureAwait(false);
+                bytesRead = await ReadBytes(_messageBuffer, LengthPrefixSize, lengthPrefix, ct).ConfigureAwait(false);
                 if (bytesRead != lengthPrefix)
                 {
                     throw CreateUnexpectedBytesReadException(bytesRead, lengthPrefix, "message");
@@ -142,19 +140,25 @@ namespace PolyMessage.Messaging
             }
 
             _logger.LogTrace("[{0}] Received {1} bytes for message.", _origin, bytesRead);
-            _length = lengthPrefix;
-            _position = 0;
+            return lengthPrefix;
         }
 
-        private async Task<int> ReadUntilMessageBufferIsFull(int lengthPrefix, CancellationToken ct)
+        public void PrepareForMessageRead(int messageLength)
+        {
+            _length = messageLength + LengthPrefixSize;
+            _position = LengthPrefixSize;
+        }
+
+        private async Task<int> ReadBytes(byte[] buffer, int offset, int count, CancellationToken ct)
         {
             int totalBytesRead = 0;
-            int bytesRemaining = lengthPrefix;
+            int bytesRemaining = count;
 
-            while (totalBytesRead < lengthPrefix)
+            while (totalBytesRead < count)
             {
-                int bytesRead = await _channel.ReadAsync(_dataBuffer, totalBytesRead, bytesRemaining, ct).ConfigureAwait(false);
+                int bytesRead = await _channel.ReadAsync(buffer, offset, bytesRemaining, ct).ConfigureAwait(false);
                 totalBytesRead += bytesRead;
+                offset += bytesRead;
                 bytesRemaining -= bytesRead;
             }
 
@@ -168,24 +172,24 @@ namespace PolyMessage.Messaging
 
         private void ExpandBuffer(bool copyExistingContent, int targetCapacity)
         {
-            int newCapacity = _dataBuffer.Length;
+            int newCapacity = _messageBuffer.Length;
             while (newCapacity < targetCapacity)
             {
                 newCapacity *= 2;
             }
 
-            byte[] previousDataBuffer = _dataBuffer;
+            byte[] previousDataBuffer = _messageBuffer;
             bool isNewDataBufferRented = false;
 
             try
             {
-                _dataBuffer = _pool.Rent(newCapacity);
+                _messageBuffer = _pool.Rent(newCapacity);
                 isNewDataBufferRented = true;
-                _logger.LogTrace("[{0}] Expanded buffer to {1}.", _origin, newCapacity);
+                _logger.LogTrace("[{0}] Expanded buffer to {1} bytes.", _origin, newCapacity);
 
                 if (copyExistingContent)
                 {
-                    Array.Copy(previousDataBuffer, 0, _dataBuffer, 0, _length);
+                    Array.Copy(previousDataBuffer, 0, _messageBuffer, 0, _length);
                     _logger.LogTrace("[{0}] Copied {1} bytes into expanded buffer.", _origin, _length);
                 }
             }
