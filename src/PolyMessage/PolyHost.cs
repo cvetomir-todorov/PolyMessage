@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -28,6 +29,7 @@ namespace PolyMessage
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
         // server
+        private readonly ArrayPool<byte> _bufferPool;
         private IAcceptor _acceptor;
         // stop/dispose
         private readonly CancellationTokenSource _stopTokenSource;
@@ -52,6 +54,8 @@ namespace PolyMessage
             // metadata
             _operations = new List<Operation>();
             _contractInspector = new ContractInspector(_loggerFactory);
+            // server
+            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: int.MaxValue, maxArraysPerBucket: 128);
             // stop/dispose
             _stopTokenSource = new CancellationTokenSource();
         }
@@ -98,7 +102,7 @@ namespace PolyMessage
             if (_operations.Count <= 0)
                 throw new InvalidOperationException("No contracts added.");
 
-            _acceptor = new Acceptor(_serviceProvider, _loggerFactory);
+            _acceptor = new Acceptor(_serviceProvider, _loggerFactory, _bufferPool);
             IMessageMetadata messageMetadata = new MessageMetadata();
             IRouter router = new Router();
             ICodeGenerator codeGenerator = new ILEmitter();

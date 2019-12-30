@@ -35,14 +35,19 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Processor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, PolyFormat format, PolyChannel connectedClient)
+        public Processor(
+            IServiceProvider serviceProvider,
+            ILoggerFactory loggerFactory,
+            ArrayPool<byte> bufferPool,
+            PolyFormat format,
+            PolyChannel connectedClient)
         {
             // identity
             _id = "Processor" + Interlocked.Increment(ref _generation);
 
             _logger = loggerFactory.CreateLogger(GetType());
-            // TODO: get array pool and capacity
-            _messageStream = new MessageStream(_id, connectedClient, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            // TODO: get capacity
+            _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: 1024, loggerFactory);
             _formatter = format.CreateFormatter(_messageStream);
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);

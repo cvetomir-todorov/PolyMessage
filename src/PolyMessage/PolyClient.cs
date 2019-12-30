@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -31,6 +32,7 @@ namespace PolyMessage
         private volatile IMessenger _messenger;
         private PolyChannel _channel;
         private PolyConnection _connection;
+        private static readonly ArrayPool<byte> _bufferPool;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
@@ -42,6 +44,11 @@ namespace PolyMessage
         // stop/dispose
         private readonly CancellationTokenSource _disconnectTokenSource;
         private bool _isDisposed;
+
+        static PolyClient()
+        {
+            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: int.MaxValue, maxArraysPerBucket: 128);
+        }
 
         public PolyClient(PolyTransport transport, PolyFormat format)
             : this(transport, format, new NullLoggerFactory())
@@ -205,7 +212,7 @@ namespace PolyMessage
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             _operationInterceptor = new OperationInterceptor(
-                _loggerFactory, _id, _messenger, _format, _channel, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
+                _loggerFactory, _id, _messenger, _format, _channel, _bufferPool, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
             ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(

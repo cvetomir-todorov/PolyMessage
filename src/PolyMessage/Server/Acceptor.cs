@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace PolyMessage.Server
     internal sealed class Acceptor : IAcceptor
     {
         private PolyListener _listener;
+        private readonly ArrayPool<byte> _bufferPool;
         private readonly ConcurrentDictionary<string, IProcessor> _processors;
         // .net core integration
         private readonly IServiceProvider _serviceProvider;
@@ -30,11 +32,12 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Acceptor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
+        public Acceptor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, ArrayPool<byte> bufferPool)
         {
             _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
+            _bufferPool = bufferPool;
             _processors = new ConcurrentDictionary<string, IProcessor>();
             _stoppedEvent = new ManualResetEventSlim(initialState: true);
         }
@@ -104,7 +107,7 @@ namespace PolyMessage.Server
             try
             {
                 PolyChannel client = createClient();
-                processor = new Processor(_serviceProvider, _loggerFactory, format, client);
+                processor = new Processor(_serviceProvider, _loggerFactory, _bufferPool, format, client);
                 if (!_processors.TryAdd(processor.ID, processor))
                     _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 

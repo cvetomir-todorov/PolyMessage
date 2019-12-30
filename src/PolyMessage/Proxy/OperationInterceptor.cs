@@ -28,6 +28,7 @@ namespace PolyMessage.Proxy
             IMessenger messenger,
             PolyFormat format,
             PolyChannel channel,
+            ArrayPool<byte> bufferPool,
             CancellationToken cancellationToken,
             IMessageMetadata messageMetadata,
             CastToTaskOfResponse castDelegate)
@@ -35,8 +36,8 @@ namespace PolyMessage.Proxy
             _logger = loggerFactory.CreateLogger(GetType());
             _clientID = clientID;
             _messenger = messenger;
-            // TODO: set array pool and capacity
-            _messageStream = new MessageStream(_clientID, channel, ArrayPool<byte>.Shared, capacity: 1024, loggerFactory);
+            // TODO: set capacity
+            _messageStream = new MessageStream(_clientID, channel, bufferPool, capacity: 1024, loggerFactory);
             _formatter = format.CreateFormatter(_messageStream);
             _cancellationToken = cancellationToken;
             _messageMetadata = messageMetadata;
