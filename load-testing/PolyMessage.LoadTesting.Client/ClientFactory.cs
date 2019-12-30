@@ -69,7 +69,7 @@ namespace PolyMessage.LoadTesting.Client
                 {
                     if (errors != SslPolicyErrors.None)
                     {
-                        _logger.LogWarning("Validating self-signed certificate with the following errors: {0}", errors);
+                        _logger.LogDebug("Validating self-signed certificate with the following errors: {0}", errors);
                     }
                     return true;
                 };

@@ -31,7 +31,7 @@ namespace PolyMessage.LoadTesting.Client
             PolyFormat format = factory.CreateFormat();
             ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
 
-            PolyClient[] clients = new PolyClient[options.Clients];
+            ILoadTestingContract[] contracts = new ILoadTestingContract[options.Clients];
             Task[] clientTasks = new Task[options.Clients];
 
             SetupMessaging(options);
@@ -41,21 +41,26 @@ namespace PolyMessage.LoadTesting.Client
             {
                 PolyClient client = new PolyClient(transport, format, loggerFactory);
                 client.AddContract<ILoadTestingContract>();
-                clients[i] = client;
+                client.ConnectAsync().Wait();
+
+                contracts[i] = client.Get<ILoadTestingContract>();
             }
 
             _logger.LogInformation("Start {0} clients with {1} transactions each.", options.Clients, options.Transactions);
 
+            Stopwatch clientTasksStopwatch = Stopwatch.StartNew();
             for (int i = 0; i < options.Clients; ++i)
             {
                 int local = i;
                 string clientID = $"LoadTester{i}";
-                Task clientTask = Task.Run(() => RunClient(clientID, clients[local], options));
+                Task clientTask = Task.Run(() => RunClient(clientID, contracts[local], options));
                 clientTasks[i] = clientTask;
             }
 
             Task.WaitAll(clientTasks);
-            ShowAllClientResults(clientTasks, options);
+            clientTasksStopwatch.Stop();
+
+            ShowAllClientResults(clientTasks, options, clientTasksStopwatch.Elapsed);
         }
 
         private void SetupMessaging(ClientOptions options)
@@ -96,12 +101,9 @@ namespace PolyMessage.LoadTesting.Client
 
         private async Task<ClientRunResult> RunClient(
             string clientID,
-            PolyClient client,
+            ILoadTestingContract contract,
             ClientOptions options)
         {
-            await client.ConnectAsync();
-            ILoadTestingContract contract = client.Get<ILoadTestingContract>();
-
             EmptyRequest emptyRequest = new EmptyRequest();
             StringRequest stringRequest = new StringRequest {Data = _stringData};
             ObjectsRequest objectsRequest = new ObjectsRequest {Objects = _objectsData};
@@ -136,7 +138,7 @@ namespace PolyMessage.LoadTesting.Client
 
             ClientRunResult result = CreateSingleClientResult(options.Transactions, totalTimeStopwatch.Elapsed, latencies);
             _logger.LogDebug(
-                "[{0}] Completed {1} transactions for {2:###0.00} seconds. {3:###0.00} transactions per second. {4:###0.00} ms latency (P99).",
+                "[{0}] Completed {1} transactions for {2:###0.00} seconds. {3:#####0.00} transactions per second. {4:###0.00} ms latency (P99).",
                 clientID, options.Transactions, totalTimeStopwatch.Elapsed.TotalSeconds, result.TransactionsPerSecond, result.LatencyP99);
             return result;
         }
@@ -153,14 +155,16 @@ namespace PolyMessage.LoadTesting.Client
             return new ClientRunResult(transactionsPerSecond, latencyP99, latencies);
         }
 
-        private void ShowAllClientResults(Task[] clientTasks, ClientOptions options)
+        private void ShowAllClientResults(Task[] clientTasks, ClientOptions options, TimeSpan totalTime)
         {
             if (clientTasks.All(clientTask => clientTask.IsCompletedSuccessfully))
             {
-                double transactionsPerSecond = clientTasks
+                double singleClientTransactionsPerSecond = clientTasks
                     .Select(task => (Task<ClientRunResult>)task)
                     .Select(task => task.Result.TransactionsPerSecond)
                     .Average();
+                int totalTransactionCount = options.Clients * options.Transactions;
+                double totalTransactionsPerSecond = totalTransactionCount / totalTime.TotalSeconds;
                 double latencyP99 = clientTasks
                     .Select(task => (Task<ClientRunResult>) task)
                     .SelectMany(task => task.Result.Latencies)
@@ -168,7 +172,11 @@ namespace PolyMessage.LoadTesting.Client
                     .OrderByDescending(latencyMs => latencyMs)
                     .Skip(options.Clients * options.Transactions / 100)
                     .First();
-                _logger.LogInformation("{0:###0.00} transactions per second. {1:###0.00} ms latency (P99).", transactionsPerSecond, latencyP99);
+
+                _logger.LogInformation("Completed {0} transactions for {1:###0.00} seconds.", totalTransactionCount, totalTime.TotalSeconds);
+                _logger.LogInformation("{0:#####0.00} average single client transactions per second.", singleClientTransactionsPerSecond);
+                _logger.LogInformation("{0:###0.00} ms latency (P99).", latencyP99);
+                _logger.LogInformation("{0:#####0.00} total transactions per second.", totalTransactionsPerSecond);
             }
             else
             {
