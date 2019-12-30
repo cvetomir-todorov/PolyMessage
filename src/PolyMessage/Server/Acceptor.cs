@@ -97,17 +97,22 @@ namespace PolyMessage.Server
             while (!ct.IsCancellationRequested && !_isStopRequested)
             {
                 Func<PolyChannel> createClient = await _listener.AcceptClient().ConfigureAwait(false);
-                Task _ = Task.Run(() => ProcessClient(format, createClient, serverComponents, ct), ct);
+                Task _ = Task.Run(() => ProcessClient(transport, format, createClient, serverComponents, ct), ct);
             }
         }
 
-        private async Task ProcessClient(PolyFormat format, Func<PolyChannel> createClient, ServerComponents serverComponents, CancellationToken ct)
+        private async Task ProcessClient(
+            PolyTransport transport,
+            PolyFormat format,
+            Func<PolyChannel> createClient,
+            ServerComponents serverComponents,
+            CancellationToken ct)
         {
             IProcessor processor = null;
             try
             {
                 PolyChannel client = createClient();
-                processor = new Processor(_serviceProvider, _loggerFactory, _bufferPool, format, client);
+                processor = new Processor(_serviceProvider, _loggerFactory, _bufferPool, transport, format, client);
                 if (!_processors.TryAdd(processor.ID, processor))
                     _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 

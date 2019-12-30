@@ -19,6 +19,8 @@ namespace PolyMessage
 
         public PolyClientTimeouts ClientTimeouts { get; protected set; } = new PolyClientTimeouts();
 
+        public PolyMessageBufferSettings MessageBufferSettings { get; protected set; } = new PolyMessageBufferSettings();
+
         public abstract PolyListener CreateListener();
 
         public abstract PolyChannel CreateClient();
@@ -31,13 +33,18 @@ namespace PolyMessage
     public class PolyHostTimeouts
     {
         public TimeSpan ClientReceive { get; set; } = PolyTransport.InfiniteTimeout;
-
         public TimeSpan ClientSend { get; set; } = PolyTransport.InfiniteTimeout;
     }
 
     public class PolyClientTimeouts
     {
         public TimeSpan SendAndReceive { get; set; } = PolyTransport.InfiniteTimeout;
+    }
+
+    public class PolyMessageBufferSettings
+    {
+        public int InitialSize { get; set; } = 8192; // 8KB
+        public int MaxSize { get; set; } = int.MaxValue; // used only on the server
     }
 
     public abstract class PolyListener : IDisposable

@@ -55,7 +55,7 @@ namespace PolyMessage
             _operations = new List<Operation>();
             _contractInspector = new ContractInspector(_loggerFactory);
             // server
-            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: int.MaxValue, maxArraysPerBucket: 128);
+            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: transport.MessageBufferSettings.MaxSize, maxArraysPerBucket: 128);
             // stop/dispose
             _stopTokenSource = new CancellationTokenSource();
         }

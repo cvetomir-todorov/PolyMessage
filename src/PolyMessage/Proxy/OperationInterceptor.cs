@@ -26,6 +26,7 @@ namespace PolyMessage.Proxy
             ILoggerFactory loggerFactory,
             string clientID,
             IMessenger messenger,
+            PolyTransport transport,
             PolyFormat format,
             PolyChannel channel,
             ArrayPool<byte> bufferPool,
@@ -36,8 +37,7 @@ namespace PolyMessage.Proxy
             _logger = loggerFactory.CreateLogger(GetType());
             _clientID = clientID;
             _messenger = messenger;
-            // TODO: set capacity
-            _messageStream = new MessageStream(_clientID, channel, bufferPool, capacity: 1024, loggerFactory);
+            _messageStream = new MessageStream(_clientID, channel, bufferPool, capacity: transport.MessageBufferSettings.InitialSize, loggerFactory);
             _formatter = format.CreateFormatter(_messageStream);
             _cancellationToken = cancellationToken;
             _messageMetadata = messageMetadata;

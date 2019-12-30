@@ -39,6 +39,7 @@ namespace PolyMessage.Server
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             ArrayPool<byte> bufferPool,
+            PolyTransport transport,
             PolyFormat format,
             PolyChannel connectedClient)
         {
@@ -46,8 +47,7 @@ namespace PolyMessage.Server
             _id = "Processor" + Interlocked.Increment(ref _generation);
 
             _logger = loggerFactory.CreateLogger(GetType());
-            // TODO: get capacity
-            _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: 1024, loggerFactory);
+            _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: transport.MessageBufferSettings.InitialSize, loggerFactory);
             _formatter = format.CreateFormatter(_messageStream);
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);

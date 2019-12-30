@@ -212,7 +212,8 @@ namespace PolyMessage
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             _operationInterceptor = new OperationInterceptor(
-                _loggerFactory, _id, _messenger, _format, _channel, _bufferPool, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
+                _loggerFactory, _id, _messenger, _transport, _format, _channel,
+                _bufferPool, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
             ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(
