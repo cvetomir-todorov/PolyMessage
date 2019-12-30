@@ -44,7 +44,9 @@ namespace PolyMessage.Transports.Tcp
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.AppendFormat("NoDelay {0}", Settings.NoDelay ? "enabled" : "disabled");
+            builder.AppendFormat("Send buffer size {0}", Settings.SendBufferSize);
+            builder.AppendFormat(", Receive buffer size {0}", Settings.ReceiveBufferSize);
+            builder.AppendFormat(", NoDelay {0}", Settings.NoDelay ? "enabled" : "disabled");
             builder.AppendFormat(", TLS version {0}", Settings.TlsProtocol);
             if (Settings.TlsServerCertificate != null)
             {

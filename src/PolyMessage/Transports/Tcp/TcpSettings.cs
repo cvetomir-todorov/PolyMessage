@@ -9,16 +9,20 @@ namespace PolyMessage.Transports.Tcp
     /// </summary>
     public sealed class TcpSettings
     {
-        public TcpSettings()
-        {
-            NoDelay = true;
-            TlsProtocol = SslProtocols.None;
-        }
-
         /// <summary>
         /// The TCP setting for using Nagle's algorithm. The default value is true.
         /// </summary>
-        public bool NoDelay { get; set; }
+        public bool NoDelay { get; set; } = true;
+
+        /// <summary>
+        /// The size of the TCP send buffer in bytes.
+        /// </summary>
+        public int SendBufferSize { get; set; } = 8192; // 8KB
+
+        /// <summary>
+        /// The size of the TCP receive buffer in bytes.
+        /// </summary>
+        public int ReceiveBufferSize { get; set; } = 8192; // 8KB
 
         /// <summary>
         /// The certificate used in TLS over TCP.
@@ -33,6 +37,6 @@ namespace PolyMessage.Transports.Tcp
         /// <summary>
         /// The TLS protocol used in the communication.
         /// </summary>
-        public SslProtocols TlsProtocol { get; set; }
+        public SslProtocols TlsProtocol { get; set; } = SslProtocols.None;
     }
 }

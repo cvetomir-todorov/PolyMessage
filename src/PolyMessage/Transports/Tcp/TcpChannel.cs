@@ -99,6 +99,9 @@ namespace PolyMessage.Transports.Tcp
             }
 
             _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
+            _tcpClient.SendBufferSize = _tcpTransport.Settings.SendBufferSize;
+            _tcpClient.ReceiveBufferSize = _tcpTransport.Settings.ReceiveBufferSize;
+
             Uri localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
             Uri remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
             _connection.SetOpened(localAddress, remoteAddress);
