@@ -63,13 +63,13 @@ namespace PolyMessage.Transports.Tcp
 
         public override PolyConnection Connection => _connection;
 
-        public override async Task OpenAsync()
+        public override Task OpenAsync()
         {
             EnsureNotDisposed();
 
             try
             {
-                await OpenConnection();
+                return OpenConnection();
             }
             catch (Win32Exception win32Exception) // also catches SocketException
             {
@@ -89,13 +89,13 @@ namespace PolyMessage.Transports.Tcp
         {
             if (!_tcpClient.Connected)
             {
-                await _tcpClient.ConnectAsync(_tcpTransport.Address.Host, _tcpTransport.Address.Port);
+                await _tcpClient.ConnectAsync(_tcpTransport.Address.Host, _tcpTransport.Address.Port).ConfigureAwait(false);
             }
 
             _stream = _tcpClient.GetStream();
             if (_tcpTransport.Settings.TlsProtocol != SslProtocols.None)
             {
-                await InitTls();
+                await InitTls().ConfigureAwait(false);
             }
 
             _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
@@ -113,11 +113,11 @@ namespace PolyMessage.Transports.Tcp
             SslStream secureStream;
             if (_isServer)
             {
-                secureStream = await InitServerTls(settings);
+                secureStream = await InitServerTls(settings).ConfigureAwait(false);
             }
             else
             {
-                secureStream = await InitClientTls(settings);
+                secureStream = await InitClientTls(settings).ConfigureAwait(false);
             }
 
             _stream = secureStream;
@@ -132,7 +132,7 @@ namespace PolyMessage.Transports.Tcp
                 settings.TlsProtocol, settings.TlsServerCertificate.Subject);
 
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false);
-            await secureStream.AuthenticateAsServerAsync(settings.TlsServerCertificate, false, settings.TlsProtocol, true);
+            await secureStream.AuthenticateAsServerAsync(settings.TlsServerCertificate, false, settings.TlsProtocol, true).ConfigureAwait(false);
 
             _logger.LogDebug("Initialized {0} server-side using certificate {1}, cipher {2}, hash {3} and key exchange {4}.",
                 secureStream.SslProtocol, secureStream.LocalCertificate.Subject,
@@ -146,7 +146,7 @@ namespace PolyMessage.Transports.Tcp
             _logger.LogDebug("Initializing {0} client-side...", settings.TlsProtocol);
 
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false, settings.TlsClientRemoteCertificateValidationCallback);
-            await secureStream.AuthenticateAsClientAsync(_tcpTransport.Address.Host, null, settings.TlsProtocol, true);
+            await secureStream.AuthenticateAsClientAsync(_tcpTransport.Address.Host, null, settings.TlsProtocol, true).ConfigureAwait(false);
 
             _logger.LogDebug("Initialized {0} client-side using remote certificate {1}, cipher {2}, hash {3} and key exchange {4}.",
                 secureStream.SslProtocol, secureStream.RemoteCertificate.Subject,

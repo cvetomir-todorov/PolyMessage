@@ -116,7 +116,7 @@ namespace PolyMessage.Server
                 if (!_processors.TryAdd(processor.ID, processor))
                     _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
 
-                await processor.Start(serverComponents, ct);
+                await processor.Start(serverComponents, ct).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

@@ -143,11 +143,11 @@ namespace PolyMessage
             {
                 try
                 {
-                    await _setupMessagingLock.WaitAsync();
+                    await _setupMessagingLock.WaitAsync().ConfigureAwait(false);
                     if (_messenger == null)
                     {
                         _channel = _transport.CreateClient();
-                        await _channel.OpenAsync();
+                        await _channel.OpenAsync().ConfigureAwait(false);
 
                         LogConnectionInfo();
 

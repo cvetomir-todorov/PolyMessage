@@ -115,7 +115,7 @@ namespace PolyMessage.Server
 
         private async Task DoStart(ServerComponents serverComponents, CancellationToken ct)
         {
-            await _connectedClient.OpenAsync();
+            await _connectedClient.OpenAsync().ConfigureAwait(false);
             _implementorProvider.SessionStarted(_connectedClient);
 
             while (!ct.IsCancellationRequested && !_isStopRequested)
@@ -124,7 +124,7 @@ namespace PolyMessage.Server
                 object requestMessage = await serverComponents.Messenger.Receive(_id, _messageStream, _formatter, ct).ConfigureAwait(false);
                 _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
 
-                object responseMessage = await DispatchMessage(serverComponents, requestMessage);
+                object responseMessage = await DispatchMessage(serverComponents, requestMessage).ConfigureAwait(false);
 
                 _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
                 await serverComponents.Messenger.Send(_id, responseMessage, _messageStream, _formatter, ct).ConfigureAwait(false);
