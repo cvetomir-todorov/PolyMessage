@@ -31,6 +31,7 @@ namespace PolyMessage.LoadTesting.Client
             PolyFormat format = factory.CreateFormat();
             ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
 
+            PolyClient[] clients = new PolyClient[options.Clients];
             ILoadTestingContract[] contracts = new ILoadTestingContract[options.Clients];
             Task[] clientTasks = new Task[options.Clients];
 
@@ -43,6 +44,7 @@ namespace PolyMessage.LoadTesting.Client
                 client.AddContract<ILoadTestingContract>();
                 client.ConnectAsync().Wait();
 
+                clients[i] = client;
                 contracts[i] = client.Get<ILoadTestingContract>();
             }
 
@@ -59,8 +61,12 @@ namespace PolyMessage.LoadTesting.Client
 
             Task.WaitAll(clientTasks);
             clientTasksStopwatch.Stop();
-
             ShowAllClientResults(clientTasks, options, clientTasksStopwatch.Elapsed);
+
+            foreach (PolyClient client in clients)
+            {
+                client.Disconnect();
+            }
         }
 
         private void SetupMessaging(ClientOptions options)
