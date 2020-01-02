@@ -16,9 +16,11 @@ namespace PolyMessage.LoadTesting.Client
         private static void Start(ClientOptions options)
         {
             IServiceProvider serviceProvider = BuildServiceProvider(options.LogLevel);
-            ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(Client));
+            ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            ILogger logger = loggerFactory.CreateLogger(typeof(Client));
             ClientRunner runner = new ClientRunner(logger, serviceProvider);
             runner.Run(options);
+            loggerFactory.Dispose();
         }
 
         private static IServiceProvider BuildServiceProvider(LogLevel logLevel)

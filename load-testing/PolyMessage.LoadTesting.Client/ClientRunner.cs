@@ -174,8 +174,8 @@ namespace PolyMessage.LoadTesting.Client
                     .First();
 
                 _logger.LogInformation("Completed {0} transactions for {1:###0.00} seconds.", totalTransactionCount, totalTime.TotalSeconds);
-                _logger.LogInformation("{0:#####0.00} average single client transactions per second.", singleClientTransactionsPerSecond);
                 _logger.LogInformation("{0:###0.00} ms latency (P99).", latencyP99);
+                _logger.LogInformation("{0:#####0.00} average single client transactions per second.", singleClientTransactionsPerSecond);
                 _logger.LogInformation("{0:#####0.00} total transactions per second.", totalTransactionsPerSecond);
             }
             else
