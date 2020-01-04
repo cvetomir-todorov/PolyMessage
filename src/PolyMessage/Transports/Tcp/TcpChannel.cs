@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -39,11 +40,13 @@ namespace PolyMessage.Transports.Tcp
 
             if (isDisposing)
             {
+                EndPoint remoteAddress = _tcpClient.Client.RemoteEndPoint;
                 _stream.Dispose();
                 _tcpClient.Close();
                 _tcpClient.Dispose();
                 _connection.SetClosed();
                 _isDisposed = true;
+                _logger.LogDebug("Disconnected from {0}.", remoteAddress);
             }
 
             base.DoDispose(isDisposing);
@@ -89,8 +92,10 @@ namespace PolyMessage.Transports.Tcp
         {
             if (!_tcpClient.Connected)
             {
+                _logger.LogDebug("Connecting to {0}:{1}...", _tcpTransport.Address.Host, _tcpTransport.Address.Port);
                 await _tcpClient.ConnectAsync(_tcpTransport.Address.Host, _tcpTransport.Address.Port).ConfigureAwait(false);
             }
+            _logger.LogDebug("Connected to {0}.", _tcpClient.Client.RemoteEndPoint);
 
             _stream = _tcpClient.GetStream();
             if (_tcpTransport.Settings.TlsProtocol != SslProtocols.None)
