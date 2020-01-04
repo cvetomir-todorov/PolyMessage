@@ -47,15 +47,16 @@ namespace PolyMessage.Server
             if (_isDisposed)
                 return;
 
+            _listener?.StopAccepting();
+            _isStopRequested = true;
+            _logger.LogTrace("Waiting for worker thread...");
+            _stoppedEvent.Wait();
+
             foreach (KeyValuePair<string, IProcessor> processorKvp in _processors)
             {
                 processorKvp.Value.Stop();
             }
             _processors.Clear();
-            _listener?.StopAccepting();
-            _isStopRequested = true;
-            _logger.LogTrace("Waiting for worker thread...");
-            _stoppedEvent.Wait();
 
             _listener?.Dispose();
             _stoppedEvent.Dispose();
