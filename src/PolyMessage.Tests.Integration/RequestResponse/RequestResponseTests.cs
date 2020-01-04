@@ -18,8 +18,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
 
         [Theory]
         [InlineData(1)]
-        [InlineData(100)]
-        [InlineData(1000)]
+        [InlineData(10)]
         public async Task SingleOperationContract(int messagesCount)
         {
             // arrange
@@ -43,8 +42,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
 
         [Theory]
         [InlineData(1)]
-        [InlineData(100)]
-        [InlineData(1000)]
+        [InlineData(10)]
         public async Task MultipleOperationsContract(int messagesCount)
         {
             // arrange
