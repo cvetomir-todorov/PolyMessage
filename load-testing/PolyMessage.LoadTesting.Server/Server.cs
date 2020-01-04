@@ -17,10 +17,10 @@ namespace PolyMessage.LoadTesting.Server
         private static void Start(ServerOptions options)
         {
             IServiceProvider serviceProvider = BuildServiceProvider(options.LogLevel);
+            ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            ILogger logger = loggerFactory.CreateLogger(typeof(Server));
 
-            ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(Server));
             ServerFactory factory = new ServerFactory(logger, options);
-
             PolyFormat format = factory.CreateFormat();
             PolyTransport transport = factory.CreateTransport(serviceProvider);
 
@@ -31,6 +31,7 @@ namespace PolyMessage.LoadTesting.Server
             logger.LogInformation("Press ENTER to exit.");
             Console.ReadLine();
             logger.LogInformation("Bye!");
+            loggerFactory.Dispose();
         }
 
         private static IServiceProvider BuildServiceProvider(LogLevel logLevel)

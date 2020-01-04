@@ -64,6 +64,7 @@ namespace PolyMessage.LoadTesting.Server
         {
             ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             TcpTransport transport = new TcpTransport(new Uri(_options.ListenAddress), loggerFactory);
+            transport.HostTimeouts.ClientReceive = TimeSpan.FromSeconds(5);
             if (_options.TcpTlsProtocol != SslProtocols.None)
             {
                 transport.Settings.TlsProtocol = _options.TcpTlsProtocol;
