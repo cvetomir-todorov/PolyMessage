@@ -76,11 +76,11 @@ namespace PolyMessage.Proxy
 
         private async Task<object> CallOperation(object requestMessage)
         {
-            _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage);
+            _logger.LogTrace("[{0}] Sending request [{1}]...", _clientID, requestMessage.GetType());
             await _messenger.Send(_clientID, requestMessage, _messageStream, _formatter, _cancellationToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage);
+            _logger.LogTrace("[{0}] Sent request [{1}] and waiting for response...", _clientID, requestMessage.GetType());
             object responseMessage = await _messenger.Receive(_clientID, _messageStream, _formatter, _cancellationToken).ConfigureAwait(false);
-            _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage);
+            _logger.LogTrace("[{0}] Received response [{1}].", _clientID, responseMessage.GetType());
 
             return responseMessage;
         }

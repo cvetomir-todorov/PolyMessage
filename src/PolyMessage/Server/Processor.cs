@@ -120,15 +120,14 @@ namespace PolyMessage.Server
 
             while (!ct.IsCancellationRequested && !_isStopRequested)
             {
-                _logger.LogTrace("[{0}] Receiving request...", _id);
                 object requestMessage = await serverComponents.Messenger.Receive(_id, _messageStream, _formatter, ct).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage);
+                _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage.GetType());
 
                 object responseMessage = await DispatchMessage(serverComponents, requestMessage).ConfigureAwait(false);
 
-                _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage);
+                _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage.GetType());
                 await serverComponents.Messenger.Send(_id, responseMessage, _messageStream, _formatter, ct).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage);
+                _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage.GetType());
             }
         }
 

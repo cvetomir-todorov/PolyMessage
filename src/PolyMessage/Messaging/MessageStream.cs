@@ -94,33 +94,54 @@ namespace PolyMessage.Messaging
 
         public override Task FlushAsync(CancellationToken ct) => Task.CompletedTask;
 
-        public void PrepareForMessageWrite()
+        public override long Length => _length;
+
+        public override long Position
         {
-            _position = LengthPrefixSize;
-            _length = LengthPrefixSize;
+            get => _position;
+            set => throw new NotSupportedException();
         }
 
-        public async Task WriteMessageToTransport(CancellationToken ct)
+        public void ResetLengthAndPosition()
         {
-            int lengthPrefix = _length - LengthPrefixSize;
-            EncodeInt32(lengthPrefix, _messageBuffer, offset: 0);
+            _position = 0;
+            _length = 0;
+        }
 
+        public void ReserveSpaceForLengthPrefix()
+        {
+            if (_position + LengthPrefixSize >= _messageBuffer.Length)
+            {
+                ExpandBuffer(copyExistingContent: true, targetCapacity: _position + LengthPrefixSize);
+            }
+            _position += LengthPrefixSize;
+            _length += LengthPrefixSize;
+        }
+
+        public void WriteLengthPrefix(int position, string target)
+        {
+            int lengthPrefix = _length - position - LengthPrefixSize;
+            EncodeInt32(lengthPrefix, _messageBuffer, position);
+            _logger.LogTrace("[{0}] Encoded {1} for {2} length prefix value.", _origin, lengthPrefix, target);
+        }
+
+        public async Task SendToTransport(CancellationToken ct)
+        {
             await _channel.WriteAsync(_messageBuffer, 0, _length, ct).ConfigureAwait(false);
             await _channel.FlushAsync(ct).ConfigureAwait(false);
-
-            _logger.LogTrace("[{0}] Sent {1} for length prefix value and {2} bytes for message.", _origin, lengthPrefix, lengthPrefix);
+            _logger.LogTrace("[{0}] Sent {1} bytes from the buffer.", _origin, _length);
         }
 
-        public async Task<int> ReadMessageFromTransport(CancellationToken ct)
+        public async Task<int> ReceiveFromTransport(string target, CancellationToken ct)
         {
             int bytesRead = await ReadBytes(_messageBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
             if (bytesRead != LengthPrefixSize)
             {
-                throw CreateUnexpectedBytesReadException(bytesRead, LengthPrefixSize, "length prefix");
+                throw CreateUnexpectedBytesReadException(bytesRead, LengthPrefixSize, $"{target} length prefix");
             }
 
             int lengthPrefix = DecodeInt32(_messageBuffer, offset: 0);
-            _logger.LogTrace("[{0}] Received {1} for length prefix value.", _origin, lengthPrefix);
+            _logger.LogTrace("[{0}] Received {1} for {2} length prefix value.", _origin, lengthPrefix, target);
             if (lengthPrefix + LengthPrefixSize > _messageBuffer.Length)
             {
                 ExpandBuffer(copyExistingContent: false, targetCapacity: lengthPrefix + LengthPrefixSize);
@@ -135,15 +156,15 @@ namespace PolyMessage.Messaging
                 bytesRead = await ReadBytes(_messageBuffer, LengthPrefixSize, lengthPrefix, ct).ConfigureAwait(false);
                 if (bytesRead != lengthPrefix)
                 {
-                    throw CreateUnexpectedBytesReadException(bytesRead, lengthPrefix, "message");
+                    throw CreateUnexpectedBytesReadException(bytesRead, lengthPrefix, target);
                 }
             }
 
-            _logger.LogTrace("[{0}] Received {1} bytes for message.", _origin, bytesRead);
+            _logger.LogTrace("[{0}] Received {1} bytes for {2}.", _origin, bytesRead, target);
             return lengthPrefix;
         }
 
-        public void PrepareForMessageRead(int messageLength)
+        public void PrepareForDeserialize(int messageLength)
         {
             _length = messageLength + LengthPrefixSize;
             _position = LengthPrefixSize;
@@ -229,15 +250,7 @@ namespace PolyMessage.Messaging
             return lengthPrefix;
         }
 
-        public override long Length => throw new NotSupportedException();
-
         public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override long Position
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
 
         public override bool CanSeek => false;
 

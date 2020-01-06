@@ -46,7 +46,7 @@ namespace PolyMessage.Transports.Tcp
                 _tcpClient.Dispose();
                 _connection.SetClosed();
                 _isDisposed = true;
-                _logger.LogDebug("Disconnected from {0}.", remoteAddress);
+                _logger.LogDebug("Disconnected from tcp://{0}.", remoteAddress);
             }
 
             base.DoDispose(isDisposing);
@@ -92,10 +92,10 @@ namespace PolyMessage.Transports.Tcp
         {
             if (!_tcpClient.Connected)
             {
-                _logger.LogDebug("Connecting to {0}:{1}...", _tcpTransport.Address.Host, _tcpTransport.Address.Port);
+                _logger.LogDebug("Connecting to tcp://{0}:{1}...", _tcpTransport.Address.Host, _tcpTransport.Address.Port);
                 await _tcpClient.ConnectAsync(_tcpTransport.Address.Host, _tcpTransport.Address.Port).ConfigureAwait(false);
             }
-            _logger.LogDebug("Connected to {0}.", _tcpClient.Client.RemoteEndPoint);
+            _logger.LogDebug("Connected to tcp://{0}.", _tcpClient.Client.RemoteEndPoint);
 
             _stream = _tcpClient.GetStream();
             if (_tcpTransport.Settings.TlsProtocol != SslProtocols.None)
