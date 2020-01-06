@@ -8,7 +8,7 @@ using PolyMessage.Metadata;
 
 namespace PolyMessage.Server
 {
-    internal interface IProcessor : IDisposable
+    internal interface ISession : IDisposable
     {
         string ID { get; }
 
@@ -19,7 +19,7 @@ namespace PolyMessage.Server
         PolyChannel ConnectedClient { get; }
     }
 
-    internal sealed class Processor : IProcessor
+    internal sealed class Session : ISession
     {
         private readonly ILogger _logger;
         private readonly PolyFormatter _formatter;
@@ -32,10 +32,10 @@ namespace PolyMessage.Server
         // stop/dispose
         private readonly ManualResetEventSlim _stoppedEvent;
         private readonly object _disposeLock;
-        private bool _isDisposed;
+        private volatile bool _isDisposed;
         private bool _isStopRequested;
 
-        public Processor(
+        public Session(
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             ArrayPool<byte> bufferPool,
@@ -44,7 +44,7 @@ namespace PolyMessage.Server
             PolyChannel connectedClient)
         {
             // identity
-            _id = "Processor" + Interlocked.Increment(ref _generation);
+            _id = "Session" + Interlocked.Increment(ref _generation);
 
             _logger = loggerFactory.CreateLogger(GetType());
             _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: transport.MessageBufferSettings.InitialSize, loggerFactory);
@@ -58,7 +58,7 @@ namespace PolyMessage.Server
 
         public void Dispose()
         {
-            // it is possible for the processor to be stopped from different threads
+            // it is possible for the session to be stopped from different threads
             if (!_isDisposed)
                 lock (_disposeLock)
                     if (!_isDisposed)
@@ -80,7 +80,7 @@ namespace PolyMessage.Server
         private void EnsureNotDisposed()
         {
             if (_isDisposed)
-                throw new InvalidOperationException("Processor is already stopped.");
+                throw new ObjectDisposedException("Session is already stopped.");
         }
 
         public string ID => _id;

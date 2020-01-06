@@ -15,14 +15,14 @@ namespace PolyMessage.Server
 
         void Stop();
 
-        IEnumerable<IProcessor> GetActiveProcessors();
+        IEnumerable<ISession> GetSessions();
     }
 
     internal sealed class Acceptor : IAcceptor
     {
         private PolyListener _listener;
         private readonly ArrayPool<byte> _bufferPool;
-        private readonly ConcurrentDictionary<string, IProcessor> _processors;
+        private readonly ConcurrentDictionary<string, ISession> _sessions;
         // .net core integration
         private readonly IServiceProvider _serviceProvider;
         private readonly ILoggerFactory _loggerFactory;
@@ -38,7 +38,7 @@ namespace PolyMessage.Server
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
             _bufferPool = bufferPool;
-            _processors = new ConcurrentDictionary<string, IProcessor>();
+            _sessions = new ConcurrentDictionary<string, ISession>();
             _stoppedEvent = new ManualResetEventSlim(initialState: true);
         }
 
@@ -52,11 +52,11 @@ namespace PolyMessage.Server
             _logger.LogTrace("Waiting for worker thread...");
             _stoppedEvent.Wait();
 
-            foreach (KeyValuePair<string, IProcessor> processorKvp in _processors)
+            foreach (KeyValuePair<string, ISession> sessionKvp in _sessions)
             {
-                processorKvp.Value.Stop();
+                sessionKvp.Value.Stop();
             }
-            _processors.Clear();
+            _sessions.Clear();
 
             _listener?.Dispose();
             _stoppedEvent.Dispose();
@@ -98,39 +98,39 @@ namespace PolyMessage.Server
             while (!ct.IsCancellationRequested && !_isStopRequested)
             {
                 Func<PolyChannel> createClient = await _listener.AcceptClient().ConfigureAwait(false);
-                Task _ = Task.Run(() => ProcessClient(transport, format, createClient, serverComponents, ct), ct);
+                Task _ = Task.Run(() => AcceptClient(transport, format, createClient, serverComponents, ct), ct);
             }
         }
 
-        private async Task ProcessClient(
+        private async Task AcceptClient(
             PolyTransport transport,
             PolyFormat format,
             Func<PolyChannel> createClient,
             ServerComponents serverComponents,
             CancellationToken ct)
         {
-            IProcessor processor = null;
+            ISession session = null;
             try
             {
                 PolyChannel client = createClient();
-                processor = new Processor(_serviceProvider, _loggerFactory, _bufferPool, transport, format, client);
-                if (!_processors.TryAdd(processor.ID, processor))
-                    _logger.LogCritical("Failed add processor with ID {0} to list of tracked processors.", processor.ID);
+                session = new Session(_serviceProvider, _loggerFactory, _bufferPool, transport, format, client);
+                if (!_sessions.TryAdd(session.ID, session))
+                    _logger.LogCritical("Failed to start tracking session with ID {0}.", session.ID);
 
-                await processor.Start(serverComponents, ct).ConfigureAwait(false);
+                await session.Start(serverComponents, ct).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                _logger.LogCritical(exception, "Failed to start processor.");
+                _logger.LogCritical(exception, "Failed to start session.");
             }
             finally
             {
-                if (processor != null)
+                if (session != null)
                 {
-                    processor.Stop();
-                    bool isRemoved = _processors.TryRemove(processor.ID, out _);
+                    session.Stop();
+                    bool isRemoved = _sessions.TryRemove(session.ID, out _);
                     if (!isRemoved)
-                        _logger.LogCritical("Failed to remove processor with ID {0} from list of tracked processors.", processor.ID);
+                        _logger.LogCritical("Failed to stop tracking session with ID {0}.", session.ID);
                 }
             }
         }
@@ -140,9 +140,9 @@ namespace PolyMessage.Server
             Dispose();
         }
 
-        public IEnumerable<IProcessor> GetActiveProcessors()
+        public IEnumerable<ISession> GetSessions()
         {
-            return new List<IProcessor>(_processors.Select(kvp => kvp.Value));
+            return new List<ISession>(_sessions.Select(kvp => kvp.Value));
         }
     }
 }

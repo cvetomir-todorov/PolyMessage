@@ -147,7 +147,7 @@ namespace PolyMessage
 
         internal IEnumerable<PolyChannel> GetConnectedClients()
         {
-            return _acceptor.GetActiveProcessors().Select(activeProcessor => activeProcessor.ConnectedClient);
+            return _acceptor.GetSessions().Select(session => session.ConnectedClient);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace PolyMessage.Tests.Integration.Tcp
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(4)]
-        public async Task UnneededProcessorsAreRemovedAfterClientReceiveTimeout(int clientCount)
+        public async Task SessionsAreStoppedAfterClientReceiveTimeout(int clientCount)
         {
             // arrange
             Host.AddContract<IContract>();
