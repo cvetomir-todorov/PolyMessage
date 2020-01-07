@@ -56,7 +56,7 @@ namespace PolyMessage.Formats.NewtonsoftJson
 
             object obj = _serializer.Deserialize(_reader, objType);
             if (obj == null)
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
+                throw new PolyFormatException(PolyFormatError.UnexpectedData, "Deserialization could not parse JSON token.", _format);
 
             return obj;
         }

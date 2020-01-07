@@ -10,7 +10,7 @@ namespace PolyMessage.Formats.DotNetBinary
         private readonly DotNetBinaryFormat _format;
         private readonly BinaryFormatter _formatter;
         private readonly Stream _stream;
-        private const string KnownErrorConnectionClosed = "End of Stream encountered before parsing was completed.";
+        private const string KnownErrorEndOfStream = "End of Stream encountered before parsing was completed.";
 
         public DotNetBinaryFormatter(DotNetBinaryFormat format, Stream stream)
         {
@@ -33,7 +33,7 @@ namespace PolyMessage.Formats.DotNetBinary
             {
                 return _formatter.Deserialize(_stream);
             }
-            catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorConnectionClosed))
+            catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorEndOfStream))
             {
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
             }

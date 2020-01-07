@@ -8,7 +8,7 @@ namespace PolyMessage.Formats.MessagePack
     {
         private readonly MessagePackFormat _format;
         private readonly Stream _stream;
-        private const string KnownErrorConnectionClosed = "Invalid MessagePack code was detected";
+        private const string KnownErrorInvalidCode = "Invalid MessagePack code was detected";
 
         public MessagePackFormatter(MessagePackFormat format, Stream stream)
         {
@@ -30,9 +30,9 @@ namespace PolyMessage.Formats.MessagePack
             {
                 return MessagePackSerializer.NonGeneric.Deserialize(objType, _stream);
             }
-            catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorConnectionClosed))
+            catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorInvalidCode))
             {
-                throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
+                throw new PolyFormatException(PolyFormatError.UnexpectedData, "Deserialization encountered invalid code.", _format, exception);
             }
         }
     }
