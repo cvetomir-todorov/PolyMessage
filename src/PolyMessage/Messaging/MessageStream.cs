@@ -180,8 +180,7 @@ namespace PolyMessage.Messaging
                 int bytesRead = await _channel.ReadAsync(buffer, offset, bytesRemaining, ct).ConfigureAwait(false);
                 if (bytesRead == 0)
                 {
-                    // TODO: fix exception handling
-                    throw new PolyFormatException(PolyFormatError.EndOfDataStream, "connection closed or timed-out", null);
+                    throw new PolyConnectionClosedException(PolyConnectionCloseReason.RemoteClosed, _channel.Transport);
                 }
 
                 totalBytesRead += bytesRead;

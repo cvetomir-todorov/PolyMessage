@@ -64,6 +64,8 @@ namespace PolyMessage.Transports.Tcp
                 throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is not opened.");
         }
 
+        public override PolyTransport Transport => _tcpTransport;
+
         public override PolyConnection Connection => _connection;
 
         public override Task OpenAsync()

@@ -52,17 +52,29 @@ namespace PolyMessage
 
     public enum PolyConnectionCloseReason
     {
-        RemoteTimedOut, RemoteAbortedConnection, ConnectionReset
+        RemoteTimedOut, RemoteAbortedConnection, ConnectionReset, RemoteClosed
     }
 
     [Serializable]
     public class PolyConnectionClosedException : PolyException
     {
-        public PolyConnectionClosedException(PolyConnectionCloseReason closeReason, PolyTransport transport, Exception innerException)
-            : base($"Transport {transport.DisplayName} connection has been closed with reason {closeReason}.", innerException)
+        public PolyConnectionClosedException(PolyConnectionCloseReason closeReason, PolyTransport transport)
+            : base(CreateMessage(closeReason, transport))
         {
             CloseReason = closeReason;
             Transport = transport;
+        }
+
+        public PolyConnectionClosedException(PolyConnectionCloseReason closeReason, PolyTransport transport, Exception innerException)
+            : base(CreateMessage(closeReason, transport), innerException)
+        {
+            CloseReason = closeReason;
+            Transport = transport;
+        }
+
+        private static string CreateMessage(PolyConnectionCloseReason closeReason, PolyTransport transport)
+        {
+            return $"Transport {transport.DisplayName} connection has been closed with reason {closeReason}.";
         }
 
         public PolyConnectionCloseReason CloseReason { get; }

@@ -94,11 +94,7 @@ namespace PolyMessage.Server
                 _stoppedEvent.Reset();
                 await DoStart(serverComponents, ct).ConfigureAwait(false);
             }
-            catch (PolyFormatException formatException) when (formatException.FormatError == PolyFormatError.EndOfDataStream)
-            {
-                _logger.LogDebug("[{0}] Connection has been closed. Format error is {1}.", _id, formatException.FormatError);
-            }
-            catch (PolyConnectionClosedException connectionClosedException) when (connectionClosedException.CloseReason == PolyConnectionCloseReason.RemoteTimedOut)
+            catch (PolyConnectionClosedException connectionClosedException) when (connectionClosedException.CloseReason == PolyConnectionCloseReason.RemoteClosed)
             {
                 _logger.LogDebug("[{0}] Connection has been closed. Reason is {1}.", _id, connectionClosedException.CloseReason);
             }

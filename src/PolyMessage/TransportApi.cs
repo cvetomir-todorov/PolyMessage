@@ -74,6 +74,8 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing) {}
 
+        public abstract PolyTransport Transport { get; }
+
         public abstract PolyConnection Connection { get; }
 
         public abstract Task OpenAsync();
