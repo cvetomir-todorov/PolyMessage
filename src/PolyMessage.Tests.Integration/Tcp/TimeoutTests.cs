@@ -32,8 +32,7 @@ namespace PolyMessage.Tests.Integration.Tcp
 
         [Theory]
         [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(4)]
+        [InlineData(10)]
         public async Task SessionsAreStoppedAfterClientReceiveTimeout(int clientCount)
         {
             // arrange

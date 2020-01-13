@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
+using PolyMessage.Timer;
 
 namespace PolyMessage.Server
 {
@@ -22,10 +23,15 @@ namespace PolyMessage.Server
     internal sealed class Session : ISession
     {
         private readonly ILogger _logger;
+        private readonly PolyTransport _transport;
         private readonly PolyFormatter _formatter;
         private readonly PolyChannel _connectedClient;
         private readonly MessageStream _messageStream;
         private readonly IImplementorProvider _implementorProvider;
+        // timeout timer tasks
+        private readonly ITimerTask _receiveTimerTask;
+        private readonly ITimerTask _sendTimerTask;
+        private ITimeout _clientIOTimeout;
         // identity
         private static int _generation;
         private readonly string _id;
@@ -47,10 +53,14 @@ namespace PolyMessage.Server
             _id = "Session" + Interlocked.Increment(ref _generation);
 
             _logger = loggerFactory.CreateLogger(GetType());
+            _transport = transport;
             _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: transport.MessageBufferSettings.InitialSize, loggerFactory);
             _formatter = format.CreateFormatter(_messageStream);
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);
+            // timeout timer tasks
+            _receiveTimerTask = new DisposeSessionTimerTask(this, _logger, "[{0}] Client receive timeout.", new object[] {_id});
+            _sendTimerTask = new DisposeSessionTimerTask(this, _logger, "[{0}] Client send timeout.", new object[] {_id});
             // stop/dispose
             _stoppedEvent = new ManualResetEventSlim(initialState: true);
             _disposeLock = new object();
@@ -68,6 +78,7 @@ namespace PolyMessage.Server
                         _connectedClient.Close();
                         _messageStream.Close();
                         _formatter.Dispose();
+                        _clientIOTimeout?.Cancel();
                         _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
                         _stoppedEvent.Wait();
                         _stoppedEvent.Dispose();
@@ -116,15 +127,50 @@ namespace PolyMessage.Server
 
             while (!ct.IsCancellationRequested && !_isStopRequested)
             {
-                object requestMessage = await serverComponents.Messenger.Receive(_id, _messageStream, _formatter, ct).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage.GetType());
-
+                object requestMessage = await ReceiveRequest(serverComponents, ct).ConfigureAwait(false);
                 object responseMessage = await DispatchMessage(serverComponents, requestMessage).ConfigureAwait(false);
-
-                _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage.GetType());
-                await serverComponents.Messenger.Send(_id, responseMessage, _messageStream, _formatter, ct).ConfigureAwait(false);
-                _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage.GetType());
+                await SendResponse(serverComponents, ct, responseMessage).ConfigureAwait(false);
             }
+        }
+
+        private async Task<object> ReceiveRequest(ServerComponents serverComponents, CancellationToken ct)
+        {
+            if (_transport.HostTimeouts.ClientReceive > TimeSpan.Zero)
+            {
+                _clientIOTimeout = serverComponents.Timer.NewTimeout(_receiveTimerTask, _transport.HostTimeouts.ClientReceive);
+            }
+
+            object requestMessage = await serverComponents.Messenger.Receive(_id, _messageStream, _formatter, ct).ConfigureAwait(false);
+
+            if (_clientIOTimeout != null)
+            {
+                _clientIOTimeout.Cancel();
+                _clientIOTimeout = null;
+            }
+
+            _logger.LogTrace("[{0}] Received request [{1}]", _id, requestMessage.GetType());
+            return requestMessage;
+        }
+
+        private async Task SendResponse(ServerComponents serverComponents, CancellationToken ct, object responseMessage)
+        {
+            _logger.LogTrace("[{0}] Sending response [{1}]...", _id, responseMessage.GetType());
+
+            if (_transport.HostTimeouts.ClientSend > TimeSpan.Zero)
+            {
+                // TODO: figure out how to test the client send timeout
+                _clientIOTimeout = serverComponents.Timer.NewTimeout(_sendTimerTask, _transport.HostTimeouts.ClientSend);
+            }
+
+            await serverComponents.Messenger.Send(_id, responseMessage, _messageStream, _formatter, ct).ConfigureAwait(false);
+
+            if (_clientIOTimeout != null)
+            {
+                _clientIOTimeout.Cancel();
+                _clientIOTimeout = null;
+            }
+
+            _logger.LogTrace("[{0}] Sent response [{1}]", _id, responseMessage.GetType());
         }
 
         private async Task<object> DispatchMessage(ServerComponents serverComponents, object requestMessage)
@@ -149,5 +195,27 @@ namespace PolyMessage.Server
         }
 
         public PolyChannel ConnectedClient => _connectedClient;
+
+        private class DisposeSessionTimerTask : ITimerTask
+        {
+            private readonly ISession _session;
+            private readonly ILogger _logger;
+            private readonly string _logMessage;
+            private readonly object[] _logArgs;
+
+            public DisposeSessionTimerTask(ISession session, ILogger logger, string logMessage, object[] logArgs)
+            {
+                _session = session;
+                _logger = logger;
+                _logMessage = logMessage;
+                _logArgs = logArgs;
+            }
+
+            public void Run(ITimeout timeout)
+            {
+                _logger.LogDebug(_logMessage, _logArgs);
+                _session.Dispose();
+            }
+        }
     }
 }

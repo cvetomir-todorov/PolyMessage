@@ -32,13 +32,13 @@ namespace PolyMessage
 
     public class PolyHostTimeouts
     {
-        public TimeSpan ClientReceive { get; set; } = PolyTransport.InfiniteTimeout;
-        public TimeSpan ClientSend { get; set; } = PolyTransport.InfiniteTimeout;
+        public TimeSpan ClientReceive { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan ClientSend { get; set; } = TimeSpan.FromSeconds(30);
     }
 
     public class PolyClientTimeouts
     {
-        public TimeSpan SendAndReceive { get; set; } = PolyTransport.InfiniteTimeout;
+        public TimeSpan SendAndReceive { get; set; } = TimeSpan.FromSeconds(30);
     }
 
     public class PolyMessageBufferSettings

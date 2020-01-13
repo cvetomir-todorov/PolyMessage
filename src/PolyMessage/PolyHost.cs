@@ -10,6 +10,7 @@ using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 using PolyMessage.Server;
+using PolyMessage.Timer;
 
 namespace PolyMessage
 {
@@ -30,6 +31,7 @@ namespace PolyMessage
         private readonly IContractInspector _contractInspector;
         // server
         private readonly ArrayPool<byte> _bufferPool;
+        private readonly ITimer _timer;
         private IAcceptor _acceptor;
         // stop/dispose
         private readonly CancellationTokenSource _stopTokenSource;
@@ -56,15 +58,18 @@ namespace PolyMessage
             _contractInspector = new ContractInspector(_loggerFactory);
             // server
             _bufferPool = ArrayPool<byte>.Create(maxArrayLength: transport.MessageBufferSettings.MaxSize, maxArraysPerBucket: 128);
+            ILogger timerLogger = _loggerFactory.CreateLogger<ITimer>();
+            _timer = new HashedWheelTimer(timerLogger, tickDuration: TimeSpan.FromMilliseconds(50), ticksPerWheel: 100000, maxPendingTimeouts: long.MaxValue);
             // stop/dispose
             _stopTokenSource = new CancellationTokenSource();
         }
 
         public void Dispose()
-         {
+        {
             if (_isDisposed)
                 return;
 
+            _timer.Dispose();
             _stopTokenSource.Cancel();
             _acceptor?.Stop();
 
@@ -96,6 +101,7 @@ namespace PolyMessage
             _operations.AddRange(operations);
         }
 
+        // TODO: return the task and make the method async
         public void Start()
         {
             EnsureNotDisposed();
@@ -114,10 +120,10 @@ namespace PolyMessage
 
             IMessenger messenger = new Messenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
-            ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, dispatcher);
+            ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, _timer, dispatcher);
 
             Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _stopTokenSource.Token).ConfigureAwait(false));
-            LogConnectionInfo();
+            LogHostInfo();
         }
 
         private void RegisterMessageTypes()
@@ -129,7 +135,7 @@ namespace PolyMessage
             _format.RegisterMessageTypes(allTypes);
         }
 
-        private void LogConnectionInfo()
+        private void LogHostInfo()
         {
             _logger.LogInformation(
                 "Started host using {0} transport listening at {1} and {2} format with {3} operation(s).",

@@ -68,11 +68,6 @@ namespace PolyMessage.Transports.Tcp
 
         private PolyChannel CreateClientChannel(TcpClient tcpClient)
         {
-            // TODO: move the timeout logic into the messaging components after send/receive is truly asynchronous
-            tcpClient.Client.ReceiveTimeout = (int) _tcpTransport.HostTimeouts.ClientReceive.TotalMilliseconds;
-            // TODO: figure out how to test the server side client send timeout
-            tcpClient.Client.SendTimeout = (int) _tcpTransport.HostTimeouts.ClientSend.TotalMilliseconds;
-
             return new TcpChannel(tcpClient, _tcpTransport, isServer: true, _logger);
         }
 
