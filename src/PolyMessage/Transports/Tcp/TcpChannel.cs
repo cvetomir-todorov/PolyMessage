@@ -68,13 +68,13 @@ namespace PolyMessage.Transports.Tcp
 
         public override PolyConnection Connection => _connection;
 
-        public override Task OpenAsync()
+        public override async Task OpenAsync()
         {
             EnsureNotDisposed();
 
             try
             {
-                return OpenConnection();
+                await OpenConnection();
             }
             catch (Win32Exception win32Exception) // also catches SocketException
             {
@@ -155,6 +155,9 @@ namespace PolyMessage.Transports.Tcp
             SslStream secureStream = new SslStream(_stream, leaveInnerStreamOpen: false, settings.TlsClientRemoteCertificateValidationCallback);
             await secureStream.AuthenticateAsClientAsync(_tcpTransport.Address.Host, null, settings.TlsProtocol, true).ConfigureAwait(false);
 
+            if (secureStream.RemoteCertificate == null)
+                throw new InvalidOperationException("TLS Server certificate was not set after client authenticated.");
+
             _logger.LogDebug("Initialized {0} client-side using remote certificate {1}, cipher {2}, hash {3} and key exchange {4}.",
                 secureStream.SslProtocol, secureStream.RemoteCertificate.Subject,
                 secureStream.CipherAlgorithm, secureStream.HashAlgorithm, secureStream.KeyExchangeAlgorithm);
@@ -167,13 +170,13 @@ namespace PolyMessage.Transports.Tcp
             Dispose();
         }
 
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.ReadAsync(buffer, offset, count, ct);
+                return await _stream.ReadAsync(buffer, offset, count, ct);
             }
             catch (IOException ioException)
             {
@@ -184,13 +187,13 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.WriteAsync(buffer, offset, count, ct);
+                await _stream.WriteAsync(buffer, offset, count, ct);
             }
             catch (IOException ioException)
             {
@@ -201,13 +204,13 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override Task FlushAsync(CancellationToken ct)
+        public override async Task FlushAsync(CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return _stream.FlushAsync(ct);
+                await _stream.FlushAsync(ct);
             }
             catch (IOException ioException)
             {
