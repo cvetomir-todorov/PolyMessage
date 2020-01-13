@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ namespace PolyMessage.LoadTesting.Server
 
             PolyHost host = new PolyHost(transport, format, serviceProvider);
             host.AddContract<ILoadTestingContract>();
-            host.Start();
+            Task _ = host.StartAsync();
 
             logger.LogInformation("Press ENTER to exit.");
             Console.ReadLine();
