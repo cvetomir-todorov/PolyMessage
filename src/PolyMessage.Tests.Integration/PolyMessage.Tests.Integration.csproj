@@ -15,6 +15,7 @@
     <ProjectReference Include="..\PolyMessage.Formats.MessagePack\PolyMessage.Formats.MessagePack.csproj" />
     <ProjectReference Include="..\PolyMessage.Formats.NewtonsoftJson\PolyMessage.Formats.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\PolyMessage.Formats.ProtobufNet\PolyMessage.Formats.ProtobufNet.csproj" />
+    <ProjectReference Include="..\PolyMessage.Formats.Utf8Json\PolyMessage.Formats.Utf8Json.csproj" />
     <ProjectReference Include="..\PolyMessage.Tests\PolyMessage.Tests.csproj" />
     <ProjectReference Include="..\PolyMessage\PolyMessage.csproj" />
   </ItemGroup>
