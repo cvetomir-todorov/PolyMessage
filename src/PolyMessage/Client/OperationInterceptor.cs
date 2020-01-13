@@ -8,7 +8,7 @@ using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 
-namespace PolyMessage.Proxy
+namespace PolyMessage.Client
 {
     internal sealed class OperationInterceptor : IInterceptor, IDisposable
     {

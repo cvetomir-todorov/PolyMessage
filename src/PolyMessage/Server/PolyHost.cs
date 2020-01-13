@@ -9,10 +9,9 @@ using Microsoft.Extensions.Logging;
 using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
-using PolyMessage.Server;
 using PolyMessage.Timer;
 
-namespace PolyMessage
+namespace PolyMessage.Server
 {
     /// <summary>
     /// Creates a host for communicating via a certain <see cref="PolyTransport"/>  with messages in a certain <see cref="PolyFormat"/>.

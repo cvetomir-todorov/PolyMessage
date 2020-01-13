@@ -1,6 +1,6 @@
 ﻿using Castle.DynamicProxy;
 
-namespace PolyMessage.Proxy
+namespace PolyMessage.Client
 {
     internal class ConnectionPropertyInterceptor : IInterceptor
     {

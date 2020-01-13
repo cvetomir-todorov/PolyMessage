@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Client;
+using PolyMessage.Server;
 using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration

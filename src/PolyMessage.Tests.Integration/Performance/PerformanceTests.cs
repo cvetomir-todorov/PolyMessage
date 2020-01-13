@@ -7,6 +7,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Client;
 using Xunit;
 using Xunit.Abstractions;
 

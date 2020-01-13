@@ -10,9 +10,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PolyMessage.CodeGeneration;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
-using PolyMessage.Proxy;
 
-namespace PolyMessage
+namespace PolyMessage.Client
 {
     public class PolyClient : IDisposable
     {
