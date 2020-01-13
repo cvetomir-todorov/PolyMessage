@@ -86,7 +86,7 @@ namespace PolyMessage.Tests.Integration
 
         protected async Task StartHost()
         {
-            Host.Start();
+            Task _ = Host.StartAsync();
             await Task.Delay(100);
         }
 

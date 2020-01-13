@@ -101,8 +101,7 @@ namespace PolyMessage
             _operations.AddRange(operations);
         }
 
-        // TODO: return the task and make the method async
-        public void Start()
+        public Task StartAsync()
         {
             EnsureNotDisposed();
             if (_operations.Count <= 0)
@@ -122,8 +121,9 @@ namespace PolyMessage
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, _timer, dispatcher);
 
-            Task _ = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _stopTokenSource.Token).ConfigureAwait(false));
+            Task serverTask = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _stopTokenSource.Token).ConfigureAwait(false));
             LogHostInfo();
+            return serverTask;
         }
 
         private void RegisterMessageTypes()
