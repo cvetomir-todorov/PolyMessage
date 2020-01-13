@@ -8,7 +8,7 @@ namespace PolyMessage.LoadTesting.Server
 {
     public enum Format
     {
-        Unknown, DotNetBinary, NewtonsoftJson, MessagePack, ProtobufNet
+        Unknown, DotNetBinary, NewtonsoftJson, MessagePack, ProtobufNet, Utf8Json
     }
 
     public enum Transport

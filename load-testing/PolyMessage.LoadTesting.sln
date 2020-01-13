@@ -30,6 +30,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{4FEE
 		start-server.ps1 = start-server.ps1
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyMessage.Formats.Utf8Json", "..\src\PolyMessage.Formats.Utf8Json\PolyMessage.Formats.Utf8Json.csproj", "{6395F68B-7EAA-4A8C-BF4B-0839BE75281C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{255B0CC6-A13A-4093-8EA8-347864E21F48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{255B0CC6-A13A-4093-8EA8-347864E21F48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{255B0CC6-A13A-4093-8EA8-347864E21F48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6395F68B-7EAA-4A8C-BF4B-0839BE75281C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6395F68B-7EAA-4A8C-BF4B-0839BE75281C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6395F68B-7EAA-4A8C-BF4B-0839BE75281C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6395F68B-7EAA-4A8C-BF4B-0839BE75281C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,6 +83,7 @@ Global
 		{E07731DF-8CB2-48F1-9CA9-7CE216C84F86} = {226603C4-C132-4FF8-B3F6-C5817DB64707}
 		{B2D1E1E2-3705-4242-99CF-E912B21B1B2D} = {012BB725-1817-44E7-A78C-0C2E9612A459}
 		{255B0CC6-A13A-4093-8EA8-347864E21F48} = {012BB725-1817-44E7-A78C-0C2E9612A459}
+		{6395F68B-7EAA-4A8C-BF4B-0839BE75281C} = {226603C4-C132-4FF8-B3F6-C5817DB64707}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D453E66A-0EE2-452C-A7D8-47AF6BE76FEA}

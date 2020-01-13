@@ -9,6 +9,7 @@ using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Formats.MessagePack;
 using PolyMessage.Formats.NewtonsoftJson;
 using PolyMessage.Formats.ProtobufNet;
+using PolyMessage.Formats.Utf8Json;
 using PolyMessage.Transports.Tcp;
 
 namespace PolyMessage.LoadTesting.Server
@@ -36,6 +37,8 @@ namespace PolyMessage.LoadTesting.Server
                     return new MessagePackFormat();
                 case Format.ProtobufNet:
                     return new ProtobufNetFormat();
+                case Format.Utf8Json:
+                    return new Utf8JsonFormat();
                 default:
                 {
                     _logger.LogError("Format '{0}' is invalid.", _options.Format);
