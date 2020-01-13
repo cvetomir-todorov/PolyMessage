@@ -61,10 +61,6 @@ namespace PolyMessage.Transports.Tcp
             {
                 builder.AppendFormat(", Host client receive timeout {0}s", HostTimeouts.ClientReceive.TotalSeconds);
             }
-            if (ClientTimeouts.SendAndReceive != InfiniteTimeout)
-            {
-                builder.AppendFormat(", Client send and receive timeout {0}s", HostTimeouts.ClientSend.TotalSeconds);
-            }
 
             return builder.ToString();
         }

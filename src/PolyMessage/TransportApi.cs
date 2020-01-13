@@ -17,8 +17,6 @@ namespace PolyMessage
 
         public PolyHostTimeouts HostTimeouts { get; protected set; } = new PolyHostTimeouts();
 
-        public PolyClientTimeouts ClientTimeouts { get; protected set; } = new PolyClientTimeouts();
-
         public PolyMessageBufferSettings MessageBufferSettings { get; protected set; } = new PolyMessageBufferSettings();
 
         public abstract PolyListener CreateListener();
@@ -34,11 +32,6 @@ namespace PolyMessage
     {
         public TimeSpan ClientReceive { get; set; } = TimeSpan.FromSeconds(30);
         public TimeSpan ClientSend { get; set; } = TimeSpan.FromSeconds(30);
-    }
-
-    public class PolyClientTimeouts
-    {
-        public TimeSpan SendAndReceive { get; set; } = TimeSpan.FromSeconds(30);
     }
 
     public class PolyMessageBufferSettings
