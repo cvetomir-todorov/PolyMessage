@@ -30,6 +30,7 @@ namespace PolyMessage.LoadTesting.Server
 
             logger.LogInformation("Press ENTER to exit.");
             Console.ReadLine();
+            host.Dispose();
             logger.LogInformation("Bye!");
             loggerFactory.Dispose();
         }
