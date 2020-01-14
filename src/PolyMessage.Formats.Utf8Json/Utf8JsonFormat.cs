@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace PolyMessage.Formats.Utf8Json
 {
@@ -6,10 +7,11 @@ namespace PolyMessage.Formats.Utf8Json
     {
         public override string DisplayName => "Utf8Json";
 
-        // TODO: validate input
-
         public override PolyFormatter CreateFormatter(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
             return new Utf8JsonFormatter(this, stream);
         }
     }

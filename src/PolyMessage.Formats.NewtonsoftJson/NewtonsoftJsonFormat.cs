@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace PolyMessage.Formats.NewtonsoftJson
 {
@@ -8,6 +9,9 @@ namespace PolyMessage.Formats.NewtonsoftJson
 
         public override PolyFormatter CreateFormatter(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
             return new NewtonsoftJsonFormatter(this, stream);
         }
     }
