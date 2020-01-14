@@ -65,6 +65,10 @@ namespace PolyMessage.LoadTesting.Client
         {
             ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             TcpTransport transport = new TcpTransport(new Uri(_options.ServerAddress), loggerFactory);
+            transport.Settings.ReceiveBufferSize = 65536;
+            transport.Settings.SendBufferSize = 65536;
+            transport.MessageBufferSettings.InitialSize = 65536;
+
             if (_options.TcpTlsProtocol != SslProtocols.None)
             {
                 transport.Settings.TlsProtocol = _options.TcpTlsProtocol;
