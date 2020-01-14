@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Client;
 using PolyMessage.LoadTesting.Contracts;
 
 namespace PolyMessage.LoadTesting.Client

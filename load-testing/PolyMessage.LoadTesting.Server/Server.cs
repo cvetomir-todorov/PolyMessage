@@ -4,6 +4,7 @@ using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PolyMessage.LoadTesting.Contracts;
+using PolyMessage.Server;
 
 namespace PolyMessage.LoadTesting.Server
 {
