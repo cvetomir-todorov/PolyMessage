@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using PolyMessage.Exceptions;
 using ProtoBuf;
 
 namespace PolyMessage.Formats.ProtobufNet

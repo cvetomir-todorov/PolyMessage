@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.DependencyInjection;
+using PolyMessage.Exceptions;
 using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Transports.Tcp;
 using Xunit;
@@ -98,7 +99,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             // assert
             using (new AssertionScope())
             {
-                act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                act.Should().Throw<PolyConnectionOpenException>().Which.InnerException.Should().NotBeNull();
                 Client.Connection.State.Should().Be(PolyConnectionState.Created);
             }
         }
@@ -128,7 +129,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             // assert
             using (new AssertionScope())
             {
-                act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                act.Should().Throw<PolyConnectionOpenException>().Which.InnerException.Should().NotBeNull();
                 Client.Connection.State.Should().Be(PolyConnectionState.Created);
             }
         }
@@ -146,7 +147,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             // assert
             using (new AssertionScope())
             {
-                act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                act.Should().Throw<PolyConnectionOpenException>().Which.InnerException.Should().NotBeNull();
                 Client.Connection.State.Should().Be(PolyConnectionState.Created);
             }
         }

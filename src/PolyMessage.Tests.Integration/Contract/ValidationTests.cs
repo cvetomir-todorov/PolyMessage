@@ -2,6 +2,7 @@
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Exceptions;
 using PolyMessage.Formats.DotNetBinary;
 using PolyMessage.Transports.Tcp;
 using Xunit;

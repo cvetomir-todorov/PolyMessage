@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Exceptions;
 using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 using PolyMessage.Timer;

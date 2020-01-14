@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Exceptions;
 using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
 namespace PolyMessage.Transports.Tcp

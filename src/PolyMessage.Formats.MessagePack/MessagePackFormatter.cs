@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using MessagePack;
+using PolyMessage.Exceptions;
 
 namespace PolyMessage.Formats.MessagePack
 {

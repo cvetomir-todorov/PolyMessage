@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using PolyMessage.Exceptions;
 using Utf8Json;
 
 namespace PolyMessage.Formats.Utf8Json

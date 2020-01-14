@@ -8,6 +8,7 @@ using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Exceptions;
 
 namespace PolyMessage.Transports.Tcp
 {
@@ -78,15 +79,15 @@ namespace PolyMessage.Transports.Tcp
             }
             catch (Win32Exception win32Exception) // also catches SocketException
             {
-                throw new PolyOpenConnectionException(_tcpTransport, win32Exception);
+                throw new PolyConnectionOpenException(_tcpTransport, win32Exception);
             }
             catch (IOException ioException)
             {
-                throw new PolyOpenConnectionException(_tcpTransport, ioException);
+                throw new PolyConnectionOpenException(_tcpTransport, ioException);
             }
             catch (AuthenticationException authenticationException)
             {
-                throw new PolyOpenConnectionException(_tcpTransport, authenticationException);
+                throw new PolyConnectionOpenException(_tcpTransport, authenticationException);
             }
         }
 

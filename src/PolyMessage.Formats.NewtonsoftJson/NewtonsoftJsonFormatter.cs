@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
+using PolyMessage.Exceptions;
 
 namespace PolyMessage.Formats.NewtonsoftJson
 {
