@@ -52,7 +52,22 @@ namespace PolyMessage
 
     public enum PolyConnectionCloseReason
     {
-        RemoteTimedOut, RemoteAbortedConnection, ConnectionReset, RemoteClosed
+        /// <summary>
+        /// Occurs when there is an unexpected transport error.
+        /// </summary>
+        Unexpected,
+        /// <summary>
+        /// Occurs when an established connection is aborted by the remote.
+        /// </summary>
+        ConnectionAborted,
+        /// <summary>
+        /// Occurs when the remote crashes.
+        /// </summary>
+        ConnectionReset,
+        /// <summary>
+        /// Occurs when the remote closes the connection and no more data is available.
+        /// </summary>
+        ConnectionClosed
     }
 
     [Serializable]

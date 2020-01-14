@@ -229,19 +229,16 @@ namespace PolyMessage.Transports.Tcp
                 return null;
             }
 
+            Dispose();
+
             switch (socketException.SocketErrorCode)
             {
-                case SocketError.TimedOut:
-                    Dispose();
-                    return new PolyConnectionClosedException(PolyConnectionCloseReason.RemoteTimedOut, _tcpTransport, ioException);
                 case SocketError.ConnectionAborted:
-                    Dispose();
-                    return new PolyConnectionClosedException(PolyConnectionCloseReason.RemoteAbortedConnection, _tcpTransport, ioException);
+                    return new PolyConnectionClosedException(PolyConnectionCloseReason.ConnectionAborted, _tcpTransport, ioException);
                 case SocketError.ConnectionReset:
-                    Dispose();
                     return new PolyConnectionClosedException(PolyConnectionCloseReason.ConnectionReset, _tcpTransport, ioException);
                 default:
-                    return null;
+                    return new PolyConnectionClosedException(PolyConnectionCloseReason.Unexpected, _tcpTransport, ioException);
             }
         }
     }

@@ -105,7 +105,8 @@ namespace PolyMessage.Server
                 _stoppedEvent.Reset();
                 await DoStart(serverComponents, ct).ConfigureAwait(false);
             }
-            catch (PolyConnectionClosedException connectionClosedException) when (connectionClosedException.CloseReason == PolyConnectionCloseReason.RemoteClosed)
+            catch (PolyConnectionClosedException connectionClosedException)
+                when (connectionClosedException.CloseReason == PolyConnectionCloseReason.ConnectionClosed)
             {
                 _logger.LogDebug("[{0}] Connection has been closed. Reason is {1}.", _id, connectionClosedException.CloseReason);
             }

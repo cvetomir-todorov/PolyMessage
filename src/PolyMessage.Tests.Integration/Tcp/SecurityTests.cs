@@ -74,7 +74,8 @@ namespace PolyMessage.Tests.Integration.Tcp
             // assert
             using (new AssertionScope())
             {
-                act.Should().Throw<PolyConnectionClosedException>().Which.InnerException.Should().NotBeNull();
+                act.Should().Throw<PolyConnectionClosedException>().Which.CloseReason.Should().Be(PolyConnectionCloseReason.ConnectionReset);
+                Client.Connection.State.Should().Be(PolyConnectionState.Closed);
             }
         }
 
@@ -98,6 +99,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             using (new AssertionScope())
             {
                 act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                Client.Connection.State.Should().Be(PolyConnectionState.Created);
             }
         }
 
@@ -127,6 +129,7 @@ namespace PolyMessage.Tests.Integration.Tcp
             using (new AssertionScope())
             {
                 act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                Client.Connection.State.Should().Be(PolyConnectionState.Created);
             }
         }
 
@@ -141,7 +144,11 @@ namespace PolyMessage.Tests.Integration.Tcp
             Func<Task> act = async () => await StartHostAndConnectClient();
 
             // assert
-            act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+            using (new AssertionScope())
+            {
+                act.Should().Throw<PolyOpenConnectionException>().Which.InnerException.Should().NotBeNull();
+                Client.Connection.State.Should().Be(PolyConnectionState.Created);
+            }
         }
 
         [Fact]
