@@ -17,23 +17,23 @@ public interface IProductServiceContract : IPolyContract
 [DataContract]
 public sealed class GetCheapestProductsRequest
 {
-    [DataContract(Order = 1)] public int TopCount { get; set; }
-    [DataContract(Order = 2)] public string Barcode { get; set; }
+    [DataMember(Order = 1)] public int TopCount { get; set; }
+    [DataMember(Order = 2)] public string Barcode { get; set; }
 }
 
 [PolyMessage]
 [DataContract]
 public sealed class GetCheapestProductsResponse
 {
-    [DataContract(Order = 1)] public List<ProductDto> Products { get; set; } = new List<ProductDto>();
+    [DataMember(Order = 1)] public List<ProductDto> Products { get; set; } = new List<ProductDto>();
 }
 
 [DataContract]
 public sealed class ProductDto
 {
-    [DataContract(Order = 1)] public string Name { get; set; }
-    [DataContract(Order = 2)] public decimal Price { get; set; }
-    [DataContract(Order = 3)] public string Currency { get; set; }
+    [DataMember(Order = 1)] public string Name { get; set; }
+    [DataMember(Order = 2)] public decimal Price { get; set; }
+    [DataMember(Order = 3)] public string Currency { get; set; }
 }
 
 ```
