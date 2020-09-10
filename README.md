@@ -1,10 +1,45 @@
 # PolyMessage
 
-Experimental RPC library for sending messages supporting different  transports and formats.
+Experimental RPC library for sending messages supporting different transports and formats similar to WCF in terms of usage.
 
-# How to use it
+## Core features
 
-### Create contracts, messages and optionally DTOs
+* Definition of contracts and messages is declarative via .NET attributes
+* Read-only access to the connection on client and server sides
+* Client-side proxy is generated using Castle.Core dynamic proxy
+* Each server can host a subset of the contracts
+* Each client can support more than one proxy
+* Integrated with .NET Core logging on client and server sides
+* Integrated with .NET dependency injection on server-side
+* Consistent API allowing switching between different message formats and underlying transports, as long as the new transport supports the communication pattern - e.g. request-response
+
+## Formats
+
+Formats rely on widely used .NET libraries.
+
+* [protobuf-net](https://github.com/protobuf-net/protobuf-net)
+* [Newtonsoft.Json](https://www.newtonsoft.com/json)
+* [Utf8Json](https://github.com/neuecc/Utf8Json)
+* [MessagePack-CSharp](https://github.com/neuecc/MessagePack-CSharp)
+
+## Transports
+
+### TCP
+
+* Supports the request-response communication pattern
+* Uses a custom protocol based on a single TCP connection and length-prefixing
+* Server is implemented via the async-await paradigm allowing thread pool threads reuse
+* Supports TLS
+
+### IPC (in progress)
+
+* Supports the request-response communication pattern
+* Uses a custom protocol based on a local **named-pipe** for control and a **memory-mapped file** for data transfer
+* Secure communication via named-pipe and memory-mapped file
+
+# Example
+
+## Step 1: Create contracts, messages and optionally DTOs
 
 ```C#
 public interface IProductServiceContract : IPolyContract
@@ -38,7 +73,7 @@ public sealed class ProductDto
 
 ```
 
-### Create contract implementation and server
+## Step 2: Create service implementation and server
 
 ```C#
 public class ProductService : IProductServiceContract
@@ -72,7 +107,6 @@ public static class Server
             .AddLogging(loggingBuilder =>
             {
                 loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                loggingBuilder.AddDebug();
                 loggingBuilder.AddConsole();
             });
         services.AddScoped<IProductServiceContract, ProductService>();
@@ -82,7 +116,7 @@ public static class Server
 }
 ```
 
-### Create client
+## Create client
 
 ```C#
 public static class Client
@@ -112,7 +146,6 @@ public static class Client
         services.AddLogging(loggingBuilder =>
         {
             loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-            loggingBuilder.AddDebug();
             loggingBuilder.AddConsole();
         });
 
