@@ -1,6 +1,6 @@
 # PolyMessage
 
-Experimental RPC library for sending messages supporting different transports and formats similar to WCF in terms of usage.
+Experimental RPC library supporting different client-server transports and message formats. Supports .NET Standard 2.0 and provides .NET Core integration. Similar to WCF in terms of usage.
 
 ## Core features
 
