@@ -44,33 +44,30 @@ Formats rely on widely used .NET libraries.
 ```C#
 public interface IProductServiceContract : IPolyContract
 {
-    [PolyRequestResponse]
-    Task<GetCheapestProductsResponse> GetCheapestProducts(GetCheapestProductsRequest request);
+	[PolyRequestResponse]
+	Task<GetCheapestProductsResponse> GetCheapestProducts(GetCheapestProductsRequest request);
 }
 
-[PolyMessage]
-[DataContract]
+[PolyMessage][DataContract]
 public sealed class GetCheapestProductsRequest
 {
-    [DataMember(Order = 1)] public int TopCount { get; set; }
-    [DataMember(Order = 2)] public string Barcode { get; set; }
+	[DataMember(Order = 1)] public int TopCount { get; set; }
+	[DataMember(Order = 2)] public string Barcode { get; set; }
 }
 
-[PolyMessage]
-[DataContract]
+[PolyMessage][DataContract]
 public sealed class GetCheapestProductsResponse
 {
-    [DataMember(Order = 1)] public List<ProductDto> Products { get; set; } = new List<ProductDto>();
+	[DataMember(Order = 1)] public List<ProductDto> Products { get; set; } = new List<ProductDto>();
 }
 
 [DataContract]
 public sealed class ProductDto
 {
-    [DataMember(Order = 1)] public string Name { get; set; }
-    [DataMember(Order = 2)] public decimal Price { get; set; }
-    [DataMember(Order = 3)] public string Currency { get; set; }
+	[DataMember(Order = 1)] public string Name { get; set; }
+	[DataMember(Order = 2)] public decimal Price { get; set; }
+	[DataMember(Order = 3)] public string Currency { get; set; }
 }
-
 ```
 
 ## Step 2: Create service implementation and server
@@ -78,41 +75,42 @@ public sealed class ProductDto
 ```C#
 public class ProductService : IProductServiceContract
 {
-    public PolyConnection Connection { get; set; }
+	public PolyConnection Connection { get; set; }
 
-    public Task<GetCheapestProductsResponse> GetCheapestProducts(GetCheapestProductsRequest request)
-    {
-        // implement the endpoint
-    }
+	public async Task<GetCheapestProductsResponse> GetCheapestProducts(GetCheapestProductsRequest request)
+	{
+		var response = new GetCheapestProductsResponse();
+		response.Products.Add(new ProductDto {Name = "milk", Price = 3.50M, Currency = "EUR"});
+		return response;
+	}
 }
 
 public static class Server
 {
-    public static async Task Main()
-    {
-        IServiceProvider serviceProvider = BuildServiceProvider();
-        ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+	public static async Task Main()
+	{
+		IServiceProvider serviceProvider = BuildServiceProvider();
+		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-        PolyFormat format = new Utf8JsonFormat();
-        PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
-        using PolyHost host = new PolyHost(transport, format, serviceProvider);
-        host.AddContract<IProductServiceContract>();
+		PolyFormat format = new Utf8JsonFormat();
+		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
+		using PolyHost host = new PolyHost(transport, format, serviceProvider);
+		host.AddContract<IProductServiceContract>();
 
-        await host.StartAsync();
-    }
+		await host.StartAsync();
+	}
 
-    private static IServiceProvider BuildServiceProvider()
-    {
-        IServiceCollection services = new ServiceCollection()
-            .AddLogging(loggingBuilder =>
-            {
-                loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                loggingBuilder.AddConsole();
-            });
-        services.AddScoped<IProductServiceContract, ProductService>();
-
-        return services.BuildServiceProvider();
-    }
+	private static IServiceProvider BuildServiceProvider()
+	{
+		return new ServiceCollection()
+			.AddLogging(loggingBuilder =>
+			{
+				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+				loggingBuilder.AddConsole();
+			})
+			.AddScoped<IProductServiceContract, ProductService>()
+			.BuildServiceProvider();
+	}
 }
 ```
 
@@ -121,35 +119,32 @@ public static class Server
 ```C#
 public static class Client
 {
-    private static async Task Start(ClientOptions options)
-    {
-        IServiceProvider serviceProvider = BuildServiceProvider();
-        ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+	public static async Task Main()
+	{
+		IServiceProvider serviceProvider = BuildServiceProvider();
+		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-        PolyFormat format = new Utf8JsonFormat();
-        PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
-        using PolyClient client = new PolyClient(transport, format, loggerFactory);
-        client.AddContract<IProductServiceContract>();
+		PolyFormat format = new Utf8JsonFormat();
+		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
+		using PolyClient client = new PolyClient(transport, format, loggerFactory);
+		client.AddContract<IProductServiceContract>();
 
-        await client.ConnectAsync();
-        IProductServiceContract proxy = client.Get<IProductServiceContract>();
-        
-        GetCheapestProductsResponse response = await proxy.GetCheapestProducts(new GetCheapestProductsRequest
-        {
-            TopCount = 10, Barcode = "..."
-        });
-    }
+		await client.ConnectAsync();
+		IProductServiceContract proxy = client.Get<IProductServiceContract>();
 
-    private static IServiceProvider BuildServiceProvider()
-    {
-        IServiceCollection services = new ServiceCollection();
-        services.AddLogging(loggingBuilder =>
-        {
-            loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-            loggingBuilder.AddConsole();
-        });
+		GetCheapestProductsResponse response = await proxy.GetCheapestProducts(
+			new GetCheapestProductsRequest {TopCount = 10, Barcode = "milk"});
+	}
 
-        return services.BuildServiceProvider();
-    }
+	private static IServiceProvider BuildServiceProvider()
+	{
+		return new ServiceCollection()
+			.AddLogging(loggingBuilder =>
+			{
+				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+				loggingBuilder.AddConsole();
+			})
+			.BuildServiceProvider();
+	}
 }
 ```
