@@ -1,17 +1,21 @@
 # PolyMessage
 
-Experimental RPC library supporting different client-server transports and message formats. Supports .NET Standard 2.0 and provides .NET Core integration. Similar to WCF in terms of usage.
+Experimental RPC library supporting different client-server transports and message formats.
 
 ## Core features
 
-* Definition of contracts and messages is declarative via .NET attributes
-* Read-only access to the connection on client and server sides
-* Client-side proxy is generated using Castle.Core dynamic proxy
-* Each server can host a subset of the contracts
-* Each client can support more than one proxy
-* Integrated with .NET Core logging on client and server sides
+* Easy definition of contracts, messages and DTOs
+* Declarative definition via .NET attributes
+* Consistent API allowing easy switching between
+  * Message formats
+  * Underlying transports
+* Built using .NET Standard 2.0
+* Integrated with .NET logging on client and server sides
 * Integrated with .NET dependency injection on server-side
-* Consistent API allowing switching between different message formats and underlying transports, as long as the new transport supports the communication pattern - e.g. request-response
+* Each server can host a subset of the contracts
+* Same client can serve more than one proxy
+* Read-only access to the connection on client and server sides
+* Similar in some aspects to the good old WCF
 
 ## Formats
 
@@ -35,11 +39,11 @@ Formats rely on widely used .NET libraries.
 
 * Supports the request-response communication pattern
 * Uses a custom protocol based on a local **named-pipe** for control and a **memory-mapped file** for data transfer
-* Secure communication via named-pipe and memory-mapped file
+* Secure communication via named-pipe and memory-mapped file built-in security
 
 # Example
 
-## Step 1: Create contracts, messages and optionally DTOs
+## Step 1: Define contracts, messages and optionally DTOs
 
 ```C#
 public interface IProductServiceContract : IPolyContract
@@ -114,7 +118,7 @@ public static class Server
 }
 ```
 
-## Create client
+## Step 3: Create client
 
 ```C#
 public static class Client
