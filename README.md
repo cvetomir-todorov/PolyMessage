@@ -5,17 +5,22 @@ Experimental RPC communication library based on .NET Standard. Allows creation o
 * Different transports based on communication protocols
 * Different message formats using data encoding standards
 
-For example it could be used to create microservices using the request-response pattern which use TCP with TLS as a transport and Google Protobuf as message format.
+## Example ([**code below**](#code-example))
+
+It could be used to create microservices using the request-response pattern which use TCP with TLS as a transport and Google Protobuf as message format.
 
 ## Core features
 
-* Shared contracts defining the communication (similar to the good old WCF but not committed to SOAP in any way)
-* Easy and quick declarative definition of contracts, messages and DTOs via .NET attributes
+* Shared contracts defining the microservices (similar to the good old WCF but not committed to SOAP in any way)
+  * RPC operations
+  * Main messages - e.g. request and response
+  * Additional, optional DTOs as part of more complex message structures
+* Easy and quick declarative definition of contracts via .NET attributes
 * Consistent API allowing easy switching between and extension points related to
   * Message formats
   * Underlying transports
 * Widely used message formats are supported out of the box (listed below)
-* TCP transport is supported out of the box (IPC transport in progress)
+* TCP transport is supported out of the box (more details below)
 * Built using .NET Standard 2.0
 * Integrated with .NET logging on client and server sides
 * Integrated with .NET dependency injection on server-side
@@ -59,7 +64,7 @@ Formats rely on widely used .NET libraries.
   * Contract - validation
   * Connection - addresses, state, read-only access on client and server sides
   * Request-response pattern - single/multiple endpoints, single/multiple messages, performance
-  * Message Format - messages which contain: nothing (empty), large arrays, large number of objects, large strings
+  * Message format - messages which contain: nothing (empty), large arrays, large number of objects, large strings
   * TCP transport - TLS security, timeouts
   * Service implementation instance disposal
 * Micro tests
@@ -69,7 +74,7 @@ Formats rely on widely used .NET libraries.
 
 TODO
 
-# Example
+# Code example
 
 ## Step 1: Define contracts, messages and optionally DTOs
 
@@ -131,7 +136,7 @@ public static class Server
 			.BuildServiceProvider();
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-		PolyFormat format = new Utf8JsonFormat();
+		PolyFormat format = new ProtobufNetFormat();
 		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
 		using PolyHost host = new PolyHost(transport, format, serviceProvider);
 		host.AddContract<IProductServiceContract>();
@@ -157,7 +162,7 @@ public static class Client
 			.BuildServiceProvider();
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-		PolyFormat format = new Utf8JsonFormat();
+		PolyFormat format = new ProtobufNetFormat();
 		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
 		using PolyClient client = new PolyClient(transport, format, loggerFactory);
 		client.AddContract<IProductServiceContract>();
