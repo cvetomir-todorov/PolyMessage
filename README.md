@@ -1,21 +1,28 @@
 # PolyMessage
 
-Experimental RPC library supporting different client-server transports and message formats.
+Experimental RPC communication library based on .NET Standard. Allows creation of microservices using a client-server architecture. Supports
+* Request-response pattern
+* Different transports based on communication protocols
+* Different message formats using data encoding standards
+
+For example it could be used to create microservices using the request-response pattern which use TCP with TLS as a transport and Google Protobuf as message format.
 
 ## Core features
 
-* Easy definition of contracts, messages and DTOs
-* Declarative definition via .NET attributes
-* Consistent API allowing easy switching between
+* Shared contracts defining the communication (similar to the good old WCF but not committed to SOAP in any way)
+* Easy and quick declarative definition of contracts, messages and DTOs via .NET attributes
+* Consistent API allowing easy switching between and extension points related to
   * Message formats
   * Underlying transports
+* Widely used message formats are supported out of the box (listed below)
+* TCP transport is supported out of the box (IPC transport in progress)
 * Built using .NET Standard 2.0
 * Integrated with .NET logging on client and server sides
 * Integrated with .NET dependency injection on server-side
-* Each server can host a subset of the contracts
-* Same client can serve more than one proxy
+* Dynamic client-side proxy generation
+* Each server can host all or a subset of the contracts
+* Same client can serve more than one proxy using the same connection
 * Read-only access to the connection on client and server sides
-* Similar in some aspects to the good old WCF
 
 ## Formats
 
@@ -30,16 +37,37 @@ Formats rely on widely used .NET libraries.
 
 ### TCP
 
-* Supports the request-response communication pattern
+* Supports the request-response pattern
 * Uses a custom protocol based on a single TCP connection and length-prefixing
 * Server is implemented via the async-await paradigm allowing thread pool threads reuse
-* Supports TLS
+* Server can be configured to disconnect
+  * Clients being idle more than a specified timeout
+  * Clients which receive data more slowly than a specified timeout
+* Secure communication via TLS
 
 ### IPC (in progress)
 
-* Supports the request-response communication pattern
+* Supports the request-response pattern
 * Uses a custom protocol based on a local **named-pipe** for control and a **memory-mapped file** for data transfer
-* Secure communication via named-pipe and memory-mapped file built-in security
+* Secure communication via named-pipe's and memory-mapped file's built-in security
+
+## Verification
+
+### Automated testing
+
+* Integration tests using (single or multiple) client(s) and server instances
+  * Contract - validation
+  * Connection - addresses, state, read-only access on client and server sides
+  * Request-response pattern - single/multiple endpoints, single/multiple messages, performance
+  * Message Format - messages which contain: nothing (empty), large arrays, large number of objects, large strings
+  * TCP transport - TLS security, timeouts
+  * Service implementation instance disposal
+* Micro tests
+  * IL generation
+
+### Load testing
+
+TODO
 
 # Example
 
@@ -93,7 +121,14 @@ public static class Server
 {
 	public static async Task Main()
 	{
-		IServiceProvider serviceProvider = BuildServiceProvider();
+		IServiceProvider serviceProvider = new ServiceCollection()
+			.AddLogging(loggingBuilder =>
+			{
+				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+				loggingBuilder.AddConsole();
+			})
+			.AddScoped<IProductServiceContract, ProductService>()
+			.BuildServiceProvider();
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
 		PolyFormat format = new Utf8JsonFormat();
@@ -102,18 +137,6 @@ public static class Server
 		host.AddContract<IProductServiceContract>();
 
 		await host.StartAsync();
-	}
-
-	private static IServiceProvider BuildServiceProvider()
-	{
-		return new ServiceCollection()
-			.AddLogging(loggingBuilder =>
-			{
-				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-				loggingBuilder.AddConsole();
-			})
-			.AddScoped<IProductServiceContract, ProductService>()
-			.BuildServiceProvider();
 	}
 }
 ```
@@ -125,7 +148,13 @@ public static class Client
 {
 	public static async Task Main()
 	{
-		IServiceProvider serviceProvider = BuildServiceProvider();
+		IServiceProvider serviceProvider = new ServiceCollection()
+			.AddLogging(loggingBuilder =>
+			{
+				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+				loggingBuilder.AddConsole();
+			})
+			.BuildServiceProvider();
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
 		PolyFormat format = new Utf8JsonFormat();
@@ -136,19 +165,8 @@ public static class Client
 		await client.ConnectAsync();
 		IProductServiceContract proxy = client.Get<IProductServiceContract>();
 
-		GetCheapestProductsResponse response = await proxy.GetCheapestProducts(
-			new GetCheapestProductsRequest {TopCount = 10, Barcode = "milk"});
-	}
-
-	private static IServiceProvider BuildServiceProvider()
-	{
-		return new ServiceCollection()
-			.AddLogging(loggingBuilder =>
-			{
-				loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-				loggingBuilder.AddConsole();
-			})
-			.BuildServiceProvider();
+		var request = new GetCheapestProductsRequest {TopCount = 10, Barcode = "milk"};
+		GetCheapestProductsResponse response = await proxy.GetCheapestProducts(request);
 	}
 }
 ```
