@@ -1,26 +1,30 @@
 # PolyMessage
 
-Experimental RPC communication library based on .NET Standard. Allows creation of microservices using a client-server architecture. Supports
+RPC communication library based on .NET Standard. Allows creation of microservices using a client-server architecture. Supports:
 * Request-response pattern
 * Different transports based on communication protocols
 * Different message formats using data encoding standards
 
 ## Example ([**code below**](#code-example))
 
-It could be used to create microservices using the request-response pattern which use TCP with TLS as a transport and Google Protobuf as message format.
+It could be used to create microservices using the request-response pattern with TCP as a transport and Google Protobuf as message format.
 
 ## Core features
 
-* Shared contracts defining the microservices (similar to the good old WCF but not committed to SOAP in any way)
-  * RPC operations
+* Shared contracts defining the microservices
+  * Operations with a type based on the communication pattern - e.g. request-response
   * Main messages - e.g. request and response
-  * Additional, optional DTOs as part of more complex message structures
+  * Optional additional DTOs as part of more complex message hierarchies
+  * Similar to the good old WCF
 * Easy and quick declarative definition of contracts via .NET attributes
-* Consistent API allowing easy switching between and extension points related to
+* Consistent API allowing easy switching between:
   * Message formats
   * Underlying transports
 * Widely used message formats are supported out of the box (listed below)
-* TCP transport is supported out of the box (more details below)
+* TCP transport is supported out of the box with IPC one in progress (more details below)
+* Extension points:
+  * Message formats
+  * Underlying transports
 * Built using .NET Standard 2.0
 * Integrated with .NET logging on client and server sides
 * Integrated with .NET dependency injection on server-side
@@ -29,9 +33,9 @@ It could be used to create microservices using the request-response pattern whic
 * Same client can serve more than one proxy using the same connection
 * Read-only access to the connection on client and server sides
 
-## Formats
+## Message formats
 
-Formats rely on widely used .NET libraries.
+Formats rely on widely used .NET libraries. All of them use declarative attributes. They have their own ones and they support .NET based attributes such as `[DataContract]`, `[DataMember]` etc.
 
 * [protobuf-net](https://github.com/protobuf-net/protobuf-net)
 * [Newtonsoft.Json](https://www.newtonsoft.com/json)
@@ -45,34 +49,36 @@ Formats rely on widely used .NET libraries.
 * Supports the request-response pattern
 * Uses a custom protocol based on a single TCP connection and length-prefixing
 * Server is implemented via the async-await paradigm allowing thread pool threads reuse
-* Server can be configured to disconnect
-  * Clients being idle more than a specified timeout
-  * Clients which receive data more slowly than a specified timeout
+* Server can be configured to disconnect:
+  * clients being idle more than a specified timeout
+  * clients which receive data more slowly than a specified timeout
 * Secure communication via TLS
 
 ### IPC (in progress)
 
 * Supports the request-response pattern
-* Uses a custom protocol based on a local **named-pipe** for control and a **memory-mapped file** for data transfer
+* Uses a custom protocol based on a local named-pipe for control and a memory-mapped file for performant data transfer
 * Secure communication via named-pipe's and memory-mapped file's built-in security
 
 ## Verification
 
 ### Automated testing
 
-* Integration tests using (single or multiple) client(s) and server instances
+* Integration tests using (single or multiple) client(s) and server instances:
   * Contract - validation
   * Connection - addresses, state, read-only access on client and server sides
   * Request-response pattern - single/multiple endpoints, single/multiple messages, performance
   * Message format - messages which contain: nothing (empty), large arrays, large number of objects, large strings
   * TCP transport - TLS security, timeouts
   * Service implementation instance disposal
-* Micro tests
+* Micro tests:
   * IL generation
 
 ### Load testing
 
-TODO
+The code under `\load-testing` folder can be used to perform load testing in a specific environment.
+
+TODO: post the result using the environment in place
 
 # Code example
 
@@ -137,7 +143,7 @@ public static class Server
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
 		PolyFormat format = new ProtobufNetFormat();
-		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
+		PolyTransport transport = new TcpTransport(new Uri("tcp://127.0.0.1:10678/"), loggerFactory);
 		using PolyHost host = new PolyHost(transport, format, serviceProvider);
 		host.AddContract<IProductServiceContract>();
 
@@ -163,7 +169,7 @@ public static class Client
 		ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
 		PolyFormat format = new ProtobufNetFormat();
-		PolyTransport transport = new TcpTransport(new Uri("tcp://localhost:10678/"), loggerFactory);
+		PolyTransport transport = new TcpTransport(new Uri("tcp://127.0.0.1:10678/"), loggerFactory);
 		using PolyClient client = new PolyClient(transport, format, loggerFactory);
 		client.AddContract<IProductServiceContract>();
 
