@@ -1,0 +1,2 @@
+﻿The hashed wheel timer source code is taken from the GitHub repo below and contains minor additional fixes.
+https://github.com/wangjia184/HashedWheelTimer - MIT License
