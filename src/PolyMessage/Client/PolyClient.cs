@@ -30,7 +30,7 @@ namespace PolyMessage.Client
         private readonly SemaphoreSlim _setupMessagingLock;
         private volatile IMessenger _messenger;
         private PolyChannel _channel;
-        private PolyConnection _connection;
+        private PolyMutableConnection _connection;
         private static readonly ArrayPool<byte> _bufferPool;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
@@ -74,7 +74,7 @@ namespace PolyMessage.Client
             _contractInspector = new ContractInspector(loggerFactory);
             // messaging
             _setupMessagingLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-            _connection = new PolyConnection();
+            _connection = new PolyMutableConnection();
             // proxies
             _proxyGenerator = new ProxyGenerator();
             _createProxyLock = new object();
@@ -150,7 +150,7 @@ namespace PolyMessage.Client
 
                         LogConnectionInfo();
 
-                        _connection = _channel.Connection;
+                        _connection = _channel.MutableConnection;
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
                         _messenger = new Messenger(_loggerFactory, _messageMetadata);

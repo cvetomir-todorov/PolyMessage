@@ -59,6 +59,11 @@ namespace PolyMessage
 
     public abstract class PolyChannel : IDisposable
     {
+        protected PolyChannel()
+        {
+            MutableConnection = new PolyMutableConnection();
+        }
+
         public void Dispose()
         {
             DoDispose(true);
@@ -67,9 +72,11 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing) {}
 
-        public abstract PolyTransport Transport { get; }
+        protected internal PolyMutableConnection MutableConnection { get; }
 
-        public abstract PolyConnection Connection { get; }
+        public PolyConnection Connection => MutableConnection;
+
+        public abstract PolyTransport Transport { get; }
 
         public abstract Task OpenAsync();
 

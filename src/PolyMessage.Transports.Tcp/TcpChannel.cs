@@ -16,7 +16,6 @@ namespace PolyMessage.Transports.Tcp
     {
         private readonly ILogger _logger;
         private readonly bool _isServer;
-        private readonly PolyConnection _connection;
         // TCP
         private readonly TcpClient _tcpClient;
         private readonly TcpTransport _tcpTransport;
@@ -28,7 +27,6 @@ namespace PolyMessage.Transports.Tcp
         {
             _logger = logger;
             _isServer = isServer;
-            _connection = new PolyConnection();
             // TCP
             _tcpClient = tcpClient;
             _tcpTransport = tcpTransport;
@@ -45,7 +43,7 @@ namespace PolyMessage.Transports.Tcp
                 _stream.Dispose();
                 _tcpClient.Close();
                 _tcpClient.Dispose();
-                _connection.SetClosed();
+                MutableConnection.SetClosed();
                 _isDisposed = true;
                 _logger.LogDebug("Disconnected from tcp://{0}.", remoteAddress);
             }
@@ -66,8 +64,6 @@ namespace PolyMessage.Transports.Tcp
         }
 
         public override PolyTransport Transport => _tcpTransport;
-
-        public override PolyConnection Connection => _connection;
 
         public override async Task OpenAsync()
         {
@@ -112,7 +108,7 @@ namespace PolyMessage.Transports.Tcp
 
             Uri localAddress = new Uri($"tcp://{_tcpClient.Client.LocalEndPoint}");
             Uri remoteAddress = new Uri($"tcp://{_tcpClient.Client.RemoteEndPoint}");
-            _connection.SetOpened(localAddress, remoteAddress);
+            MutableConnection.SetOpened(localAddress, remoteAddress);
         }
 
         private async Task InitTls()

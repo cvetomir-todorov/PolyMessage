@@ -24,7 +24,11 @@ namespace PolyMessage
                 throw new InvalidOperationException("Connection needs to be opened in order to have addresses.");
         }
 
-        public PolyConnectionState State => _state;
+        public PolyConnectionState State
+        {
+            get => _state;
+            set => _state = value;
+        }
 
         public Uri LocalAddress
         {
@@ -32,6 +36,12 @@ namespace PolyMessage
             {
                 EnsureNotInCreatedState();
                 return _localAddress;
+            }
+            protected set
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+                _localAddress = value;
             }
         }
 
@@ -42,18 +52,27 @@ namespace PolyMessage
                 EnsureNotInCreatedState();
                 return _remoteAddress;
             }
+            protected set
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+                _remoteAddress = value;
+            }
+        }
+    }
+
+    public class PolyMutableConnection : PolyConnection
+    {
+        public void SetOpened(Uri localAddress, Uri remoteAddress)
+        {
+            State = PolyConnectionState.Opened;
+            LocalAddress = localAddress;
+            RemoteAddress = remoteAddress;
         }
 
-        internal void SetOpened(Uri localAddress, Uri remoteAddress)
+        public void SetClosed()
         {
-            _state = PolyConnectionState.Opened;
-            _localAddress = localAddress;
-            _remoteAddress = remoteAddress;
-        }
-
-        internal void SetClosed()
-        {
-            _state = PolyConnectionState.Closed;
+            State = PolyConnectionState.Closed;
         }
     }
 }

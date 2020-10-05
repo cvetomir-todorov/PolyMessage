@@ -48,11 +48,11 @@ namespace PolyMessage.Transports.Tcp
             builder.AppendFormat(", Receive buffer size {0}", Settings.ReceiveBufferSize);
             builder.AppendFormat(", NoDelay {0}", Settings.NoDelay ? "enabled" : "disabled");
             builder.AppendFormat(", TLS version {0}", Settings.TlsProtocol);
+
             if (Settings.TlsServerCertificate != null)
             {
                 builder.AppendFormat(", TLS certificate {0}", Settings.TlsServerCertificate.Subject);
             }
-
             if (HostTimeouts.ClientSend != InfiniteTimeout)
             {
                 builder.AppendFormat(", Host client send timeout {0}s", HostTimeouts.ClientSend.TotalSeconds);
