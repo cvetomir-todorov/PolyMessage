@@ -28,10 +28,8 @@ namespace PolyMessage.Client
         private IMessageMetadata _messageMetadata;
         // messaging
         private readonly SemaphoreSlim _setupMessagingLock;
-        private volatile IMessenger _messenger;
-        private PolyChannel _channel;
+        private volatile PolyChannel _channel;
         private PolyMutableConnection _connection;
-        private static readonly ArrayPool<byte> _bufferPool;
         // proxies
         private readonly IProxyGenerator _proxyGenerator;
         private readonly object _createProxyLock;
@@ -43,11 +41,6 @@ namespace PolyMessage.Client
         // stop/dispose
         private readonly CancellationTokenSource _disconnectTokenSource;
         private bool _isDisposed;
-
-        static PolyClient()
-        {
-            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: int.MaxValue, maxArraysPerBucket: 128);
-        }
 
         public PolyClient(PolyTransport transport, PolyFormat format)
             : this(transport, format, new NullLoggerFactory())
@@ -138,23 +131,26 @@ namespace PolyMessage.Client
             if (_operations.Count <= 0)
                 throw new InvalidOperationException("No contracts added.");
 
-            if (_messenger == null)
+            if (_channel == null)
             {
                 try
                 {
                     await _setupMessagingLock.WaitAsync().ConfigureAwait(false);
-                    if (_messenger == null)
+                    if (_channel == null)
                     {
-                        _channel = _transport.CreateClient();
-                        await _channel.OpenAsync().ConfigureAwait(false);
-
-                        LogConnectionInfo();
-
-                        _connection = _channel.MutableConnection;
                         _messageMetadata = new MessageMetadata();
                         _messageMetadata.Build(_operations);
-                        _messenger = new Messenger(_loggerFactory, _messageMetadata);
                         RegisterMessageTypes();
+                        _transport.MessageMetadata = _messageMetadata;
+                        _transport.BufferPool = ArrayPool<byte>.Create(
+                            maxArrayLength: _transport.MessageBufferSettings.MaxSize,
+                            maxArraysPerBucket: 4);
+
+                        _channel = _transport.CreateClient();
+                        await _channel.OpenAsync().ConfigureAwait(false);
+                        _connection = _channel.MutableConnection;
+
+                        LogConnectionInfo();
                     }
                 }
                 finally
@@ -211,8 +207,7 @@ namespace PolyMessage.Client
             CastToTaskOfResponse castDelegate = codeGenerator.GetCastToTaskOfResponse();
 
             _operationInterceptor = new OperationInterceptor(
-                _loggerFactory, _id, _messenger, _transport, _format, _channel,
-                _bufferPool, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
+                _loggerFactory, _id, _format, _channel, _disconnectTokenSource.Token, _messageMetadata, castDelegate);
             ConnectionPropertyInterceptor connectionPropertyInterceptor = new ConnectionPropertyInterceptor(_channel);
 
             object proxy = _proxyGenerator.CreateInterfaceProxyWithoutTarget(

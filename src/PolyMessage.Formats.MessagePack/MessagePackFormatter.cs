@@ -8,28 +8,25 @@ namespace PolyMessage.Formats.MessagePack
     public class MessagePackFormatter : PolyFormatter
     {
         private readonly MessagePackFormat _format;
-        private readonly Stream _stream;
         private const string KnownErrorInvalidCode = "Invalid MessagePack code was detected";
 
-        public MessagePackFormatter(MessagePackFormat format, Stream stream)
+        public MessagePackFormatter(MessagePackFormat format)
         {
             _format = format;
-            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override void Serialize(object obj)
+        public override void Serialize(object obj, string streamID, Stream stream)
         {
-            MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), _stream, obj);
-            _stream.Flush();
+            MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), stream, obj);
         }
 
-        public override object Deserialize(Type objType)
+        public override object Deserialize(Type objType, string streamID, Stream stream)
         {
             try
             {
-                return MessagePackSerializer.NonGeneric.Deserialize(objType, _stream);
+                return MessagePackSerializer.NonGeneric.Deserialize(objType, stream);
             }
             catch (InvalidOperationException exception) when (exception.Message.StartsWith(KnownErrorInvalidCode))
             {

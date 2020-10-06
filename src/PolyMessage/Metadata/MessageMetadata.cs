@@ -3,13 +3,17 @@ using System.Collections.Generic;
 
 namespace PolyMessage.Metadata
 {
-    internal interface IMessageMetadata
+    public interface IReadOnlyMessageMetadata
     {
-        void Build(IEnumerable<Operation> operations);
-
         Type GetMessageType(short messageTypeID);
 
         short GetMessageTypeID(Type messageType);
+    }
+
+    // TODO: consider creating a builder
+    internal interface IMessageMetadata : IReadOnlyMessageMetadata
+    {
+        void Build(IEnumerable<Operation> operations);
     }
 
     internal class MessageMetadata : IMessageMetadata

@@ -10,29 +10,26 @@ namespace PolyMessage.Formats.DotNetBinary
     {
         private readonly DotNetBinaryFormat _format;
         private readonly BinaryFormatter _formatter;
-        private readonly Stream _stream;
         private const string KnownErrorEndOfStream = "End of Stream encountered before parsing was completed.";
 
-        public DotNetBinaryFormatter(DotNetBinaryFormat format, Stream stream)
+        public DotNetBinaryFormatter(DotNetBinaryFormat format)
         {
             _format = format;
             _formatter = new BinaryFormatter();
-            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override void Serialize(object obj)
+        public override void Serialize(object obj, string streamID, Stream stream)
         {
-            _formatter.Serialize(_stream, obj);
-            _stream.Flush();
+            _formatter.Serialize(stream, obj);
         }
 
-        public override object Deserialize(Type objType)
+        public override object Deserialize(Type objType, string streamID, Stream stream)
         {
             try
             {
-                return _formatter.Deserialize(_stream);
+                return _formatter.Deserialize(stream);
             }
             catch (SerializationException serializationException) when (serializationException.Message.StartsWith(KnownErrorEndOfStream))
             {

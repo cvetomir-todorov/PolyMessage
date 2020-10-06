@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
+using PolyMessage.Metadata;
 
 namespace PolyMessage
 {
@@ -23,6 +25,11 @@ namespace PolyMessage
 
         public abstract PolyChannel CreateClient();
 
+        protected internal IReadOnlyMessageMetadata MessageMetadata { get; set; }
+
+        // TODO: move into TcpTransport
+        protected internal ArrayPool<byte> BufferPool { get; set; }
+
         public virtual string GetSettingsInfo() => string.Empty;
 
         public override string ToString() => DisplayName;
@@ -37,7 +44,7 @@ namespace PolyMessage
     public class PolyMessageBufferSettings
     {
         public int InitialSize { get; set; } = 8192; // 8KB
-        public int MaxSize { get; set; } = int.MaxValue; // used only on the server
+        public int MaxSize { get; set; } = int.MaxValue;
     }
 
     public abstract class PolyListener : IDisposable
@@ -76,16 +83,12 @@ namespace PolyMessage
 
         public PolyConnection Connection => MutableConnection;
 
-        public abstract PolyTransport Transport { get; }
-
         public abstract Task OpenAsync();
 
         public abstract void Close();
 
-        public abstract Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct);
+        public abstract Task<object> Receive(PolyFormatter formatter, string origin, CancellationToken ct);
 
-        public abstract Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct);
-
-        public abstract Task FlushAsync(CancellationToken ct);
+        public abstract Task Send(object message, PolyFormatter formatter, string origin, CancellationToken ct);
     }
 }

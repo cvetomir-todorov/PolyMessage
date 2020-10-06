@@ -4,26 +4,24 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PolyMessage.Exceptions;
 
-namespace PolyMessage.Messaging
+namespace PolyMessage.Transports.Tcp
 {
-    internal sealed class MessageStream : Stream
+    internal sealed class LengthPrefixStream : Stream
     {
-        private readonly string _origin;
         private readonly ILogger _logger;
-        private readonly PolyChannel _channel;
+        private readonly Stream _internalStream;
         private readonly ArrayPool<byte> _pool;
+        private string _origin;
         private byte[] _messageBuffer;
         private int _position;
         private int _length;
         private const int LengthPrefixSize = 4;
 
-        public MessageStream(string origin, PolyChannel channel, ArrayPool<byte> bufferPool, int capacity, ILoggerFactory loggerFactory)
+        public LengthPrefixStream(ILogger logger, Stream internalStream, ArrayPool<byte> bufferPool, int capacity)
         {
-            _origin = origin;
-            _logger = loggerFactory.CreateLogger(GetType());
-            _channel = channel;
+            _logger = logger;
+            _internalStream = internalStream;
             _pool = bufferPool;
             _messageBuffer = _pool.Rent(capacity);
         }
@@ -103,6 +101,12 @@ namespace PolyMessage.Messaging
             set => throw new NotSupportedException();
         }
 
+        public string Origin
+        {
+            get => _origin;
+            set => _origin = value;
+        }
+
         public void ResetLengthAndPosition()
         {
             _position = 0;
@@ -128,14 +132,18 @@ namespace PolyMessage.Messaging
 
         public async Task SendToTransport(CancellationToken ct)
         {
-            await _channel.WriteAsync(_messageBuffer, 0, _length, ct).ConfigureAwait(false);
-            await _channel.FlushAsync(ct).ConfigureAwait(false);
+            await _internalStream.WriteAsync(_messageBuffer, 0, _length, ct).ConfigureAwait(false);
+            await _internalStream.FlushAsync(ct).ConfigureAwait(false);
             _logger.LogTrace("[{0}] Sent {1} bytes from the buffer.", _origin, _length);
         }
 
         public async Task<int> ReceiveFromTransport(string target, CancellationToken ct)
         {
             int bytesRead = await ReadBytes(_messageBuffer, 0, LengthPrefixSize, ct).ConfigureAwait(false);
+            if (bytesRead < 0)
+            {
+                return bytesRead;
+            }
             if (bytesRead != LengthPrefixSize)
             {
                 throw CreateUnexpectedBytesReadException(bytesRead, LengthPrefixSize, $"{target} length prefix");
@@ -155,6 +163,10 @@ namespace PolyMessage.Messaging
             else
             {
                 bytesRead = await ReadBytes(_messageBuffer, LengthPrefixSize, lengthPrefix, ct).ConfigureAwait(false);
+                if (bytesRead < 0)
+                {
+                    return bytesRead;
+                }
                 if (bytesRead != lengthPrefix)
                 {
                     throw CreateUnexpectedBytesReadException(bytesRead, lengthPrefix, target);
@@ -178,10 +190,10 @@ namespace PolyMessage.Messaging
 
             while (totalBytesRead < count)
             {
-                int bytesRead = await _channel.ReadAsync(buffer, offset, bytesRemaining, ct).ConfigureAwait(false);
+                int bytesRead = await _internalStream.ReadAsync(buffer, offset, bytesRemaining, ct).ConfigureAwait(false);
                 if (bytesRead == 0)
                 {
-                    throw new PolyConnectionClosedException(PolyConnectionCloseReason.ConnectionClosed, _channel.Transport);
+                    return -1;
                 }
 
                 totalBytesRead += bytesRead;

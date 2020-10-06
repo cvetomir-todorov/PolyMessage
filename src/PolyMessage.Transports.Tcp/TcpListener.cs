@@ -1,25 +1,31 @@
 ﻿using System;
+using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Exceptions;
+using PolyMessage.Metadata;
 using DotNetTcpListener = System.Net.Sockets.TcpListener;
 
 namespace PolyMessage.Transports.Tcp
 {
     internal sealed class TcpListener : PolyListener
     {
-        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ArrayPool<byte> _bufferPool;
+        private readonly IReadOnlyMessageMetadata _messageMetadata;
         // TCP
         private readonly TcpTransport _tcpTransport;
         private DotNetTcpListener _tcpListener;
         // stop/dispose
         private bool _isDisposed;
 
-        public TcpListener(TcpTransport tcpTransport, ILogger logger)
+        public TcpListener(TcpTransport tcpTransport, ArrayPool<byte> bufferPool, IReadOnlyMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
         {
-            _logger = logger;
+            _bufferPool = bufferPool;
+            _messageMetadata = messageMetadata;
+            _loggerFactory = loggerFactory;
             _tcpTransport = tcpTransport;
         }
 
@@ -69,7 +75,7 @@ namespace PolyMessage.Transports.Tcp
 
         private PolyChannel CreateClientChannel(TcpClient tcpClient)
         {
-            return new TcpChannel(tcpClient, _tcpTransport, isServer: true, _logger);
+            return new TcpChannel(tcpClient, _tcpTransport, isServer: true, _bufferPool, _messageMetadata, _loggerFactory);
         }
 
         public override void StopAccepting()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using PolyMessage.Exceptions;
@@ -8,23 +9,14 @@ namespace PolyMessage.Formats.NewtonsoftJson
     public class NewtonsoftJsonFormatter : PolyFormatter
     {
         private readonly NewtonsoftJsonFormat _format;
-        private readonly JsonWriter _writer;
-        private readonly JsonReader _reader;
+        private readonly Dictionary<string, StreamInstrument> _instruments;
         private readonly JsonSerializer _serializer;
         private bool _isDisposed;
 
-        public NewtonsoftJsonFormatter(NewtonsoftJsonFormat format, Stream stream)
+        public NewtonsoftJsonFormatter(NewtonsoftJsonFormat format)
         {
             _format = format;
-
-            _writer = new JsonTextWriter(new StreamWriter(stream));
-            _writer.AutoCompleteOnClose = false;
-            _writer.CloseOutput = false;
-
-            _reader = new JsonTextReader(new StreamReader(stream));
-            _reader.CloseInput = false;
-            _reader.SupportMultipleContent = true;
-
+            _instruments = new Dictionary<string, StreamInstrument>();
             _serializer = new JsonSerializer();
         }
 
@@ -35,31 +27,74 @@ namespace PolyMessage.Formats.NewtonsoftJson
 
             if (isDisposing)
             {
-                _writer.Close();
-                _reader.Close();
+                foreach (KeyValuePair<string, StreamInstrument> pair in _instruments)
+                {
+                    pair.Value.Dispose();
+                }
                 _isDisposed = true;
             }
         }
 
         public override PolyFormat Format => _format;
 
-        public override void Serialize(object obj)
+        public override void Serialize(object obj, string streamID, Stream stream)
         {
-            _serializer.Serialize(_writer, obj, obj.GetType());
-            _writer.Flush();
+            StreamInstrument instrument = GetInstrument(streamID, stream);
+
+            _serializer.Serialize(instrument.Writer, obj, obj.GetType());
+            instrument.Writer.Flush();
         }
 
-        public override object Deserialize(Type objType)
+        public override object Deserialize(Type objType, string streamID, Stream stream)
         {
-            bool readSuccess = _reader.Read();
+            StreamInstrument instrument = GetInstrument(streamID, stream);
+
+            bool readSuccess = instrument.Reader.Read();
             if (!readSuccess)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
 
-            object obj = _serializer.Deserialize(_reader, objType);
+            object obj = _serializer.Deserialize(instrument.Reader, objType);
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.UnexpectedData, "Deserialization could not parse JSON token.", _format);
 
             return obj;
+        }
+
+        private StreamInstrument GetInstrument(string streamID, Stream stream)
+        {
+            if (_instruments.TryGetValue(streamID, out StreamInstrument existingInstrument))
+            {
+                return existingInstrument;
+            }
+            else
+            {
+                StreamInstrument newInstrument = new StreamInstrument(stream);
+                _instruments.Add(streamID, newInstrument);
+                return newInstrument;
+            }
+        }
+
+        private sealed class StreamInstrument : IDisposable
+        {
+            public StreamInstrument(Stream stream)
+            {
+                Writer = new JsonTextWriter(new StreamWriter(stream));
+                Writer.AutoCompleteOnClose = false;
+                Writer.CloseOutput = false;
+
+                Reader = new JsonTextReader(new StreamReader(stream));
+                Reader.CloseInput = false;
+                Reader.SupportMultipleContent = true;
+            }
+
+            public void Dispose()
+            {
+                Writer?.Close();
+                Reader?.Close();
+            }
+
+            public JsonWriter Writer { get; }
+            public JsonReader Reader { get; }
         }
     }
 }

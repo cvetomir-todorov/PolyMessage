@@ -8,25 +8,22 @@ namespace PolyMessage.Formats.ProtobufNet
     public class ProtobufNetFormatter : PolyFormatter
     {
         private readonly ProtobufNetFormat _format;
-        private readonly Stream _stream;
 
-        public ProtobufNetFormatter(ProtobufNetFormat format, Stream stream)
+        public ProtobufNetFormatter(ProtobufNetFormat format)
         {
             _format = format;
-            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override void Serialize(object obj)
+        public override void Serialize(object obj, string streamID, Stream stream)
         {
-            Serializer.NonGeneric.Serialize(_stream, obj);
-            _stream.Flush();
+            Serializer.NonGeneric.Serialize(stream, obj);
         }
 
-        public override object Deserialize(Type objType)
+        public override object Deserialize(Type objType, string streamID, Stream stream)
         {
-            object obj = Serializer.NonGeneric.Deserialize(objType, _stream);
+            object obj = Serializer.NonGeneric.Deserialize(objType, stream);
             if (obj == null)
                 throw new PolyFormatException(PolyFormatError.EndOfDataStream, "Deserialization encountered end of stream.", _format);
 

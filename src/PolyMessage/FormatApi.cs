@@ -10,7 +10,7 @@ namespace PolyMessage
 
         public virtual void RegisterMessageTypes(IEnumerable<MessageInfo> messageTypes) {}
 
-        public abstract PolyFormatter CreateFormatter(Stream stream);
+        public abstract PolyFormatter CreateFormatter();
 
         public override string ToString() => DisplayName;
     }
@@ -41,9 +41,9 @@ namespace PolyMessage
 
         public abstract PolyFormat Format { get; }
 
-        public abstract void Serialize(object obj);
+        public abstract void Serialize(object obj, string streamID, Stream stream);
 
-        public abstract object Deserialize(Type objType);
+        public abstract object Deserialize(Type objType, string streamID, Stream stream);
 
         public override string ToString() => $"Formatter[{Format.DisplayName}]";
     }

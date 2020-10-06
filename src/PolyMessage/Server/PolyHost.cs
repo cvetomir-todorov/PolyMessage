@@ -29,7 +29,6 @@ namespace PolyMessage.Server
         private readonly List<Operation> _operations;
         private readonly IContractInspector _contractInspector;
         // server
-        private readonly ArrayPool<byte> _bufferPool;
         private readonly ITimer _timer;
         private IAcceptor _acceptor;
         // stop/dispose
@@ -56,7 +55,6 @@ namespace PolyMessage.Server
             _operations = new List<Operation>();
             _contractInspector = new ContractInspector(_loggerFactory);
             // server
-            _bufferPool = ArrayPool<byte>.Create(maxArrayLength: transport.MessageBufferSettings.MaxSize, maxArraysPerBucket: 128);
             ILogger timerLogger = _loggerFactory.CreateLogger<ITimer>();
             _timer = new HashedWheelTimer(timerLogger, tickDuration: TimeSpan.FromMilliseconds(50), ticksPerWheel: 100000, maxPendingTimeouts: long.MaxValue);
             // stop/dispose
@@ -106,7 +104,7 @@ namespace PolyMessage.Server
             if (_operations.Count <= 0)
                 throw new InvalidOperationException("No contracts added.");
 
-            _acceptor = new Acceptor(_serviceProvider, _loggerFactory, _bufferPool);
+            _acceptor = new Acceptor(_serviceProvider, _loggerFactory);
             IMessageMetadata messageMetadata = new MessageMetadata();
             IRouter router = new Router();
             ICodeGenerator codeGenerator = new ILEmitter();
@@ -115,10 +113,13 @@ namespace PolyMessage.Server
             router.BuildRoutingTable(_operations);
             codeGenerator.GenerateCode(_operations);
             RegisterMessageTypes();
+            _transport.MessageMetadata = messageMetadata;
+            _transport.BufferPool = ArrayPool<byte>.Create(
+                maxArrayLength: _transport.MessageBufferSettings.MaxSize,
+                maxArraysPerBucket: 128);
 
-            IMessenger messenger = new Messenger(_loggerFactory, messageMetadata);
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
-            ServerComponents serverComponents = new ServerComponents(router, messageMetadata, messenger, _timer, dispatcher);
+            ServerComponents serverComponents = new ServerComponents(router, messageMetadata, _timer, dispatcher);
 
             Task serverTask = Task.Run(async () => await _acceptor.Start(_transport, _format, serverComponents, _stopTokenSource.Token).ConfigureAwait(false));
             LogHostInfo();

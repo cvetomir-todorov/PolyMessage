@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Exceptions;
-using PolyMessage.Messaging;
 using PolyMessage.Metadata;
 using PolyMessage.Timer;
 
@@ -27,7 +25,6 @@ namespace PolyMessage.Server
         private readonly PolyTransport _transport;
         private readonly PolyFormatter _formatter;
         private readonly PolyChannel _connectedClient;
-        private readonly MessageStream _messageStream;
         private readonly IImplementorProvider _implementorProvider;
         // timeout timer tasks
         private readonly ITimerTask _receiveTimerTask;
@@ -45,7 +42,6 @@ namespace PolyMessage.Server
         public Session(
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
-            ArrayPool<byte> bufferPool,
             PolyTransport transport,
             PolyFormat format,
             PolyChannel connectedClient)
@@ -55,8 +51,7 @@ namespace PolyMessage.Server
 
             _logger = loggerFactory.CreateLogger(GetType());
             _transport = transport;
-            _messageStream = new MessageStream(_id, connectedClient, bufferPool, capacity: transport.MessageBufferSettings.InitialSize, loggerFactory);
-            _formatter = format.CreateFormatter(_messageStream);
+            _formatter = format.CreateFormatter();
             _connectedClient = connectedClient;
             _implementorProvider = new ImplementorProvider(serviceProvider);
             // timeout timer tasks
@@ -77,7 +72,6 @@ namespace PolyMessage.Server
                         _isStopRequested = true;
                         _implementorProvider.Dispose();
                         _connectedClient.Close();
-                        _messageStream.Close();
                         _formatter.Dispose();
                         _clientIOTimeout?.Cancel();
                         _logger.LogTrace("[{0}] Waiting for worker thread...", _id);
@@ -142,7 +136,7 @@ namespace PolyMessage.Server
                 _clientIOTimeout = serverComponents.Timer.NewTimeout(_receiveTimerTask, _transport.HostTimeouts.ClientReceive);
             }
 
-            object requestMessage = await serverComponents.Messenger.Receive(_id, _messageStream, _formatter, ct).ConfigureAwait(false);
+            object requestMessage = await _connectedClient.Receive(_formatter, _id, ct).ConfigureAwait(false);
 
             if (_clientIOTimeout != null)
             {
@@ -164,7 +158,7 @@ namespace PolyMessage.Server
                 _clientIOTimeout = serverComponents.Timer.NewTimeout(_sendTimerTask, _transport.HostTimeouts.ClientSend);
             }
 
-            await serverComponents.Messenger.Send(_id, responseMessage, _messageStream, _formatter, ct).ConfigureAwait(false);
+            await _connectedClient.Send(responseMessage, _formatter, _id, ct).ConfigureAwait(false);
 
             if (_clientIOTimeout != null)
             {

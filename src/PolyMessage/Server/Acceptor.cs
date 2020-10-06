@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,6 @@ namespace PolyMessage.Server
     internal sealed class Acceptor : IAcceptor
     {
         private PolyListener _listener;
-        private readonly ArrayPool<byte> _bufferPool;
         private readonly ConcurrentDictionary<string, ISession> _sessions;
         // .net core integration
         private readonly IServiceProvider _serviceProvider;
@@ -33,12 +31,11 @@ namespace PolyMessage.Server
         private bool _isDisposed;
         private bool _isStopRequested;
 
-        public Acceptor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, ArrayPool<byte> bufferPool)
+        public Acceptor(IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(GetType());
-            _bufferPool = bufferPool;
             _sessions = new ConcurrentDictionary<string, ISession>();
             _stoppedEvent = new ManualResetEventSlim(initialState: true);
         }
@@ -114,7 +111,7 @@ namespace PolyMessage.Server
             try
             {
                 PolyChannel client = createClient();
-                session = new Session(_serviceProvider, _loggerFactory, _bufferPool, transport, format, client);
+                session = new Session(_serviceProvider, _loggerFactory, transport, format, client);
                 if (!_sessions.TryAdd(session.ID, session))
                     _logger.LogCritical("Failed to start tracking session with ID {0}.", session.ID);
 

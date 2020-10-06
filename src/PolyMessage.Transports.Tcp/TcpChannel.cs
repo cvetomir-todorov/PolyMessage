@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PolyMessage.Exceptions;
+using PolyMessage.Metadata;
 
 namespace PolyMessage.Transports.Tcp
 {
@@ -16,17 +18,26 @@ namespace PolyMessage.Transports.Tcp
     {
         private readonly ILogger _logger;
         private readonly bool _isServer;
+        private readonly ArrayPool<byte> _bufferPool;
+        private readonly IReadOnlyMessageMetadata _messageMetadata;
         // TCP
         private readonly TcpClient _tcpClient;
         private readonly TcpTransport _tcpTransport;
         private Stream _stream;
+        // messaging
+        private LengthPrefixStream _lengthPrefixStream;
+        private LengthPrefixProtocol _lengthPrefixProtocol;
         // close/dispose
         private bool _isDisposed;
 
-        public TcpChannel(TcpClient tcpClient, TcpTransport tcpTransport, bool isServer, ILogger logger)
+        public TcpChannel(
+            TcpClient tcpClient, TcpTransport tcpTransport, bool isServer,
+            ArrayPool<byte> bufferPool, IReadOnlyMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger(GetType());
             _isServer = isServer;
+            _bufferPool = bufferPool;
+            _messageMetadata = messageMetadata;
             // TCP
             _tcpClient = tcpClient;
             _tcpTransport = tcpTransport;
@@ -62,8 +73,6 @@ namespace PolyMessage.Transports.Tcp
             if (_stream == null)
                 throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is not opened.");
         }
-
-        public override PolyTransport Transport => _tcpTransport;
 
         public override async Task OpenAsync()
         {
@@ -101,6 +110,8 @@ namespace PolyMessage.Transports.Tcp
             {
                 await InitTls().ConfigureAwait(false);
             }
+            _lengthPrefixStream = new LengthPrefixStream(_logger, _stream, _bufferPool, _tcpTransport.MessageBufferSettings.InitialSize);
+            _lengthPrefixProtocol = new LengthPrefixProtocol(_logger, _messageMetadata, _tcpTransport);
 
             _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
             _tcpClient.SendBufferSize = _tcpTransport.Settings.SendBufferSize;
@@ -167,13 +178,13 @@ namespace PolyMessage.Transports.Tcp
             Dispose();
         }
 
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+        public override async Task<object> Receive(PolyFormatter formatter, string origin, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                return await _stream.ReadAsync(buffer, offset, count, ct);
+                return await _lengthPrefixProtocol.Receive(formatter, _lengthPrefixStream, origin, ct);
             }
             catch (IOException ioException)
             {
@@ -184,30 +195,13 @@ namespace PolyMessage.Transports.Tcp
             }
         }
 
-        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+        public override async Task Send(object message, PolyFormatter formatter, string origin, CancellationToken ct)
         {
             EnsureNotDisposed();
             EnsureConnected();
             try
             {
-                await _stream.WriteAsync(buffer, offset, count, ct);
-            }
-            catch (IOException ioException)
-            {
-                PolyException polyException = TryHandleIOException(ioException);
-                if (polyException != null)
-                    throw polyException;
-                throw;
-            }
-        }
-
-        public override async Task FlushAsync(CancellationToken ct)
-        {
-            EnsureNotDisposed();
-            EnsureConnected();
-            try
-            {
-                await _stream.FlushAsync(ct);
+                await _lengthPrefixProtocol.Send(message, formatter, _lengthPrefixStream, origin, ct);
             }
             catch (IOException ioException)
             {

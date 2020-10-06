@@ -8,27 +8,24 @@ namespace PolyMessage.Formats.Utf8Json
     public class Utf8JsonFormatter : PolyFormatter
     {
         private readonly Utf8JsonFormat _format;
-        private readonly Stream _stream;
 
-        public Utf8JsonFormatter(Utf8JsonFormat format, Stream stream)
+        public Utf8JsonFormatter(Utf8JsonFormat format)
         {
             _format = format;
-            _stream = stream;
         }
 
         public override PolyFormat Format => _format;
 
-        public override void Serialize(object obj)
+        public override void Serialize(object obj, string streamID, Stream stream)
         {
-            JsonSerializer.NonGeneric.Serialize(obj.GetType(), _stream, obj);
-            _stream.Flush();
+            JsonSerializer.NonGeneric.Serialize(obj.GetType(), stream, obj);
         }
 
-        public override object Deserialize(Type objType)
+        public override object Deserialize(Type objType, string streamID, Stream stream)
         {
             try
             {
-                return JsonSerializer.NonGeneric.Deserialize(objType, _stream);
+                return JsonSerializer.NonGeneric.Deserialize(objType, stream);
             }
             catch (JsonParsingException jsonParsingException)
             {

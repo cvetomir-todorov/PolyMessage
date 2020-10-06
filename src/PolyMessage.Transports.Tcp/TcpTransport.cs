@@ -7,7 +7,7 @@ namespace PolyMessage.Transports.Tcp
 {
     public class TcpTransport : PolyTransport
     {
-        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
         public TcpTransport(Uri address, ILoggerFactory loggerFactory)
         {
@@ -20,7 +20,7 @@ namespace PolyMessage.Transports.Tcp
 
             Address = address;
             Settings = new TcpSettings();
-            _logger = loggerFactory.CreateLogger(GetType());
+            _loggerFactory = loggerFactory;
         }
 
         public override string DisplayName => "TCP";
@@ -31,13 +31,23 @@ namespace PolyMessage.Transports.Tcp
 
         public override PolyListener CreateListener()
         {
-            return new TcpListener(this, _logger);
+            EnsureReadyForCommunication();
+            return new TcpListener(this, BufferPool, MessageMetadata, _loggerFactory);
         }
 
         public override PolyChannel CreateClient()
         {
+            EnsureReadyForCommunication();
             TcpClient tcpClient = new TcpClient();
-            return new TcpChannel(tcpClient, this, isServer: false, _logger);
+            return new TcpChannel(tcpClient, this, isServer: false, BufferPool, MessageMetadata, _loggerFactory);
+        }
+
+        private void EnsureReadyForCommunication()
+        {
+            if (BufferPool == null)
+                throw new InvalidOperationException("Buffer pool needs to be initialized.");
+            if (MessageMetadata == null)
+                throw new InvalidOperationException("Message metadata needs to be initialized.");
         }
 
         public override string GetSettingsInfo()

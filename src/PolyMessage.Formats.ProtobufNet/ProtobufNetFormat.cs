@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using ProtoBuf;
 
 namespace PolyMessage.Formats.ProtobufNet
@@ -20,12 +19,9 @@ namespace PolyMessage.Formats.ProtobufNet
             }
         }
 
-        public override PolyFormatter CreateFormatter(Stream stream)
+        public override PolyFormatter CreateFormatter()
         {
-            if (stream == null)
-                throw new ArgumentNullException(nameof(stream));
-
-            return new ProtobufNetFormatter(this, stream);
+            return new ProtobufNetFormatter(this);
         }
     }
 }
