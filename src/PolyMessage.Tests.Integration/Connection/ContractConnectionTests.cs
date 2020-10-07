@@ -11,16 +11,16 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration.Connection
 {
-    public class ContractWithConnection_Tcp : ContractWithConnectionTests
+    public class ContractConnection_Tcp : ContractConnectionTests
     {
-        public ContractWithConnection_Tcp(ITestOutputHelper output) : base(output) {}
+        public ContractConnection_Tcp(ITestOutputHelper output) : base(output) {}
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
         protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
     }
 
-    public abstract class ContractWithConnectionTests : IntegrationFixture
+    public abstract class ContractConnectionTests : IntegrationFixture
     {
-        protected ContractWithConnectionTests(ITestOutputHelper output) : base(output, services =>
+        protected ContractConnectionTests(ITestOutputHelper output) : base(output, services =>
         {
             services.AddScoped<IContractWithConnection, ImplementorWithConnection>();
         })
