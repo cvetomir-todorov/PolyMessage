@@ -137,8 +137,8 @@ namespace PolyMessage.Client
                     await _setupMessagingLock.WaitAsync().ConfigureAwait(false);
                     if (_channel == null)
                     {
-                        _messageMetadata = new MessageMetadata();
-                        _messageMetadata.Build(_operations);
+                        IMessageMetadataBuilder metadataBuilder = new MessageMetadataBuilder();
+                        _messageMetadata = metadataBuilder.Build(_operations);
                         RegisterMessageTypes();
                         _transport.MessageMetadata = _messageMetadata;
 

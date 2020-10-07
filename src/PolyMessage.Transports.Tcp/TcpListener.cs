@@ -14,14 +14,14 @@ namespace PolyMessage.Transports.Tcp
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly ArrayPool<byte> _bufferPool;
-        private readonly IReadOnlyMessageMetadata _messageMetadata;
+        private readonly IMessageMetadata _messageMetadata;
         // TCP
         private readonly TcpTransport _tcpTransport;
         private DotNetTcpListener _tcpListener;
         // stop/dispose
         private bool _isDisposed;
 
-        public TcpListener(TcpTransport tcpTransport, ArrayPool<byte> bufferPool, IReadOnlyMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
+        public TcpListener(TcpTransport tcpTransport, ArrayPool<byte> bufferPool, IMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
         {
             _bufferPool = bufferPool;
             _messageMetadata = messageMetadata;

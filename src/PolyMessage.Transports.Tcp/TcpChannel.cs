@@ -19,7 +19,7 @@ namespace PolyMessage.Transports.Tcp
         private readonly ILogger _logger;
         private readonly bool _isServer;
         private readonly ArrayPool<byte> _bufferPool;
-        private readonly IReadOnlyMessageMetadata _messageMetadata;
+        private readonly IMessageMetadata _messageMetadata;
         // TCP
         private readonly TcpClient _tcpClient;
         private readonly TcpTransport _tcpTransport;
@@ -32,7 +32,7 @@ namespace PolyMessage.Transports.Tcp
 
         public TcpChannel(
             TcpClient tcpClient, TcpTransport tcpTransport, bool isServer,
-            ArrayPool<byte> bufferPool, IReadOnlyMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
+            ArrayPool<byte> bufferPool, IMessageMetadata messageMetadata, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger(GetType());
             _isServer = isServer;

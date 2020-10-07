@@ -104,13 +104,16 @@ namespace PolyMessage.Server
                 throw new InvalidOperationException("No contracts added.");
 
             _acceptor = new Acceptor(_serviceProvider, _loggerFactory);
-            IMessageMetadata messageMetadata = new MessageMetadata();
-            IRouter router = new Router();
-            ICodeGenerator codeGenerator = new ILEmitter();
 
-            messageMetadata.Build(_operations);
+            IMessageMetadataBuilder metadataBuilder = new MessageMetadataBuilder();
+            IMessageMetadata messageMetadata = metadataBuilder.Build(_operations);
+
+            IRouter router = new Router();
             router.BuildRoutingTable(_operations);
+
+            ICodeGenerator codeGenerator = new ILEmitter();
             codeGenerator.GenerateCode(_operations);
+
             RegisterMessageTypes();
             _transport.MessageMetadata = messageMetadata;
 

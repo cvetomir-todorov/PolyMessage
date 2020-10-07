@@ -3,17 +3,11 @@ using System.Collections.Generic;
 
 namespace PolyMessage.Metadata
 {
-    public interface IReadOnlyMessageMetadata
+    public interface IMessageMetadata
     {
         Type GetMessageType(short messageTypeID);
 
         short GetMessageTypeID(Type messageType);
-    }
-
-    // TODO: consider creating a builder
-    internal interface IMessageMetadata : IReadOnlyMessageMetadata
-    {
-        void Build(IEnumerable<Operation> operations);
     }
 
     internal class MessageMetadata : IMessageMetadata
@@ -21,33 +15,21 @@ namespace PolyMessage.Metadata
         private readonly Dictionary<short, Type> _idTypeMap;
         private readonly Dictionary<Type, short> _typeIDMap;
 
-        public MessageMetadata()
+        internal MessageMetadata(Dictionary<short, Type> idTypeMap, Dictionary<Type, short> typeIDMap)
         {
-            _idTypeMap = new Dictionary<short, Type>();
-            _typeIDMap = new Dictionary<Type, short>();
-        }
+            if (idTypeMap == null)
+                throw new ArgumentNullException(nameof(idTypeMap));
+            if (typeIDMap == null)
+                throw new ArgumentNullException(nameof(typeIDMap));
+            if (idTypeMap.Count <= 0)
+                throw new ArgumentException("ID<->type map should not be empty.", nameof(idTypeMap));
+            if (typeIDMap.Count <= 0)
+                throw new ArgumentException("Type<->ID map should not be empty.", nameof(typeIDMap));
+            if (idTypeMap.Count != typeIDMap.Count)
+                throw new ArgumentException("Both maps should have the same size.");
 
-        public void Build(IEnumerable<Operation> operations)
-        {
-            if (operations == null)
-                throw new ArgumentNullException(nameof(operations));
-            if (_idTypeMap.Count > 0 || _typeIDMap.Count > 0)
-                throw new InvalidOperationException("Metadata is already built.");
-
-            foreach (Operation operation in operations)
-            {
-                AddMetadata(operation.RequestTypeID, operation.RequestType);
-                AddMetadata(operation.ResponseTypeID, operation.ResponseType);
-            }
-
-            if (_idTypeMap.Count <= 0 || _typeIDMap.Count <= 0)
-                throw new ArgumentException("No operations were provided.", nameof(operations));
-        }
-
-        private void AddMetadata(short messageTypeID, Type messageType)
-        {
-            _idTypeMap.Add(messageTypeID, messageType);
-            _typeIDMap.Add(messageType, messageTypeID);
+            _idTypeMap = idTypeMap;
+            _typeIDMap = typeIDMap;
         }
 
         private void EnsureBuilt()

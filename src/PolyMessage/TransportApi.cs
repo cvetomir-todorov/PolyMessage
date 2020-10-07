@@ -24,7 +24,7 @@ namespace PolyMessage
 
         public abstract PolyChannel CreateClient();
 
-        protected internal IReadOnlyMessageMetadata MessageMetadata { get; set; }
+        protected internal IMessageMetadata MessageMetadata { get; set; }
 
         public virtual string GetSettingsInfo() => string.Empty;
 

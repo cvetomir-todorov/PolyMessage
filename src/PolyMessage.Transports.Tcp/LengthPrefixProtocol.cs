@@ -11,12 +11,12 @@ namespace PolyMessage.Transports.Tcp
     internal sealed class LengthPrefixProtocol
     {
         private readonly ILogger _logger;
-        private readonly IReadOnlyMessageMetadata _messageMetadata;
+        private readonly IMessageMetadata _messageMetadata;
         private readonly PolyTransport _transport;
         // TCP transport uses only 1 stream
         private const string TcpStreamID = "0";
 
-        public LengthPrefixProtocol(ILogger logger, IReadOnlyMessageMetadata messageMetadata, PolyTransport transport)
+        public LengthPrefixProtocol(ILogger logger, IMessageMetadata messageMetadata, PolyTransport transport)
         {
             _logger = logger;
             _messageMetadata = messageMetadata;
