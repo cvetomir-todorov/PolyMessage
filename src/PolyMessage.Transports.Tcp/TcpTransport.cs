@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,8 @@ namespace PolyMessage.Transports.Tcp
     public class TcpTransport : PolyTransport
     {
         private readonly ILoggerFactory _loggerFactory;
+        private bool _isInitialized;
+        private ArrayPool<byte> _bufferPool;
 
         public TcpTransport(Uri address, ILoggerFactory loggerFactory)
         {
@@ -18,36 +21,38 @@ namespace PolyMessage.Transports.Tcp
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
 
-            Address = address;
-            Settings = new TcpSettings();
             _loggerFactory = loggerFactory;
+            Address = address;
+            DisplayName = "TCP";
+            Settings = new TcpSettings();
         }
-
-        public override string DisplayName => "TCP";
-
-        public override Uri Address { get; }
 
         public TcpSettings Settings { get; }
 
         public override PolyListener CreateListener()
         {
-            EnsureReadyForCommunication();
-            return new TcpListener(this, BufferPool, MessageMetadata, _loggerFactory);
+            Initialize();
+            return new TcpListener(this, _bufferPool, MessageMetadata, _loggerFactory);
         }
 
         public override PolyChannel CreateClient()
         {
-            EnsureReadyForCommunication();
+            Initialize();
             TcpClient tcpClient = new TcpClient();
-            return new TcpChannel(tcpClient, this, isServer: false, BufferPool, MessageMetadata, _loggerFactory);
+            return new TcpChannel(tcpClient, this, isServer: false, _bufferPool, MessageMetadata, _loggerFactory);
         }
 
-        private void EnsureReadyForCommunication()
+        private void Initialize()
         {
-            if (BufferPool == null)
-                throw new InvalidOperationException("Buffer pool needs to be initialized.");
+            if (_isInitialized)
+                return;
             if (MessageMetadata == null)
                 throw new InvalidOperationException("Message metadata needs to be initialized.");
+
+            _bufferPool = ArrayPool<byte>.Create(
+                maxArrayLength: MessageBufferSettings.MaxSize,
+                maxArraysPerBucket: MessageBufferSettings.MaxArraysPerBucket);
+            _isInitialized = true;
         }
 
         public override string GetSettingsInfo()

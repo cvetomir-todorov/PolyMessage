@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -114,9 +113,6 @@ namespace PolyMessage.Server
             codeGenerator.GenerateCode(_operations);
             RegisterMessageTypes();
             _transport.MessageMetadata = messageMetadata;
-            _transport.BufferPool = ArrayPool<byte>.Create(
-                maxArrayLength: _transport.MessageBufferSettings.MaxSize,
-                maxArraysPerBucket: 128);
 
             IDispatcher dispatcher = new Dispatcher(messageMetadata, codeGenerator.GetDispatchRequest());
             ServerComponents serverComponents = new ServerComponents(router, messageMetadata, _timer, dispatcher);

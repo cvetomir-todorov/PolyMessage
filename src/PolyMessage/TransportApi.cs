@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using PolyMessage.Metadata;
@@ -13,9 +12,9 @@ namespace PolyMessage
         /// </summary>
         public static readonly TimeSpan InfiniteTimeout = Timeout.InfiniteTimeSpan;
 
-        public abstract string DisplayName { get; }
+        public string DisplayName { get; protected set; }
 
-        public abstract Uri Address { get; }
+        public Uri Address { get; protected set; }
 
         public PolyHostTimeouts HostTimeouts { get; protected set; } = new PolyHostTimeouts();
 
@@ -26,9 +25,6 @@ namespace PolyMessage
         public abstract PolyChannel CreateClient();
 
         protected internal IReadOnlyMessageMetadata MessageMetadata { get; set; }
-
-        // TODO: move into TcpTransport
-        protected internal ArrayPool<byte> BufferPool { get; set; }
 
         public virtual string GetSettingsInfo() => string.Empty;
 
@@ -45,6 +41,7 @@ namespace PolyMessage
     {
         public int InitialSize { get; set; } = 8192; // 8KB
         public int MaxSize { get; set; } = int.MaxValue;
+        public int MaxArraysPerBucket { get; set; } = 128;
     }
 
     public abstract class PolyListener : IDisposable

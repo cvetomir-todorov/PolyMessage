@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -142,9 +141,6 @@ namespace PolyMessage.Client
                         _messageMetadata.Build(_operations);
                         RegisterMessageTypes();
                         _transport.MessageMetadata = _messageMetadata;
-                        _transport.BufferPool = ArrayPool<byte>.Create(
-                            maxArrayLength: _transport.MessageBufferSettings.MaxSize,
-                            maxArraysPerBucket: 4);
 
                         _channel = _transport.CreateClient();
                         await _channel.OpenAsync().ConfigureAwait(false);
