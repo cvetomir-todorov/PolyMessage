@@ -4,6 +4,7 @@ using PolyMessage.Formats.MessagePack;
 using PolyMessage.Formats.NewtonsoftJson;
 using PolyMessage.Formats.ProtobufNet;
 using PolyMessage.Formats.Utf8Json;
+using PolyMessage.Transports.Ipc;
 using PolyMessage.Transports.Tcp;
 using Xunit.Abstractions;
 
@@ -42,5 +43,19 @@ namespace PolyMessage.Tests.Integration.RequestResponse
         public RequestResponse_Tcp_Utf8Json(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new Utf8JsonFormat();
         protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
+    }
+
+    public class RequestResponse_Ipc_DotNetBinary : RequestResponseTests
+    {
+        public RequestResponse_Ipc_DotNetBinary(ITestOutputHelper output) : base(output, TransportUnderTest.Ipc) {}
+        protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
+        protected override PolyTransport CreateTransport(Uri address) => new IpcTransport(address, LoggerFactory);
+    }
+
+    public class RequestResponse_Ipc_MessagePack : RequestResponseTests
+    {
+        public RequestResponse_Ipc_MessagePack(ITestOutputHelper output) : base(output, TransportUnderTest.Ipc) {}
+        protected override PolyFormat CreateFormat() => new MessagePackFormat();
+        protected override PolyTransport CreateTransport(Uri address) => new IpcTransport(address, LoggerFactory);
     }
 }
