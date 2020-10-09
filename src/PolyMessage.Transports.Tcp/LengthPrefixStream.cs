@@ -32,6 +32,8 @@ namespace PolyMessage.Transports.Tcp
             {
                 _pool.Return(_messageBuffer);
             }
+
+            base.Dispose(disposing);
         }
 
         public override bool CanRead => true;
@@ -130,6 +132,7 @@ namespace PolyMessage.Transports.Tcp
             _logger.LogTrace("[{0}] Encoded {1} for {2} length prefix value.", _origin, lengthPrefix, target);
         }
 
+        // TODO: consider using FlushAsync for this and make Flush throw
         public async Task SendToTransport(CancellationToken ct)
         {
             await _internalStream.WriteAsync(_messageBuffer, 0, _length, ct).ConfigureAwait(false);

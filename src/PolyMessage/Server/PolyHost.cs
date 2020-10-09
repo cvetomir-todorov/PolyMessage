@@ -129,8 +129,8 @@ namespace PolyMessage.Server
         {
             IEnumerable<MessageInfo> requestTypes = _operations.Select(o => new MessageInfo(o.RequestType, o.RequestTypeID));
             IEnumerable<MessageInfo> responseTypes = _operations.Select(o => new MessageInfo(o.ResponseType, o.ResponseTypeID));
-            IEnumerable<MessageInfo> systemTypes = new[] { new MessageInfo(typeof(PolyHeader), PolyHeader.TypeID) };
-            IEnumerable<MessageInfo> allTypes = systemTypes.Union(requestTypes).Union(responseTypes);
+            IEnumerable<MessageInfo> transportTypes = _transport.GetMessageTypes();
+            IEnumerable<MessageInfo> allTypes = transportTypes.Union(requestTypes).Union(responseTypes);
             _format.RegisterMessageTypes(allTypes);
         }
 

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using PolyMessage.Messaging;
 
 namespace PolyMessage.Transports.Tcp
 {
@@ -17,7 +19,7 @@ namespace PolyMessage.Transports.Tcp
             if (address == null)
                 throw new ArgumentNullException(nameof(address));
             if (!string.Equals(address.Scheme, "tcp", StringComparison.InvariantCultureIgnoreCase))
-                throw new ArgumentException("Uri scheme should be TCP.");
+                throw new ArgumentException("Uri scheme should be TCP.", nameof(address));
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
 
@@ -53,6 +55,11 @@ namespace PolyMessage.Transports.Tcp
                 maxArrayLength: MessageBufferSettings.MaxSize,
                 maxArraysPerBucket: MessageBufferSettings.MaxArraysPerBucket);
             _isInitialized = true;
+        }
+
+        public override IEnumerable<MessageInfo> GetMessageTypes()
+        {
+            return new[] {new MessageInfo(typeof(PolyHeader), PolyHeader.TypeID)};
         }
 
         public override string GetSettingsInfo()

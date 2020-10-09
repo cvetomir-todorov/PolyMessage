@@ -8,6 +8,7 @@ using PolyMessage.Metadata;
 
 namespace PolyMessage.Transports.Tcp
 {
+    // TODO: rename to single channel ... protocol
     internal sealed class LengthPrefixProtocol
     {
         private readonly ILogger _logger;
@@ -36,12 +37,12 @@ namespace PolyMessage.Transports.Tcp
             int lengthPrefixPosition = (int)stream.Position;
             stream.ReserveSpaceForLengthPrefix();
             formatter.Serialize(header, TcpStreamID, stream);
-            stream.WriteLengthPrefix(position: lengthPrefixPosition, "header");
+            stream.WriteLengthPrefix(lengthPrefixPosition, "header");
 
             lengthPrefixPosition = (int)stream.Position;
             stream.ReserveSpaceForLengthPrefix();
             formatter.Serialize(message, TcpStreamID, stream);
-            stream.WriteLengthPrefix(position: lengthPrefixPosition, "message");
+            stream.WriteLengthPrefix(lengthPrefixPosition, "message");
 
             await stream.SendToTransport(ct).ConfigureAwait(false);
 

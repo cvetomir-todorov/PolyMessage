@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using PolyMessage.Metadata;
@@ -24,8 +25,11 @@ namespace PolyMessage
 
         public abstract PolyChannel CreateClient();
 
+        public virtual IEnumerable<MessageInfo> GetMessageTypes() => new MessageInfo[0];
+
         protected internal IMessageMetadata MessageMetadata { get; set; }
 
+        // TODO: change to return key-value pairs instead, modify the settings to return the pairs
         public virtual string GetSettingsInfo() => string.Empty;
 
         public override string ToString() => DisplayName;
@@ -54,7 +58,7 @@ namespace PolyMessage
 
         protected virtual void DoDispose(bool isDisposing) {}
 
-        public abstract void PrepareAccepting();
+        public virtual void PrepareAccepting() {}
 
         public abstract Task<Func<PolyChannel>> AcceptClient();
 

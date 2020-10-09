@@ -68,7 +68,7 @@ namespace PolyMessage.Transports.Tcp
                 throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is already disposed.");
         }
 
-        private void EnsureConnected()
+        private void EnsureOpened()
         {
             if (_stream == null)
                 throw new InvalidOperationException($"{_tcpTransport.DisplayName} channel is not opened.");
@@ -111,6 +111,7 @@ namespace PolyMessage.Transports.Tcp
                 await InitTls().ConfigureAwait(false);
             }
             _lengthPrefixStream = new LengthPrefixStream(_logger, _stream, _bufferPool, _tcpTransport.MessageBufferSettings.InitialSize);
+            // TODO: use a single instance since this class is stateless and simplify its name
             _lengthPrefixProtocol = new LengthPrefixProtocol(_logger, _messageMetadata, _tcpTransport);
 
             _tcpClient.NoDelay = _tcpTransport.Settings.NoDelay;
@@ -181,7 +182,7 @@ namespace PolyMessage.Transports.Tcp
         public override async Task<object> Receive(PolyFormatter formatter, string origin, CancellationToken ct)
         {
             EnsureNotDisposed();
-            EnsureConnected();
+            EnsureOpened();
             try
             {
                 return await _lengthPrefixProtocol.Receive(formatter, _lengthPrefixStream, origin, ct);
@@ -198,7 +199,7 @@ namespace PolyMessage.Transports.Tcp
         public override async Task Send(object message, PolyFormatter formatter, string origin, CancellationToken ct)
         {
             EnsureNotDisposed();
-            EnsureConnected();
+            EnsureOpened();
             try
             {
                 await _lengthPrefixProtocol.Send(message, formatter, _lengthPrefixStream, origin, ct);
