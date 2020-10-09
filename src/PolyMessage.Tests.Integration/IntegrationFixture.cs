@@ -12,6 +12,11 @@ using Xunit.Abstractions;
 
 namespace PolyMessage.Tests.Integration
 {
+    public enum TransportUnderTest
+    {
+        Tcp, Ipc
+    }
+
     public abstract class IntegrationFixture : BaseFixture
     {
         protected Uri ServerAddress { get; }
@@ -21,13 +26,14 @@ namespace PolyMessage.Tests.Integration
         protected PolyClient Client { get; set; }
         protected List<PolyClient> Clients { get; }
 
-        protected IntegrationFixture(ITestOutputHelper output) : this(output, collection => {})
+        protected IntegrationFixture(ITestOutputHelper output, TransportUnderTest transport) : this(output, transport, collection => {})
         {}
 
-        protected IntegrationFixture(ITestOutputHelper output, Action<IServiceCollection> addServices) : base(output, addServices)
+        protected IntegrationFixture(ITestOutputHelper output, TransportUnderTest transport, Action<IServiceCollection> addServices)
+            : base(output, addServices)
         {
-            ServerAddress = GetServerAddress();
-            Host = CreateHost(ServerAddress, ServiceProvider);
+            ServerAddress = GetServerAddress(transport);
+            Host = CreateHost();
             Client = CreateClient();
             Clients = new List<PolyClient>();
         }
@@ -51,25 +57,36 @@ namespace PolyMessage.Tests.Integration
         private PolyFormat CreateHostFormat() => CreateFormat();
         private PolyFormat CreateClientFormat() => CreateFormat();
 
-        protected abstract PolyTransport CreateTransport(Uri serverAddress);
-        private PolyTransport CreateHostTransport(Uri serverAddress) => CreateTransport(serverAddress);
-        private PolyTransport CreateClientTransport(Uri serverAddress) => CreateTransport(serverAddress);
+        protected abstract PolyTransport CreateTransport(Uri address);
+        private PolyTransport CreateHostTransport(Uri address) => CreateTransport(address);
+        private PolyTransport CreateClientTransport(Uri address) => CreateTransport(address);
 
-        private static Uri GetServerAddress()
+        private static Uri GetServerAddress(TransportUnderTest transport)
         {
-            string hostName = Dns.GetHostName();
-            IPAddress[] addresses = Dns.GetHostAddresses(hostName);
-            IPAddress ipv4Address = addresses.First(a => a.AddressFamily == AddressFamily.InterNetwork);
+            switch (transport)
+            {
+                case TransportUnderTest.Tcp:
+                {
+                    string hostName = Dns.GetHostName();
+                    IPAddress[] addresses = Dns.GetHostAddresses(hostName);
+                    IPAddress ipv4Address = addresses.First(a => a.AddressFamily == AddressFamily.InterNetwork);
 
-            UriBuilder addressBuilder = new UriBuilder("tcp", ipv4Address.ToString(), 10678);
-            return addressBuilder.Uri;
+                    UriBuilder addressBuilder = new UriBuilder("tcp", ipv4Address.ToString(), 10678);
+                    return addressBuilder.Uri;
+                }
+                case TransportUnderTest.Ipc:
+                {
+                    return new Uri("net.pipe://127.0.0.1/test");
+                }
+                default: throw new NotSupportedException($"Transport {transport} is not supported.");
+            }
         }
 
-        private PolyHost CreateHost(Uri serverAddress, IServiceProvider serviceProvider)
+        private PolyHost CreateHost()
         {
-            HostTransport = CreateHostTransport(serverAddress);
+            HostTransport = CreateHostTransport(ServerAddress);
             PolyFormat hostFormat = CreateHostFormat();
-            PolyHost host = new PolyHost(HostTransport, hostFormat, serviceProvider);
+            PolyHost host = new PolyHost(HostTransport, hostFormat, ServiceProvider);
             return host;
         }
 
@@ -78,9 +95,9 @@ namespace PolyMessage.Tests.Integration
             return CreateClient(ServerAddress, ServiceProvider);
         }
 
-        protected PolyClient CreateClient(Uri serverAddress, IServiceProvider serviceProvider)
+        protected PolyClient CreateClient(Uri address, IServiceProvider serviceProvider)
         {
-            ClientTransport = CreateClientTransport(serverAddress);
+            ClientTransport = CreateClientTransport(address);
             PolyFormat clientFormat = CreateClientFormat();
             PolyClient client = new PolyClient(ClientTransport, clientFormat, serviceProvider.GetRequiredService<ILoggerFactory>());
             return client;

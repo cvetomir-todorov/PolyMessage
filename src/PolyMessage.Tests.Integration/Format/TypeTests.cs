@@ -11,7 +11,7 @@ namespace PolyMessage.Tests.Integration.Format
     {
         private readonly TypeImplementor _implementorInstance;
 
-        protected TypeTests(ITestOutputHelper output) : base(output, services =>
+        protected TypeTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddSingleton<ITypeContract, TypeImplementor>();
         })

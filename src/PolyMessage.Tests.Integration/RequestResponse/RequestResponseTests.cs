@@ -9,7 +9,7 @@ namespace PolyMessage.Tests.Integration.RequestResponse
 {
     public abstract class RequestResponseTests : IntegrationFixture
     {
-        protected RequestResponseTests(ITestOutputHelper output) : base(output, services =>
+        protected RequestResponseTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddScoped<ISingleOperationContract, SingleOperationImplementor>();
             services.AddScoped<IMultipleOperationsContract, MultipleOperationsImplementor>();

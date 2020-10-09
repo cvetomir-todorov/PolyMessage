@@ -15,7 +15,7 @@ namespace PolyMessage.Tests.Integration.Performance
 {
     public abstract class PerformanceTests : IntegrationFixture
     {
-        protected PerformanceTests(ITestOutputHelper output) : base(output, services =>
+        protected PerformanceTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddScoped<IPerformanceContract, PerformanceImplementor>();
         })

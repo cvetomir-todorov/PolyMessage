@@ -12,7 +12,7 @@ namespace PolyMessage.Tests.Integration.Format
     {
         private readonly DataImplementor _implementorInstance;
 
-        protected DataTests(ITestOutputHelper output) : base(output, services =>
+        protected DataTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddSingleton<IDataContract, DataImplementor>();
         })

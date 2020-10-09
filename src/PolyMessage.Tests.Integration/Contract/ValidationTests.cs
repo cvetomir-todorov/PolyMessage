@@ -12,11 +12,11 @@ namespace PolyMessage.Tests.Integration.Contract
 {
     public class ValidationTests : IntegrationFixture
     {
-        public ValidationTests(ITestOutputHelper output) : base(output)
+        public ValidationTests(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp)
         {}
 
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
 
         [Theory]
         [InlineData("010", typeof(IContractWithoutAttributeAndInterface), 1)]

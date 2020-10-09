@@ -14,16 +14,16 @@ namespace PolyMessage.Tests.Integration.Tcp
 {
     public class Timeout_Tcp : TimeoutTests
     {
-        public Timeout_Tcp(ITestOutputHelper output) : base(output) {}
+        public Timeout_Tcp(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public abstract class TimeoutTests : IntegrationFixture
     {
         private readonly TimeSpan _timeout;
 
-        protected TimeoutTests(ITestOutputHelper output) : base(output, services =>
+        protected TimeoutTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })

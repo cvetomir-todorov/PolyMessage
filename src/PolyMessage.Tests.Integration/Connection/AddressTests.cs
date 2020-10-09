@@ -14,14 +14,14 @@ namespace PolyMessage.Tests.Integration.Connection
 {
     public class Address_Tcp : AddressTests
     {
-        public Address_Tcp(ITestOutputHelper output) : base(output) {}
+        public Address_Tcp(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public abstract class AddressTests : IntegrationFixture
     {
-        protected AddressTests(ITestOutputHelper output) : base(output, services =>
+        protected AddressTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })

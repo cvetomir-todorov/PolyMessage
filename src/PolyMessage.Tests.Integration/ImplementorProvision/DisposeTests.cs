@@ -11,7 +11,7 @@ namespace PolyMessage.Tests.Integration.ImplementorProvision
 {
     public class DisposeTests : IntegrationFixture
     {
-        public DisposeTests(ITestOutputHelper output) : base(output, services =>
+        public DisposeTests(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp, services =>
         {
             services.AddScoped<IDisposableContract, DisposableImplementor>();
         })
@@ -21,7 +21,7 @@ namespace PolyMessage.Tests.Integration.ImplementorProvision
         }
 
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
 
         [Theory]
         [InlineData(1)]

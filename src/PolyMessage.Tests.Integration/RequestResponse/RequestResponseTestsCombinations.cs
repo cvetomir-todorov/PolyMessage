@@ -11,36 +11,36 @@ namespace PolyMessage.Tests.Integration.RequestResponse
 {
     public class RequestResponse_Tcp_DotNetBinary : RequestResponseTests
     {
-        public RequestResponse_Tcp_DotNetBinary(ITestOutputHelper output) : base(output) {}
+        public RequestResponse_Tcp_DotNetBinary(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public class RequestResponse_Tcp_MessagePack : RequestResponseTests
     {
-        public RequestResponse_Tcp_MessagePack(ITestOutputHelper output) : base(output) {}
+        public RequestResponse_Tcp_MessagePack(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new MessagePackFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public class RequestResponse_Tcp_ProtobufNet : RequestResponseTests
     {
-        public RequestResponse_Tcp_ProtobufNet(ITestOutputHelper output) : base(output) {}
+        public RequestResponse_Tcp_ProtobufNet(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new ProtobufNetFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public class RequestResponse_Tcp_NewtonsoftJson : RequestResponseTests
     {
-        public RequestResponse_Tcp_NewtonsoftJson(ITestOutputHelper output) : base(output) {}
+        public RequestResponse_Tcp_NewtonsoftJson(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new NewtonsoftJsonFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public class RequestResponse_Tcp_Utf8Json : RequestResponseTests
     {
-        public RequestResponse_Tcp_Utf8Json(ITestOutputHelper output) : base(output) {}
+        public RequestResponse_Tcp_Utf8Json(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new Utf8JsonFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 }

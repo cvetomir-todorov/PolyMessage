@@ -16,9 +16,9 @@ namespace PolyMessage.Tests.Integration.Tcp
 {
     public class Security_Tcp : SecurityTests
     {
-        public Security_Tcp(ITestOutputHelper output) : base(output) {}
+        public Security_Tcp(ITestOutputHelper output) : base(output, TransportUnderTest.Tcp) {}
         protected override PolyFormat CreateFormat() => new DotNetBinaryFormat();
-        protected override PolyTransport CreateTransport(Uri serverAddress) => new TcpTransport(serverAddress, LoggerFactory);
+        protected override PolyTransport CreateTransport(Uri address) => new TcpTransport(address, LoggerFactory);
     }
 
     public abstract class SecurityTests : IntegrationFixture
@@ -26,7 +26,7 @@ namespace PolyMessage.Tests.Integration.Tcp
         private readonly TcpTransport _hostTransport;
         private readonly TcpTransport _clientTransport;
 
-        protected SecurityTests(ITestOutputHelper output) : base(output, services =>
+        protected SecurityTests(ITestOutputHelper output, TransportUnderTest transport) : base(output, transport, services =>
         {
             services.AddScoped<IContract, Implementor>();
         })
